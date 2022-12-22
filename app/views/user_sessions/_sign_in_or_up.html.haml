@@ -1,0 +1,38 @@
+- user ||= User.new_with_defaults(email: params[:email])
+- if params[:destination]
+  - backto = params[:destination]
+- elsif stored_location = controller.stored_location_for(:user)
+  - backto = URI.join(local_host, stored_location).to_s if stored_location
+
+= form_for(user, url: droom_client.sign_in_path, method: 'post', html: {class: "sign_in_or_up", data: {signup: droom_client.users_url}}) do |f|
+  = hidden_field_tag :destination, backto
+
+  .fields
+    %p.onecol
+      %span.col>
+        = f.email_field :email, placeholder: t("placeholders.signin.email")
+    %p.onecol.passwords
+      %span.col>
+        = f.password_field :password, placeholder: t("placeholders.signin.password")
+      %span.col.last.signup>
+        = f.password_field :password_confirmation, placeholder: t("placeholders.signin.password_confirmation")
+    .signup
+      %p.threecol
+        %span.col.first>
+          = f.text_field :family_name, placeholder: t("placeholders.user.family_name")
+        %span.col>
+          = f.text_field :given_name, placeholder: t("placeholders.user.given_name")
+        %span.col.last>
+          = f.text_field :chinese_name, placeholder: t("placeholders.user.chinese_name")
+  .buttons
+    %p
+      = f.submit t(:sign_in), :class => "go"
+      %br
+      = link_to t(:or_sign_up), '#', class: "show_signup"
+  .preferences
+    %p
+      %a.forgotten{href:  droom_link_url("/users/password/new", backto: request.url)}
+        Forgotten password?
+      = f.check_box :remember_me
+      = f.label :remember_me, :class => "minor"
+
