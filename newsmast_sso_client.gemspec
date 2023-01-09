@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+$:.push File.expand_path("../lib", __FILE__)
 require_relative "lib/newsmast_sso_client/version"
 
 Gem::Specification.new do |spec|
@@ -32,4 +33,6 @@ Gem::Specification.new do |spec|
 
   # For more information and examples about making a new gem, check out our
   # guide at: https://bundler.io/guides/creating_gem.html
+
+  spec.add_dependency "rails", "~> 6.1"
 end
