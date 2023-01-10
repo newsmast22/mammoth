@@ -34,7 +34,17 @@ module NewsmastSsoClient
       if @user.otp_code == params[:confirmed_otp_code]
         @user.confirmed_at = Time.now.utc
         @user.save(validate: false)
-        render json: {message: 'account confirmed', data: @user}
+
+        @app = doorkeeper_token.application
+        @access_token = Doorkeeper::AccessToken.create!(
+          application: @app,
+          resource_owner_id: @user.id,
+          scopes: @app.scopes,
+          expires_in: Doorkeeper.configuration.access_token_expires_in,
+          use_refresh_token: Doorkeeper.configuration.refresh_token_enabled?
+        )
+        response = Doorkeeper::OAuth::TokenResponse.new(@access_token)
+        render json: {message: 'account confirmed', access_token: JSON.parse(Oj.dump(response.body["access_token"]))}
       else
         render json: {error: 'wrong otp'}
       end
