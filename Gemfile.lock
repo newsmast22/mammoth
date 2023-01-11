@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    newsmast_sso_client (0.1.0)
+    mammoth (0.1.0)
       rails (~> 6.1)
 
 GEM
@@ -164,7 +164,7 @@ PLATFORMS
   x86_64-darwin-21
 
 DEPENDENCIES
-  newsmast_sso_client!
+  mammoth!
   rake (~> 13.0)
   rspec (~> 3.0)
 

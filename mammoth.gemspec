@@ -1,25 +1,25 @@
 # frozen_string_literal: true
 
 $:.push File.expand_path("../lib", __FILE__)
-require_relative "lib/newsmast_sso_client/version"
+require_relative "lib/mammoth/version"
 
 Gem::Specification.new do |spec|
-  spec.name = "newsmast_sso_client"
-  spec.version = NewsmastSsoClient::VERSION
+  spec.name = "mammoth"
+  spec.version = Mammoth::VERSION
   spec.authors = ["yarzar"]
   spec.email = ["yarzarminwai97@gmail.com"]
 
-  spec.summary = "Newsmast authentication gem"
-  spec.description = "Newsmast authentication gem"
-  spec.homepage = "https://github.com/newsmast22/newsmast_sso_client"
+  spec.summary = "Newsmast gem to provide customized APIs"
+  spec.description = "Newsmast gem to provide customized APIs"
+  spec.homepage = "https://github.com/newsmast22/mammoth"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 2.6.0"
 
-  spec.metadata["allowed_push_host"] = "https://github.com/newsmast22/newsmast_sso_client"
+  spec.metadata["allowed_push_host"] = "https://github.com/newsmast22/mammoth"
 
   spec.metadata["homepage_uri"] = spec.homepage
-  spec.metadata["source_code_uri"] = "https://github.com/newsmast22/newsmast_sso_client"
-  spec.metadata["changelog_uri"] = "https://github.com/newsmast22/newsmast_sso_client"
+  spec.metadata["source_code_uri"] = "https://github.com/newsmast22/mammoth"
+  spec.metadata["changelog_uri"] = "https://github.com/newsmast22/mammoth"
 
   # Specify which files should be added to the gem when it is released.
   # The `git ls-files -z` loads the files in the RubyGem that have been added into git.

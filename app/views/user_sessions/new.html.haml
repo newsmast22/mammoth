@@ -1,9 +1,0 @@
-#account
-  %h1.pagetitle
-    =t :please_sign_in
-    
-  - if flash[:notice]
-    %p.standfirst.green
-      = flash[:notice]
-
-  = render partial: "sign_in"

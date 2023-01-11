@@ -2,7 +2,7 @@
 
 source "https://rubygems.org"
 
-# Specify your gem's dependencies in newsmast_sso_client.gemspec
+# Specify your gem's dependencies in mammoth.gemspec
 gemspec
 
 gem "rake", "~> 13.0"

@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-RSpec.describe NewsmastSsoClient do
+RSpec.describe Mammoth do
   it "has a version number" do
-    expect(NewsmastSsoClient::VERSION).not_to be nil
+    expect(Mammoth::VERSION).not_to be nil
   end
 
   it "does something useful" do

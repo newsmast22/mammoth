@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "newsmast_sso_client"
+require "mammoth"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure

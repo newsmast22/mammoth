@@ -1,4 +1,4 @@
-module NewsmastSsoClient
+module Mammoth
   class UserSessionsController < Api::BaseController
 
     skip_before_action :require_authenticated_user!
