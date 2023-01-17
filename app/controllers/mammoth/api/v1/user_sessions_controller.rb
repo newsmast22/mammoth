@@ -1,4 +1,4 @@
-module Mammoth
+module Mammoth::Api::V1
   class UserSessionsController < Api::BaseController
 
     skip_before_action :require_authenticated_user!
