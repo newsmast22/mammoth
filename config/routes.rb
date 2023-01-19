@@ -8,6 +8,14 @@ Mammoth::Engine.routes.draw do
       resources :communities
       resources :community_statuses
       resources :user_communities
+      resources :wait_lists do
+        collection do
+          post 'register_end_user_waitlist' => "wait_lists#register_end_user_waitlist", as: "register_end_user_waitlist"
+          post 'register_moderator_waitlist' => "wait_lists#register_moderator_waitlist", as: "register_moderator_waitlist"
+          post 'register_contributor_waitlist' => "wait_lists#register_contributor_waitlist", as: "register_contributor_waitlist"
+          get 'get_contributor_roles' => "wait_lists#get_contributor_roles", as: "get_contributor_roles"
+        end
+      end
     end
   end
   
