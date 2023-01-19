@@ -4,23 +4,14 @@ module Mammoth::Api::V1
 
     def register_end_user_waitlist
       if wait_lists_params[:email].present?
-        @user_wait_list= Mammoth::WaitList.create!(
-          role: "end-user",
-          email: wait_lists_params[:email],
-          invitation_code: generate_verify_code()
-        ) 
+        save_wait_list("end-user",wait_lists_params[:email],nil,nil)
         render json: {message: 'Successfully registered.'}  
       end
     end
 
     def register_moderator_waitlist
       if wait_lists_params[:email].present?
-        @user_wait_list= Mammoth::WaitList.create!(
-          role: "moderator",
-          email: wait_lists_params[:email],
-          invitation_code: generate_verify_code(),
-          description: wait_lists_params[:description]
-        ) 
+        save_wait_list("moderator",wait_lists_params[:email],wait_lists_params[:description],nil)
         render json: {message: 'Successfully registered.'}  
       end
     end
@@ -28,13 +19,7 @@ module Mammoth::Api::V1
     def register_contributor_waitlist
       if wait_lists_params[:email].present? && wait_lists_params[:role_id].present?
         @contributor_role = Mammoth::ContributorRole.find_by(slug: wait_lists_params[:role_id])
-        @user_wait_list= Mammoth::WaitList.create!(
-          role: "contributor",
-          email: wait_lists_params[:email],
-          invitation_code: generate_verify_code(),
-          description: wait_lists_params[:description],
-          contributor_role_id: @contributor_role.id
-        ) 
+        save_wait_list("contributor",wait_lists_params[:email],wait_lists_params[:description],@contributor_role.id)
         render json: {message: 'Successfully registered.'}  
       end
     end
@@ -53,6 +38,16 @@ module Mammoth::Api::V1
     def generate_verify_code
       number_array = (1..9).to_a
       verify_code = (0...4).collect { number_array[Kernel.rand(number_array.length)] }.join
+    end
+
+    def save_wait_list(role,email,description,contributor_role_id)
+      @user_wait_list= Mammoth::WaitList.create!(
+        role: role,
+        email: email,
+        invitation_code: generate_verify_code(),
+        description: description,
+        contributor_role_id: contributor_role_id
+      ) 
     end
 
   end
