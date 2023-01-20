@@ -3,7 +3,6 @@ module Mammoth::Api::V1
 		skip_before_action :require_authenticated_user!
 
     def verify_waitlist
-      puts "***********"
       if wait_lists_params[:invitation_code].present?
         verified_code = Mammoth::WaitList.find_by(invitation_code: wait_lists_params[:invitation_code])
           if verified_code.invitation_code == wait_lists_params[:invitation_code]
