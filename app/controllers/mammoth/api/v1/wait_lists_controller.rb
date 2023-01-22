@@ -2,6 +2,19 @@ module Mammoth::Api::V1
 	class WaitListsController < Api::BaseController
 		skip_before_action :require_authenticated_user!
 
+    def verify_waitlist
+      if wait_lists_params[:invitation_code].present?
+        verified_code = Mammoth::WaitList.find_by(invitation_code: wait_lists_params[:invitation_code])
+          if verified_code.invitation_code == wait_lists_params[:invitation_code]
+            verified_code.update(is_invitation_code_used: true)
+            render json: {message: 'Successfully verified.'} 
+          else
+            render json: {message: 'Unsuccessfully verified.'} 
+        end
+         
+      end
+    end
+
     def register_end_user_waitlist
       if wait_lists_params[:email].present?
         save_wait_list("end-user",wait_lists_params[:email],nil,nil)
