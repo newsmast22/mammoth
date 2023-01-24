@@ -9,6 +9,7 @@ Mammoth::Engine.routes.draw do
       resources :communities
       resources :community_statuses
       resources :user_communities
+      resources :collections
       resources :wait_lists do
         collection do
           post 'verify_waitlist' => "wait_lists#verify_waitlist", as: "verify_waitlist"

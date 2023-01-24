@@ -1,13 +1,12 @@
 module Mammoth
-  class Community < ApplicationRecord
+
+  class Collection < ApplicationRecord
+    self.table_name = 'mammoth_collections'
     include Attachmentable
 
-    has_and_belongs_to_many :statuses, class_name: "Mammoth::Status"
-    has_and_belongs_to_many :users, class_name: "Mammoth::User"
-    belongs_to :collection, class_name: "Mammoth::Collection"
+    has_many :communities, class_name: "Mammoth::Community"
 
-
-  	IMAGE_LIMIT = 20.megabytes
+    IMAGE_LIMIT = 20.megabytes
 
   	IMAGE_MIME_TYPES = %w(image/jpeg image/png image/gif image/heic image/heif image/webp image/avif).freeze
 

@@ -9,7 +9,7 @@ module Mammoth::Api::V1
             verified_code.update(is_invitation_code_used: true)
             render json: {message: 'Successfully verified.'} 
           else
-            render json: {message: 'Unsuccessfully verified.'} 
+            render json: {error: 'Unsuccessfully verified.'} 
         end
          
       end
