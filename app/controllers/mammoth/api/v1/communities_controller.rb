@@ -4,7 +4,7 @@ module Mammoth::Api::V1
 		before_action :set_community, only: %i[show update destroy]
 
 		def index
-			@collection  = Mammoth::Collection.find_by(slug: community_params[:collection_id])
+			@collection  = Mammoth::Collection.find_by(slug: params[:collection_id])
 			@communities = @collection.communities
 			render json: @communities
 		end
