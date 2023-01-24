@@ -1,0 +1,56 @@
+!!!
+%html{:lang => 'en'}
+  %head
+    %title
+      = @subject
+    %style{:type => 'text/css'}
+      :css
+        body
+          font-size: 125%
+          line-height: 1.5
+      
+        a, a:visited
+          color: #ED1C24
+          text-decoration: none
+          &:visited
+            color: #ED1C24
+          &:hover
+            color: #9a9b9d
+          &:active
+            color: #d1005d
+
+        h1
+          font-family: 'Frutiger Next W01 Light', helvetica, arial, sans-serif
+          font-weight: normal
+          line-height: 1
+          font-size: 3em
+          letter-spacing: -0.04em
+          margin: 0.25em 0
+
+        h2, h3
+          font-family: 'Frutiger Next W01 Bold', helvetica, arial, sans-serif
+          font-weight: normal
+          line-height: 1.2
+          margin: 1em 0 0.25em 0
+          &.flush
+            margin: 0
+
+        p
+          overflow: hidden
+          padding: 0
+          &.clear
+            clear: both
+
+        strong, b
+          font-family: 'Frutiger Next W01 Bold'
+
+        em, i
+          font-family: 'FrutigerNextW01-LightIt'
+
+  %body
+    #header{:style => "margin: 10px"}
+      #logo
+        
+    #page{:style => "margin: 30px 40px 20px 62px;"}
+      #content
+        = yield

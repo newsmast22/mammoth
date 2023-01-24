@@ -1,0 +1,10 @@
+%p
+  Dear
+  = @user.account.display_name + ','
+
+%p
+  Your account verification is as below:
+  %br
+  %strong
+    = @user.otp_code
+
