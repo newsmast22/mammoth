@@ -4,17 +4,17 @@ module Mammoth::Api::V1
 		#before_action :set_community, only: %i[show update destroy]
 
 		def index
-				if params[:community_id].present?
-						@community = Mammoth::Community.find_by(slug: params[:community_id])
-						@statuses = @community&.statuses || []
-				else
-						@statuses = Mammoth::Status.all
-				end
-				if @statuses.any?
-						render json: @statuses, each_serializer: REST::StatusSerializer
-				else
-						render json: { error: "no statuses found " }
-				end
+			if params[:community_id].present?
+				@community = Mammoth::Community.find_by(slug: params[:community_id])
+				@statuses = @community&.statuses || []
+			else
+				@statuses = Mammoth::Status.all
+			end
+			if @statuses.any?
+				render json: @statuses, each_serializer: REST::StatusSerializer
+			else
+				render json: { error: "no statuses found " }
+			end
 		end
 
 		def create
