@@ -71,6 +71,16 @@ module Mammoth::Api::V1
       end
     end
 
+    def user_sign_in
+      @user = User.find_by(email: params[:email])
+      unless  @user.nil?
+        token = Doorkeeper::AccessToken.find_by(resource_owner_id: @user.id).token
+        render json: {message: 'login success', access_token: token}
+      else
+        render json: {error: 'username and password invalid'}
+      end
+    end
+
     private
 
     def generate_otp
