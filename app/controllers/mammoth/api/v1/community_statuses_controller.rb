@@ -1,8 +1,8 @@
 module Mammoth::Api::V1
 	class CommunityStatusesController < Api::BaseController
-		skip_before_action :require_authenticated_user!
-		#before_action :set_community, only: %i[show update destroy]
-
+		before_action -> { authorize_if_got_token! :read, :'read:statuses' }, except: [:create]
+		before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only:   [:create]
+		before_action :require_user!, only:   [:create]
 		def index
 			if params[:community_id].present?
 				@community = Mammoth::Community.find_by(slug: params[:community_id])

@@ -1,6 +1,7 @@
 module Mammoth::Api::V1
 	class CommunitiesController < Api::BaseController
-		skip_before_action :require_authenticated_user!
+		before_action :require_user!
+		before_action -> { doorkeeper_authorize! :read , :write}
 		before_action :set_community, only: %i[show update destroy]
 
 		def index
