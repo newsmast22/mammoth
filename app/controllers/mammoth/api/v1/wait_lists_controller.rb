@@ -1,5 +1,6 @@
 module Mammoth::Api::V1
 	class WaitListsController < Api::BaseController
+    before_action -> { doorkeeper_authorize! :write }
 		skip_before_action :require_authenticated_user!
 
     def verify_waitlist

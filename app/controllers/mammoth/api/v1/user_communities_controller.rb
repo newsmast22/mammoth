@@ -1,6 +1,7 @@
 module Mammoth::Api::V1
 	class UserCommunitiesController < Api::BaseController
-		
+		before_action :require_authenticated_user!
+    before_action -> { doorkeeper_authorize! :write, :read }
     def index
       @user = Mammoth::User.find(current_user.id)
       @communities = @user&.communities || []
