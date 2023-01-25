@@ -42,12 +42,44 @@ module Mammoth::Api::V1
 			render json: {message: 'status with community successfully saved!'}
 		end
 
+		def update
+			@status = Status.where(account: current_account).find(params[:id])
+			authorize @status, :update?
+	
+			UpdateStatusService.new.call(
+				@status,
+				current_account.id,
+				text: community_status_params[:status],
+				media_ids: community_status_params[:media_ids],
+				sensitive: community_status_params[:sensitive],
+				language: community_status_params[:language],
+				spoiler_text: community_status_params[:spoiler_text],
+				poll: community_status_params[:poll]
+			)
+	
+			render json: @status, serializer: REST::StatusSerializer
+		end
+
     private
 
 			def community_status_params
-				params.require(:community_status).permit(:status, :media_ids, :sensitive, 
-									:spoiler_text, :visibility, :language,
-									:scheduled_at, :poll, :community_id)
+				params.require(:community_status).permit(
+					:community_id,
+					:status,
+					:in_reply_to_id,
+					:sensitive,
+					:spoiler_text,
+					:visibility,
+					:language,
+					:scheduled_at,
+					media_ids: [],
+					poll: [
+						:multiple,
+						:hide_totals,
+						:expires_in,
+						options: [],
+					]
+				)
 			end
   end
 end
