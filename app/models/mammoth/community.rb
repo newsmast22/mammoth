@@ -61,7 +61,6 @@ module Mammoth
     end
 
     def image_data=(data)
-      byebug
       self.image = {data: data} if data.present?
     end
 
