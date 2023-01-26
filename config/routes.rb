@@ -5,7 +5,6 @@ Mammoth::Engine.routes.draw do
       post 'register_with_email' => "user_sessions#register_with_email", as: "register_with_email"
       post 'register_with_phone' => "user_sessions#register_with_phone", as: "register_with_phone"
       put 'verify_otp' => "user_sessions#verify_otp", as: "verify_otp"
-      post 'user_sign_in' => "user_sessions#user_sign_in", as: "user_sign_in"
 
       resources :communities
       resources :community_statuses
