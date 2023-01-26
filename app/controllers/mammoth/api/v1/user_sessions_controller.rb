@@ -3,7 +3,8 @@ module Mammoth::Api::V1
 
     before_action -> { doorkeeper_authorize! :write, :'write:accounts' }, only: [:create]
     before_action :check_enabled_registrations, only: [:create]
-    before_action :generate_otp, except: [:verify_otp]
+    before_action :generate_otp, except: [:verify_otp, :verify_reset_password_otp, :update_password]
+    before_action :find_by_email, only: [:get_reset_password_otp, :verify_reset_password_otp, :reset_password]
     skip_before_action :require_authenticated_user!
     
     def register_with_email
@@ -50,6 +51,36 @@ module Mammoth::Api::V1
       render json: {data: @user}
     end
 
+    def get_reset_password_otp
+      @user.update(otp_code: @otp_code)
+      Mammoth::Mailer.with(user: @user).reset_password_confirmation.deliver_now
+      render json: {data: @user}
+    end
+
+    def verify_reset_password_otp
+      if @user.otp_code == params[:confirmed_otp_code]
+        render json: {message: 'Reset password OTP verification successed.'}, status: 200
+      else
+        render json: {error: 'Reset password OTP verification failed.'}, status: 422
+      end
+    end
+
+    def reset_password
+      if params[:password].present?
+        @user.update(password: params[:password])
+        @app = doorkeeper_token.application
+        @access_token = Doorkeeper::AccessToken.create!(
+          application: @app,
+          resource_owner_id: @user.id,
+          scopes: @app.scopes,
+          expires_in: Doorkeeper.configuration.access_token_expires_in,
+          use_refresh_token: Doorkeeper.configuration.refresh_token_enabled?
+        )
+        response = Doorkeeper::OAuth::TokenResponse.new(@access_token)
+        render json: {message: 'password updating successed', access_token: JSON.parse(Oj.dump(response.body["access_token"]))}
+      end
+    end
+
     def verify_otp
       @user = User.find(params[:user_id])
       if @user.otp_code == params[:confirmed_otp_code]
@@ -72,6 +103,11 @@ module Mammoth::Api::V1
     end
 
     private
+
+    def find_by_email
+      @user = User.find_by(email: params[:email])
+      raise ActiveRecord::RecordNotFound unless @user
+    end
 
     def generate_otp
       number_array = (1..9).to_a

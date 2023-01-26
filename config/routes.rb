@@ -4,7 +4,10 @@ Mammoth::Engine.routes.draw do
     namespace :v1 do
       post 'register_with_email' => "user_sessions#register_with_email", as: "register_with_email"
       post 'register_with_phone' => "user_sessions#register_with_phone", as: "register_with_phone"
-      put 'verify_otp' => "user_sessions#verify_otp", as: "verify_otp"
+      put  'verify_otp' => "user_sessions#verify_otp", as: "verify_otp"
+      get  'get_reset_password_otp' => 'user_sessions#get_reset_password_otp', as: 'get_reset_password_otp'
+      post 'verify_reset_password_otp' => 'user_sessions#verify_reset_password_otp', as: 'verify_reset_password_otp'
+      put  'reset_password' => 'user_sessions#reset_password', as: 'reset_password'
 
       resources :communities
       resources :community_statuses

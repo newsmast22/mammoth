@@ -11,5 +11,13 @@ module Mammoth
       end
     end
 
+    def reset_password_confirmation
+      @user = params[:user]
+      if @user.present?
+        @subject = "Newsmast: Reset your password"
+        mail(to: @user.email, subject: @subject)
+      end
+    end
+
   end
 end
