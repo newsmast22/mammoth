@@ -20,6 +20,7 @@ Mammoth::Engine.routes.draw do
           get 'suggestion'
         end
       end
+      
       resources :wait_lists do
         collection do
           post 'verify_waitlist' => "wait_lists#verify_waitlist", as: "verify_waitlist"
@@ -30,15 +31,6 @@ Mammoth::Engine.routes.draw do
         end
       end
 
-
-      namespace :mammoth_timelines do
-        resource :home, only: :show, controller: :home
-        resource :public, only: :show, controller: :public
-        # resources :tag, only: :show
-        # resources :list, only: :show
-      end
-
     end
   end
-  
 end
