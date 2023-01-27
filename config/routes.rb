@@ -13,6 +13,8 @@ Mammoth::Engine.routes.draw do
       resources :community_statuses
       resources :user_communities
       resources :collections
+      resources :primany_timelines
+      resources :following_timelines
       resources :users, only: [] do
         collection do
           get 'suggestion'
@@ -27,6 +29,15 @@ Mammoth::Engine.routes.draw do
           get  'get_contributor_roles' => "wait_lists#get_contributor_roles", as: "get_contributor_roles"
         end
       end
+
+
+      namespace :mammoth_timelines do
+        resource :home, only: :show, controller: :home
+        resource :public, only: :show, controller: :public
+        # resources :tag, only: :show
+        # resources :list, only: :show
+      end
+
     end
   end
   
