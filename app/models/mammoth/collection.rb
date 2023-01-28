@@ -4,6 +4,9 @@ module Mammoth
     self.table_name = 'mammoth_collections'
     include Attachmentable
 
+    # attr_accessor :image_data
+    # before_save :decode_base64_image
+
     has_many :communities, class_name: "Mammoth::Community"
 
     IMAGE_LIMIT = 20.megabytes
@@ -23,8 +26,8 @@ module Mammoth
 
       small: {
         pixels: 230_400, # 640x360px
-        file_geometry_parser: FastGeometryParser,
-        blurhash: BLURHASH_OPTIONS,
+        file_geometry_parser: FastGeometryParser
+        #blurhash: BLURHASH_OPTIONS,
       }.freeze,
     }.freeze
 
@@ -61,6 +64,29 @@ module Mammoth
 
     def image_data=(data)
       self.image = {data: data} if data.present?
+    end
+
+    protected
+
+    def decode_base64_image
+      #if image_data && content_type && original_filename
+      if image_data
+        puts image_data
+        decoded_data = Base64.decode64(image_data)
+
+        data = StringIO.new(decoded_data)
+        # data.class_eval do
+        #   attr_accessor :content_type, :original_filename
+        # end
+
+        # data.content_type = 'image/jpeg',
+        # data.original_filename = File.basename(original_filename)
+
+        data.content_type = 'image/jpeg',
+        data.original_filename = File.basename("min-1")
+
+        self.image = data
+      end
     end
 
   end
