@@ -5,9 +5,34 @@ module Mammoth::Api::V1
     def index
       @user = Mammoth::User.find(current_user.id)
       @communities = @user&.communities || []
+      @user_communities = Mammoth::UserCommunity.find_by(user_id: current_user.id,is_primary: true)
+
       
       if @communities.any?
-        render json: @communities
+        data = []
+
+        @communities.each do |community|
+          if community.id == @user_communities.community_id
+            @flag  = true
+          else
+            @flag = false
+          end
+          data << {
+            id: community.id.to_s,
+            is_primary: @flag,
+            name: community.name,
+            slug: community.slug,
+            image_file_name: community.image_file_name,
+            image_content_type: community.image_content_type,
+            image_file_size: community.image_file_size,
+            image_updated_at: community.image_updated_at,
+            description: community.description,
+            collection_id: 3,
+            created_at: community.created_at,
+            updated_at: community.updated_at
+          }
+        end
+        render json: data
       else
         render json: { error: 'no communities found' }
       end
