@@ -1,8 +1,10 @@
 module Mammoth::Api::V1
 	class CommunityStatusesController < Api::BaseController
-		before_action -> { authorize_if_got_token! :read, :'read:statuses' }, except: [:create]
-		before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only:   [:create]
+		before_action -> { authorize_if_got_token! :read, :'read:statuses' }
+		before_action -> { doorkeeper_authorize! :write, :'write:statuses' }
 		before_action :require_user!, only:   [:create]
+		before_action :set_status, only: [:show]
+		
 		def index
 			if params[:community_id].present?
 				@community = Mammoth::Community.find_by(slug: params[:community_id])
@@ -16,6 +18,11 @@ module Mammoth::Api::V1
 				render json: { error: "no statuses found " }
 			end
 		end
+
+		def show
+      @status = cache_collection([@status], Status).first
+      render json: @status, serializer: Mammoth::StatusSerializer
+    end
 
 		def create
 			@status = PostStatusService.new.call(
@@ -44,24 +51,28 @@ module Mammoth::Api::V1
 
     private
 
-			def community_status_params
-				params.require(:community_status).permit(
-					:community_id,
-					:status,
-					:in_reply_to_id,
-					:sensitive,
-					:spoiler_text,
-					:visibility,
-					:language,
-					:scheduled_at,
-					media_ids: [],
-					poll: [
-						:multiple,
-						:hide_totals,
-						:expires_in,
-						options: [],
-					]
-				)
-			end
+		def set_status
+			@status = Status.find(params[:id])
+		end
+
+		def community_status_params
+			params.require(:community_status).permit(
+				:community_id,
+				:status,
+				:in_reply_to_id,
+				:sensitive,
+				:spoiler_text,
+				:visibility,
+				:language,
+				:scheduled_at,
+				media_ids: [],
+				poll: [
+					:multiple,
+					:hide_totals,
+					:expires_in,
+					options: [],
+				]
+			)
+		end
   end
 end
