@@ -8,7 +8,7 @@ module Mammoth::Api::V1
       if statues_ids.any?
         @statuses = Status.where(account_id: statues_ids)
         if @statuses.any?
-          render json: @statuses, each_serializer: REST::StatusSerializer, relationships: StatusRelationshipsPresenter.new(@statuses, current_user&.account_id)
+          render json: @statuses, each_serializer: Mammoth::StatusSerializer, relationships: StatusRelationshipsPresenter.new(@statuses, current_user&.account_id)
         else
           render json: {error: "Record not found"}
         end

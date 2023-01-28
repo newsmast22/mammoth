@@ -8,7 +8,7 @@ module Mammoth::Api::V1
       statues_ids = Mammoth::CommunityStatus.where(community_id: user_communities_ids).pluck(:status_id).map(&:to_i)
       @statuses = Status.where(id: statues_ids).where.not(account_id: current_account.id)
 
-      render json: @statuses, each_serializer: REST::StatusSerializer, relationships: StatusRelationshipsPresenter.new(@statuses, current_user&.account_id)
+      render json: @statuses, each_serializer: Mammoth::StatusSerializer, relationships: StatusRelationshipsPresenter.new(@statuses, current_user&.account_id)
     end
 
   end
