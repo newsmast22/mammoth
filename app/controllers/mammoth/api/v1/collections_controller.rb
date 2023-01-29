@@ -6,7 +6,22 @@ module Mammoth::Api::V1
 
     def index
 			@collections = Mammoth::Collection.all
-			render json: @collections
+			data = []
+			@collections.each do |collection|
+        data << {
+        id: collection.id,
+        name: collection.name,
+        slug: collection.slug,
+        image_file_name: collection.image_file_name,
+        image_content_type: collection.image_content_type,
+        image_file_size: collection.image_file_size,
+        image_updated_at: collection.image_updated_at,
+        created_at: collection.created_at,
+        updated_at: collection.updated_at,
+				image_url: collection.image.url
+        }
+			end
+				render json: data
 		end
 
 		def show
@@ -14,12 +29,34 @@ module Mammoth::Api::V1
 		end
 
 		def create
-			@collection = Mammoth::Collection.new(collection_params)
-			if @collection.save
-				return_collection
+
+			time = Time.new
+
+			@new_status = Mammoth::Collection.new()
+			@new_status.name = collection_params[:name]
+			@new_status.slug = collection_params[:slug]
+			@new_status.save
+
+			unless collection_params[:image_data].nil?
+				content_type = "image/jpg"
+				image = Paperclip.io_adapters.for(collection_params[:image_data])
+				image.original_filename = "collection-#{time.usec.to_s}-#{}.jpg"
+				@new_status.image = image
+				@new_status.save
+			end
+			
+			if @new_status
+				render json: @new_status
 			else
 				render json: {error: 'collection creation failed!'}
 			end
+
+			# @collection = Mammoth::Collection.new(collection_params)
+			# if @collection.save
+			# 	return_collection
+			# else
+			# 	render json: {error: 'collection creation failed!'}
+			# end
 		end
 
     def update
@@ -45,7 +82,7 @@ module Mammoth::Api::V1
 		end
 
 		def collection_params
-			params.require(:collection).permit(:name, :slug, :image)
+			params.require(:collection).permit(:name, :slug, :image_data,:original_filename,:content_type)
 		end
 
   end

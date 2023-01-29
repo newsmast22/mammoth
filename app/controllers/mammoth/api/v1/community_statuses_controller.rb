@@ -4,7 +4,8 @@ module Mammoth::Api::V1
 		before_action -> { doorkeeper_authorize! :write, :'write:statuses' }
 		before_action :require_user!, only:   [:create]
 		before_action :set_status, only: [:show]
-		
+		include Authorization
+
 		def index
 			if params[:community_id].present?
 				@community = Mammoth::Community.find_by(slug: params[:community_id])
@@ -13,7 +14,7 @@ module Mammoth::Api::V1
 				@statuses = Mammoth::Status.all
 			end
 			if @statuses.any?
-				render json: @statuses, each_serializer: REST::StatusSerializer
+				render json: @statuses, each_serializer: Mammoth::StatusSerializer
 			else
 				render json: { error: "no statuses found " }
 			end
@@ -25,7 +26,9 @@ module Mammoth::Api::V1
     end
 
 		def create
-			@status = PostStatusService.new.call(
+			time = Time.new
+
+			@status = Mammoth::PostStatusService.new.call(
 				current_user.account,
 				text: community_status_params[:status],
 				thread: @thread,
@@ -41,11 +44,20 @@ module Mammoth::Api::V1
 				with_rate_limit: true
 			)
 
+			content_type = "image/jpg"
+			image = Paperclip.io_adapters.for(community_status_params[:image_data])
+			image.original_filename = "status-#{time.usec.to_s}-#{}.jpg"
+
 			@community = Mammoth::Community.find_by(slug: community_status_params[:community_id])
-			@community_status = Mammoth::CommunityStatus.create!(
-					status_id: @status.id,
-					community_id: @community.id
-			)
+
+			@community_status = Mammoth::CommunityStatus.new()
+			@community_status.status_id = @status.id
+			@community_status.community_id = @community.id
+			@community_status.save
+			unless community_status_params[:image_data].nil?
+				@community_status.image = image
+				@community_status.save
+			end
 			render json: {message: 'status with community successfully saved!'}
 		end
 
@@ -59,6 +71,7 @@ module Mammoth::Api::V1
 			params.require(:community_status).permit(
 				:community_id,
 				:status,
+				:image_data,
 				:in_reply_to_id,
 				:sensitive,
 				:spoiler_text,
