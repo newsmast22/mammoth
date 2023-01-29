@@ -24,8 +24,8 @@ module Mammoth
 
       small: {
         pixels: 230_400, # 640x360px
-        file_geometry_parser: FastGeometryParser,
-        blurhash: BLURHASH_OPTIONS,
+        file_geometry_parser: FastGeometryParser
+        #blurhash: BLURHASH_OPTIONS,
       }.freeze,
     }.freeze
 
@@ -49,9 +49,10 @@ module Mammoth
     }.freeze
 
   	has_attached_file :image,
-                      styles: THUMBNAIL_STYLES,
-                      processors: [:lazy_thumbnail, :blurhash_transcoder, :color_extractor],
-                      convert_options: GLOBAL_CONVERT_OPTIONS
+                      styles: THUMBNAIL_STYLES
+                      # ,
+                      # processors: [:lazy_thumbnail, :blurhash_transcoder, :color_extractor],
+                      # convert_options: GLOBAL_CONVERT_OPTIONS
 
     validates_attachment_content_type :image, content_type: IMAGE_MIME_TYPES
     validates_attachment_size :image, less_than: IMAGE_LIMIT

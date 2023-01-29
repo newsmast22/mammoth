@@ -4,9 +4,6 @@ module Mammoth
     self.table_name = 'mammoth_collections'
     include Attachmentable
 
-    # attr_accessor :image_data
-    # before_save :decode_base64_image
-
     has_many :communities, class_name: "Mammoth::Community"
 
     IMAGE_LIMIT = 20.megabytes
@@ -50,44 +47,15 @@ module Mammoth
       all: '-quality 90 +profile "!icc,*" +set modify-date +set create-date',
     }.freeze
 
-  	has_attached_file :image,
-                      styles: THUMBNAIL_STYLES,
-                      processors: [:lazy_thumbnail, :blurhash_transcoder, :color_extractor],
-                      convert_options: GLOBAL_CONVERT_OPTIONS
+  	has_attached_file :image, styles: THUMBNAIL_STYLES,
+    processors: [:lazy_thumbnail]
+    # ,
+    #                   styles: THUMBNAIL_STYLES,
+    #                   processors: [:lazy_thumbnail, :blurhash_transcoder, :color_extractor],
+    #                   convert_options: GLOBAL_CONVERT_OPTIONS
 
     validates_attachment_content_type :image, content_type: IMAGE_MIME_TYPES
     validates_attachment_size :image, less_than: IMAGE_LIMIT
-
-    def image_name=(name)
-      self.image_file_name = name if name.present?
-    end
-
-    def image_data=(data)
-      self.image = {data: data} if data.present?
-    end
-
-    protected
-
-    def decode_base64_image
-      #if image_data && content_type && original_filename
-      if image_data
-        puts image_data
-        decoded_data = Base64.decode64(image_data)
-
-        data = StringIO.new(decoded_data)
-        # data.class_eval do
-        #   attr_accessor :content_type, :original_filename
-        # end
-
-        # data.content_type = 'image/jpeg',
-        # data.original_filename = File.basename(original_filename)
-
-        data.content_type = 'image/jpeg',
-        data.original_filename = File.basename("min-1")
-
-        self.image = data
-      end
-    end
 
   end
 end

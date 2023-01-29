@@ -5,13 +5,46 @@ module Mammoth::Api::V1
 		before_action :set_community, only: %i[show update destroy]
 
 		def index
+			data = []
 			if params[:collection_id].nil?
 				@communities = Mammoth::Community.all
+				@communities.each do |community|
+					data << {
+						id: community.id,
+						name: community.name,
+						slug: community.slug,
+						image_file_name: community.image_file_name,
+						image_content_type: community.image_content_type,
+						image_file_size: community.image_file_size,
+						image_updated_at: community.image_updated_at,
+						description: community.description,
+						image_url: community.image.url,
+						collection_id: community.collection_id,
+						created_at: community.created_at,
+						updated_at: community.updated_at
+					}
+				end
 			else
 				@collection  = Mammoth::Collection.find_by(slug: params[:collection_id])
 				@communities = @collection.communities
+				@communities.each do |community|
+					data << {
+						id: community.id,
+						name: community.name,
+						slug: community.slug,
+						image_file_name: community.image_file_name,
+						image_content_type: community.image_content_type,
+						image_file_size: community.image_file_size,
+						image_updated_at: community.image_updated_at,
+						description: community.description,
+						image_url: community.image.url,
+						collection_id: community.collection_id,
+						created_at: community.created_at,
+						updated_at: community.updated_at
+					}
+				end
 			end
-			render json: @communities
+			render json: data
 		end
 
 		def show
@@ -19,14 +52,35 @@ module Mammoth::Api::V1
 		end
 
 		def create
+			time = Time.new
+
 			collection = Mammoth::Collection.find_by(slug: community_params[:collection_id])
-			@community = Mammoth::Community.new(community_params)
+			@community = Mammoth::Community.new()
+			@community.name = community_params[:name]
+			@community.slug = community_params[:slug]
+			@community.description = community_params[:description]
 			@community.collection_id = collection.id
-			if @community.save
-				return_community
+			@community.save
+
+			unless community_params[:image_data].nil?
+				content_type = "image/jpg"
+				image = Paperclip.io_adapters.for(community_params[:image_data])
+				image.original_filename = "community-#{time.usec.to_s}-#{}.jpg"
+				@community.image = image
+				@community.save
+			end
+
+			if @community
+				render json: @community
 			else
 				render json: {error: 'community creation failed!'}
 			end
+
+			# if @community.save
+			# 	return_community
+			# else
+			# 	render json: {error: 'community creation failed!'}
+			# end
 		end
 
 		def update

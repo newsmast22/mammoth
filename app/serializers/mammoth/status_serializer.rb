@@ -6,7 +6,7 @@ class Mammoth::StatusSerializer < ActiveModel::Serializer
   attributes :id,:community_id,:community_name,:community_slug,:created_at, :in_reply_to_id, :in_reply_to_account_id,
              :sensitive, :spoiler_text, :visibility, :language,
              :uri, :url, :replies_count, :reblogs_count,
-             :favourites_count, :edited_at
+             :favourites_count, :edited_at,:image_url
 
   attribute :favourited, if: :current_user?
   attribute :reblogged, if: :current_user?
@@ -44,6 +44,11 @@ class Mammoth::StatusSerializer < ActiveModel::Serializer
   def community_id
     community_id =  Mammoth::CommunityStatus.find_by(status_id: object.id)
     community_id.community.id
+  end
+
+  def image_url 
+    community_id =  Mammoth::CommunityStatus.find_by(status_id: object.id)
+    community_id.image.url
   end
 
 
