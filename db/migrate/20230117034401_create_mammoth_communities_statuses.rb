@@ -3,7 +3,6 @@ class CreateMammothCommunitiesStatuses < ActiveRecord::Migration[6.1]
     create_table :mammoth_communities_statuses do |t|
       t.references :community, null: false, foreign_key: {to_table: :mammoth_communities}
       t.references :status, null: false, foreign_key: true
-      t.attachment :image
       t.timestamps
     end
   end
