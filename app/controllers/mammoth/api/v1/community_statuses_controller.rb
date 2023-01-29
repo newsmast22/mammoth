@@ -2,8 +2,10 @@ module Mammoth::Api::V1
 	class CommunityStatusesController < Api::BaseController
 		before_action -> { authorize_if_got_token! :read, :'read:statuses' }
 		before_action -> { doorkeeper_authorize! :write, :'write:statuses' }
-		before_action :require_user!, only:   [:create]
+		before_action :require_user!, only: [:create]
 		before_action :set_status, only: [:show]
+		before_action :set_thread, only: [:create]
+
 		include Authorization
 
 		def index
@@ -65,6 +67,13 @@ module Mammoth::Api::V1
 
 		def set_status
 			@status = Status.find(params[:id])
+		end
+
+		def set_thread
+			@thread = Status.find(community_status_params[:in_reply_to_id]) if community_status_params[:in_reply_to_id].present?
+			authorize(@thread, :show?) if @thread.present?
+		  rescue ActiveRecord::RecordNotFound, Mastodon::NotPermittedError
+			render json: { error: I18n.t('statuses.errors.in_reply_not_found') }, status: 404
 		end
 
 		def community_status_params
