@@ -25,6 +25,7 @@ module Mammoth::Api::V1
 					}
 				end
 			else
+				user_communities_ids  = Mammoth::User.find(current_user.id).user_communities.pluck(:community_id).map(&:to_i)
 				@collection  = Mammoth::Collection.find_by(slug: params[:collection_id])
 				@communities = @collection.communities
 				@communities.each do |community|
@@ -32,6 +33,7 @@ module Mammoth::Api::V1
 						id: community.id,
 						name: community.name,
 						slug: community.slug,
+						is_joined: user_communities_ids.include?(community.id), 
 						image_file_name: community.image_file_name,
 						image_content_type: community.image_content_type,
 						image_file_size: community.image_file_size,
@@ -53,7 +55,6 @@ module Mammoth::Api::V1
 
 		def create
 			time = Time.new
-
 			collection = Mammoth::Collection.find_by(slug: community_params[:collection_id])
 			@community = Mammoth::Community.new()
 			@community.name = community_params[:name]
@@ -69,7 +70,6 @@ module Mammoth::Api::V1
 				@community.image = image
 				@community.save
 			end
-
 			if @community
 				render json: @community
 			else
