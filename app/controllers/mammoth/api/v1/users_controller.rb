@@ -14,6 +14,7 @@ module Mammoth::Api::V1
           account_id: user.account_id.to_s,
           is_followed: account_followed.include?(user.account_id), 
           user_id: user.id.to_s,
+          username: user.account.username,
           display_name: user.account.display_name.presence || user.account.username,
           email: user.email
         }
