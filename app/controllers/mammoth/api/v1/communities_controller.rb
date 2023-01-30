@@ -75,12 +75,6 @@ module Mammoth::Api::V1
 			else
 				render json: {error: 'community creation failed!'}
 			end
-
-			# if @community.save
-			# 	return_community
-			# else
-			# 	render json: {error: 'community creation failed!'}
-			# end
 		end
 
 		def update

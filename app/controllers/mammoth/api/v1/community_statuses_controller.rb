@@ -29,7 +29,6 @@ module Mammoth::Api::V1
 
 		def create
 			time = Time.new
-
 			@status = Mammoth::PostStatusService.new.call(
 				current_user.account,
 				text: community_status_params[:status],
@@ -74,6 +73,19 @@ module Mammoth::Api::V1
 				@community_status.save
 			end
 			render json: {message: 'status with community successfully saved!'}
+		end
+
+		def get_community_statues
+			community = Mammoth::Community.find_by(slug: params[:id])
+			community_statuses = Mammoth::CommunityStatus.where(community_id: community.id)
+			community_followed_user_counts = Mammoth::UserCommunity.where(community_id: community.id).size
+			unless community_statuses.empty?
+				community_statues_ids= community_statuses.pluck(:status_id).map(&:to_i)
+				@statuses = Status.where(id: community_statues_ids)
+				render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, adapter: :json, meta: { community_followed_user_counts: community_followed_user_counts }
+			else
+				render json: {error: "Record not found"}
+			end
 		end
 
     private
