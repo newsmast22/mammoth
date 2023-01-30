@@ -32,23 +32,40 @@ class Mammoth::StatusSerializer < ActiveModel::Serializer
 
 
   def community_name
-    community_id =  Mammoth::CommunityStatus.find_by(status_id: object.id)
-    community_id.community.name
+    community_status =  Mammoth::CommunityStatus.where(status_id: object.id).last
+    if community_status.present?
+      community_status.community.name
+    else
+      ""
+    end
   end
 
   def community_slug
-    community_id =  Mammoth::CommunityStatus.find_by(status_id: object.id)
-    community_id.community.slug
+    community_status =  Mammoth::CommunityStatus.where(status_id: object.id).last
+    if community_status.present?
+      community_status.community.slug
+    else
+      ""
+    end
   end
 
   def community_id
-    community_id =  Mammoth::CommunityStatus.find_by(status_id: object.id)
-    community_id.community.id
+    community_status =  Mammoth::CommunityStatus.where(status_id: object.id).last
+    if community_status.present?
+      community_status.community.id
+    else
+      ""
+    end
   end
 
   def image_url 
-    community_id =  Mammoth::CommunityStatus.find_by(status_id: object.id)
-    community_id.image.url
+    community_status =  Mammoth::CommunityStatus.where(status_id: object.id).last
+    if community_status.present?
+      community_status.image.url
+    else
+      ""
+    end
+    
   end
 
 

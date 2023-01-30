@@ -2,11 +2,11 @@ module Mammoth::Api::V1
 	class UserCommunitiesController < Api::BaseController
 		before_action :require_authenticated_user!
     before_action -> { doorkeeper_authorize! :write, :read }
+
     def index
       @user = Mammoth::User.find(current_user.id)
       @communities = @user&.communities || []
       @user_communities = Mammoth::UserCommunity.find_by(user_id: current_user.id,is_primary: true)
-
       
       if @communities.any?
         data = []
@@ -53,6 +53,21 @@ module Mammoth::Api::V1
       end
 	    render json: {message: 'User with community successfully saved!'}
 		end
+
+    def join_community
+      @community = Mammoth::Community.find_by(slug: params[:community_id])
+      @join_list = Mammoth::UserCommunity.where(community_id: params[:community_id], user_id: current_user.id).last
+      if @join_list.nil?
+        Mammoth::UserCommunity.create!(
+          user_id: current_user.id,
+          community_id: params[:community_id]
+        )
+        render json: {message: 'User with community successfully joined!'}
+      else
+        @join_list.destroy_all
+        render json: {message: 'User with community successfully unjoied!'}
+      end
+    end
 
     private
 
