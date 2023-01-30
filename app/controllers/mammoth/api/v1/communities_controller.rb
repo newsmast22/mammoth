@@ -84,10 +84,23 @@ module Mammoth::Api::V1
 		end
 
 		def update
-			if @community.update(community_params)
-				return_community
+			time = Time.new
+			@community.name = community_params[:name]
+			@community.description = community_params[:description]
+			@community.save
+
+			unless community_params[:image_data].nil?
+				content_type = "image/jpg"
+				image = Paperclip.io_adapters.for(community_params[:image_data])
+				image.original_filename = "community-#{time.usec.to_s}-#{}.jpg"
+				@community.image = image
+				@community.save
+			end
+
+			if @community
+				render json: @community
 			else
-				render json: {error: 'community creation failed!'}
+				render json: {error: 'community update failed!'}
 			end
 		end
 

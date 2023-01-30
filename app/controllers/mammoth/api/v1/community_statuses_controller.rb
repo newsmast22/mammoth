@@ -50,11 +50,15 @@ module Mammoth::Api::V1
 			image = Paperclip.io_adapters.for(community_status_params[:image_data])
 			image.original_filename = "status-#{time.usec.to_s}-#{}.jpg"
 
-			@community = Mammoth::Community.find_by(slug: community_status_params[:community_id])
+			if @thread.nil?
+				@community = Mammoth::Community.find_by(slug: community_status_params[:community_id]).id
+			else
+				@community = Mammoth::CommunityStatus.find_by(status_id: @thread.id).community_id
+			end
 
 			@community_status = Mammoth::CommunityStatus.new()
 			@community_status.status_id = @status.id
-			@community_status.community_id = @community.id
+			@community_status.community_id = @community
 			@community_status.save
 			unless community_status_params[:image_data].nil?
 				@community_status.image = image
