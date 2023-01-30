@@ -5,14 +5,21 @@ module Mammoth::Api::V1
 
     def verify_waitlist
       if wait_lists_params[:invitation_code].present?
-        verified_code = Mammoth::WaitList.find_by(invitation_code: wait_lists_params[:invitation_code])
+        verified_code = Mammoth::WaitList.where(invitation_code: wait_lists_params[:invitation_code]).last
+        unless verified_code.nil?
           if verified_code.invitation_code == wait_lists_params[:invitation_code]
-            verified_code.update(is_invitation_code_used: true)
-            render json: {message: 'Successfully verified.'} 
+            if verified_code.is_invitation_code_used == true
+              render json: {error: 'Invation code is already used.'} 
+            else
+              verified_code.update(is_invitation_code_used: true)
+              render json: {message: 'Successfully verified.'} 
+            end
           else
-            render json: {error: 'Unsuccessfully verified.'} 
+            render json: {error: 'Invalid code.'} 
+          end
+        else
+          render json: {error: 'Invalid code.'} 
         end
-         
       end
     end
 
