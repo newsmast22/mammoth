@@ -56,15 +56,15 @@ module Mammoth::Api::V1
 
     def join_community
       @community = Mammoth::Community.find_by(slug: params[:community_id])
-      @join_list = Mammoth::UserCommunity.where(community_id: params[:community_id], user_id: current_user.id).last
-      if @join_list.nil?
+      @joined_user_community = Mammoth::UserCommunity.where(community_id: @community.id, user_id: current_user.id).last
+      unless @joined_user_community.present?
         Mammoth::UserCommunity.create!(
           user_id: current_user.id,
-          community_id: params[:community_id]
+          community_id: @community.id
         )
         render json: {message: 'User with community successfully joined!'}
       else
-        @join_list.destroy_all
+        @joined_user_community.destroy
         render json: {message: 'User with community successfully unjoied!'}
       end
     end

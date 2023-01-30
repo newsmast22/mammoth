@@ -10,9 +10,25 @@ Mammoth::Engine.routes.draw do
       put  'reset_password' => 'user_sessions#reset_password', as: 'reset_password'
 
       resources :communities
-      resources :community_statuses
-      resources :user_communities
-      resources :collections
+
+      resources :community_statuses do
+        collection do
+          get  'get_community_statues' => 'community_statuses#get_community_statues', as: 'get_community_statues'
+        end
+      end
+
+      resources :user_communities do
+        collection do
+          post  'join_community' => "user_communities#join_community", as: "join_community"
+        end
+      end
+
+      resources :collections do
+        collection do
+          get  'get_collection_by_user' => "collections#get_collection_by_user", as: "get_collection_by_user"
+        end
+      end
+      
       resources :primany_timelines
       resources :following_timelines
       resources :users, only: [] do
