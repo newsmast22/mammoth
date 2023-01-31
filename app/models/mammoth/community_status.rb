@@ -6,7 +6,7 @@ module Mammoth
     belongs_to :community 
     belongs_to :status
 
-    IMAGE_LIMIT = 20.megabytes
+    IMAGE_LIMIT = 100.megabytes
 
     IMAGE_MIME_TYPES = %w(image/jpeg image/png image/gif image/heic image/heif image/webp image/avif).freeze
 
