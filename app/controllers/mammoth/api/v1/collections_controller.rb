@@ -76,11 +76,28 @@ module Mammoth::Api::V1
 		end
 
     def update
-			if @collection.update(collection_params)
-				return_collection
-			else
-				render json: {error: 'collection update failed!'}
+			time = Time.new
+			@collection.name = collection_params[:name]
+			@collection.save
+
+			unless collection_params[:image_data].nil?
+				content_type = "image/jpg"
+				image = Paperclip.io_adapters.for(collection_params[:image_data])
+				image.original_filename = "collection-#{time.usec.to_s}-#{}.jpg"
+				@collection.image = image
+				@collection.save
 			end
+
+			if @collection
+				render json: @collection
+			else
+				render json: {error: 'community update failed!'}
+			end
+			# if @collection.update(collection_params)
+			# 	return_collection
+			# else
+			# 	render json: {error: 'collection update failed!'}
+			# end
 		end
 
 		def destroy
@@ -98,7 +115,7 @@ module Mammoth::Api::V1
 		end
 
 		def collection_params
-			params.require(:collection).permit(:name, :slug, :image_data,:original_filename,:content_type)
+			params.require(:collection).permit(:name, :slug, :image_data)
 		end
 
   end
