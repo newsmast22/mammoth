@@ -37,6 +37,7 @@ Mammoth::Engine.routes.draw do
       resources :users, only: [] do
         collection do
           get 'suggestion'
+          patch :update_credentials, to: 'users#update'
         end
       end
       
