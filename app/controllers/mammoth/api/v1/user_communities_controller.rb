@@ -10,16 +10,10 @@ module Mammoth::Api::V1
       
       if @communities.any?
         data = []
-
         @communities.each do |community|
-          if community.id == @user_communities.community_id
-            @flag  = true
-          else
-            @flag = false
-          end
           data << {
             id: community.id.to_s,
-            is_primary: @flag,
+            is_primary: community.id == @user_communities.community_id ? true : false,
             name: community.name,
             slug: community.slug,
             image_file_name: community.image_file_name,

@@ -25,9 +25,11 @@ module Mammoth::Api::V1
 					}
 				end
 			else
-				user_communities_ids  = Mammoth::User.find(current_user.id).user_communities.pluck(:community_id).map(&:to_i)
+				@user_communities = Mammoth::User.find(current_user.id).user_communities
+				user_communities_ids  = @user_communities.pluck(:community_id).map(&:to_i)
+				primary_community =  @user_communities.where(is_primary: true).last
 				@collection  = Mammoth::Collection.find_by(slug: params[:collection_id])
-				@communities = @collection.communities
+				@communities = @collection.communities.where.not(id: primary_community.community_id)
 				@communities.each do |community|
 					data << {
 						id: community.id,
@@ -46,7 +48,7 @@ module Mammoth::Api::V1
 					}
 				end
 			end
-			render json: data
+			render json: @communities
 		end
 
 		def show

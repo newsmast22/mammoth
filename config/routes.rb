@@ -15,6 +15,9 @@ Mammoth::Engine.routes.draw do
         collection do
           get  'get_community_statues' => 'community_statuses#get_community_statues', as: 'get_community_statues'
         end
+        member do
+          get :context
+        end
       end
 
       resources :user_communities do

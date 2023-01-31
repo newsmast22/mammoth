@@ -2,11 +2,44 @@ module Mammoth::Api::V1
 	class CommunityStatusesController < Api::BaseController
 		before_action -> { authorize_if_got_token! :read, :'read:statuses' }
 		before_action -> { doorkeeper_authorize! :write, :'write:statuses' }
-		before_action :require_user!, only: [:create]
-		before_action :set_status, only: [:show]
+		before_action :require_user!, except: [:show, :context]
+    before_action :set_status, only: [:show, :context]
 		before_action :set_thread, only: [:create]
 
 		include Authorization
+
+		# This API was originally unlimited, pagination cannot be introduced without
+		# breaking backwards-compatibility. Arbitrarily high number to cover most
+		# conversations as quasi-unlimited, it would be too much work to render more
+		# than this anyway
+		CONTEXT_LIMIT = 4_096
+
+		# This remains expensive and we don't want to show everything to logged-out users
+		ANCESTORS_LIMIT         = 40
+		DESCENDANTS_LIMIT       = 60
+		DESCENDANTS_DEPTH_LIMIT = 20
+
+		def context
+			ancestors_limit         = CONTEXT_LIMIT
+			descendants_limit       = CONTEXT_LIMIT
+			descendants_depth_limit = nil
+	
+			if current_account.nil?
+				ancestors_limit         = ANCESTORS_LIMIT
+				descendants_limit       = DESCENDANTS_LIMIT
+				descendants_depth_limit = DESCENDANTS_DEPTH_LIMIT
+			end
+	
+			ancestors_results   = @status.in_reply_to_id.nil? ? [] : @status.ancestors(ancestors_limit, current_account)
+			descendants_results = @status.descendants(descendants_limit, current_account, descendants_depth_limit)
+			loaded_ancestors    = cache_collection(ancestors_results, Status)
+			loaded_descendants  = cache_collection(descendants_results, Status)
+	
+			@context = Context.new(ancestors: loaded_ancestors, descendants: loaded_descendants)
+			statuses = [@status] + @context.ancestors + @context.descendants
+	
+			render json: @context, serializer: Mammoth::ContextSerializer, relationships: StatusRelationshipsPresenter.new(statuses, current_user&.account_id)
+		end
 
 		def index
 			if params[:community_id].present?
@@ -51,22 +84,18 @@ module Mammoth::Api::V1
 
 			if community_status_params[:community_id].nil?
 				@user_community = Mammoth::UserCommunity.find_by(user_id: current_user.id, is_primary: true).community
-				@community = @user_community.id
-			end
-
-			if @thread.nil?
-				unless community_status_params[:community_id].nil?
-					@community = Mammoth::Community.find_by(slug: community_status_params[:community_id]).id
-				else
-					@community = Mammoth::Community.find_by(slug: @user_community.slug).id
-				end
+				@community_id = @user_community.id
 			else
-				@community = Mammoth::CommunityStatus.find_by(status_id: @thread.id).community_id
+				@community_id = Mammoth::Community.find_by(slug: community_status_params[:community_id]).id
 			end
 
+			unless @thread.nil?
+				@community_id = Mammoth::CommunityStatus.find_by(status_id: @thread.id).community_id
+			end
+ 
 			@community_status = Mammoth::CommunityStatus.new()
 			@community_status.status_id = @status.id
-			@community_status.community_id = @community
+			@community_status.community_id = @community_id
 			@community_status.save
 			unless community_status_params[:image_data].nil?
 				@community_status.image = image
