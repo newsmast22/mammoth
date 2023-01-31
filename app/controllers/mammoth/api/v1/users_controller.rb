@@ -42,7 +42,11 @@ module Mammoth::Api::V1
       UserSettingsDecorator.new(current_user).update(user_settings_params) if user_settings_params
       ActivityPub::UpdateDistributionWorker.perform_async(@account.id)
       render json: @account, serializer: Mammoth::CredentialAccountSerializer
-      #, serializer: REST::CredentialAccountSerializer
+    end
+
+    def logout
+      Doorkeeper::AccessToken.find_by(resource_owner_id: current_user.id).destroy
+      render json: {message: 'logout successed'}
     end
 
     private
