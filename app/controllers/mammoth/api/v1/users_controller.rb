@@ -1,6 +1,6 @@
 module Mammoth::Api::V1
   class UsersController < Api::BaseController
-    before_action -> { doorkeeper_authorize! :read }
+		before_action -> { doorkeeper_authorize! :read , :write}
     before_action :require_user!
 
     def suggestion
@@ -20,6 +20,57 @@ module Mammoth::Api::V1
         }
       end
       render json: {data: data}
+    end
+
+    def update
+      time = Time.new
+      unless params[:avatar].nil?
+				content_type = "image/jpg"
+				image = Paperclip.io_adapters.for(params[:avatar])
+				image.original_filename = "avatar-#{time.usec.to_s}-#{}.jpg"
+				params[:avatar] = image
+			end
+
+      unless params[:header].nil?
+        content_type = "image/jpg"
+				image = Paperclip.io_adapters.for(params[:header])
+				image.original_filename = "header-#{time.usec.to_s}-#{}.jpg"
+				params[:header] = image
+      end
+      @account = current_account
+      UpdateAccountService.new.call(@account, account_params, raise_error: true)
+      UserSettingsDecorator.new(current_user).update(user_settings_params) if user_settings_params
+      ActivityPub::UpdateDistributionWorker.perform_async(@account.id)
+      render json: @account, serializer: Mammoth::CredentialAccountSerializer
+      #, serializer: REST::CredentialAccountSerializer
+    end
+
+    private
+
+    def account_params
+      params.permit(
+        :display_name,
+        :note,
+        :avatar,
+        :header,
+        :locked,
+        :bot,
+        :discoverable,
+        :hide_collections,
+        fields_attributes: [:name, :value]
+      )
+    end
+
+    def user_settings_params
+      return nil if params[:source].blank?
+  
+      source_params = params.require(:source)
+  
+      {
+        'setting_default_privacy' => source_params.fetch(:privacy, @account.user.setting_default_privacy),
+        'setting_default_sensitive' => source_params.fetch(:sensitive, @account.user.setting_default_sensitive),
+        'setting_default_language' => source_params.fetch(:language, @account.user.setting_default_language),
+      }
     end
 
   end
