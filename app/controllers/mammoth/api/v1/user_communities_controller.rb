@@ -48,7 +48,7 @@ module Mammoth::Api::V1
 	    render json: {message: 'User with community successfully saved!'}
 		end
 
-    def join_community
+    def join_unjoin_community
       @community = Mammoth::Community.find_by(slug: params[:community_id])
       @joined_user_community = Mammoth::UserCommunity.where(community_id: @community.id, user_id: current_user.id).last
       unless @joined_user_community.present?

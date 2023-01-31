@@ -28,27 +28,29 @@ module Mammoth::Api::V1
 				@user_communities = Mammoth::User.find(current_user.id).user_communities
 				user_communities_ids  = @user_communities.pluck(:community_id).map(&:to_i)
 				primary_community =  @user_communities.where(is_primary: true).last
-				@collection  = Mammoth::Collection.find_by(slug: params[:collection_id])
-				@communities = @collection.communities.where.not(id: primary_community.community_id)
-				@communities.each do |community|
-					data << {
-						id: community.id,
-						name: community.name,
-						slug: community.slug,
-						is_joined: user_communities_ids.include?(community.id), 
-						image_file_name: community.image_file_name,
-						image_content_type: community.image_content_type,
-						image_file_size: community.image_file_size,
-						image_updated_at: community.image_updated_at,
-						description: community.description,
-						image_url: community.image.url,
-						collection_id: community.collection_id,
-						created_at: community.created_at,
-						updated_at: community.updated_at
-					}
+				@collection  = Mammoth::Collection.where(slug: params[:collection_id]).last
+				unless @collection.nil?
+					@communities = @collection.communities.where.not(id: primary_community.community_id)
+					@communities.each do |community|
+						data << {
+							id: community.id,
+							name: community.name,
+							slug: community.slug,
+							is_joined: user_communities_ids.include?(community.id), 
+							image_file_name: community.image_file_name,
+							image_content_type: community.image_content_type,
+							image_file_size: community.image_file_size,
+							image_updated_at: community.image_updated_at,
+							description: community.description,
+							image_url: community.image.url,
+							collection_id: community.collection_id,
+							created_at: community.created_at,
+							updated_at: community.updated_at
+						}
+					end
 				end
 			end
-			render json: @communities
+			render json: data
 		end
 
 		def show
