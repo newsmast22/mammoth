@@ -22,7 +22,7 @@ Mammoth::Engine.routes.draw do
 
       resources :user_communities do
         collection do
-          post  'join_community' => "user_communities#join_community", as: "join_community"
+          post  'join_unjoin_community' => "user_communities#join_unjoin_community", as: "join_unjoin_community"
         end
       end
 
