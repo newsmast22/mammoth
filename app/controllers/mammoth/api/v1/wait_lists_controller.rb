@@ -5,9 +5,10 @@ module Mammoth::Api::V1
 
     def verify_waitlist
       if wait_lists_params[:invitation_code].present?
-        verified_code = Mammoth::WaitList.where(invitation_code: wait_lists_params[:invitation_code]).last
+        validation_code = wait_lists_params[:invitation_code].downcase
+        verified_code = Mammoth::WaitList.where(invitation_code: validation_code).last
         unless verified_code.nil?
-          if verified_code.invitation_code == wait_lists_params[:invitation_code]
+          if verified_code.invitation_code == validation_code
               verified_code.update(is_invitation_code_used: true)
               render json: {message: 'Successfully verified.'} 
           else
