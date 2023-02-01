@@ -39,6 +39,7 @@ Mammoth::Engine.routes.draw do
           get 'suggestion'
           patch :update_credentials, to: 'users#update'
           post 'logout'
+          get :show_details, to: 'users#show'
         end
       end
       

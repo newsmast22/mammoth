@@ -44,6 +44,11 @@ module Mammoth::Api::V1
       render json: @account, serializer: Mammoth::CredentialAccountSerializer
     end
 
+    def show
+      @account = current_account
+      render json: @account, serializer: Mammoth::CredentialAccountSerializer
+    end
+
     def logout
       Doorkeeper::AccessToken.where(resource_owner_id: current_user.id).destroy_all
       render json: {message: 'logout successed'}
