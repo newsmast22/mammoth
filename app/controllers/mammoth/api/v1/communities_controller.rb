@@ -48,6 +48,10 @@ module Mammoth::Api::V1
 							updated_at: community.updated_at
 						}
 					end
+					data << {
+						collection_image_url: @collection.image.url,
+						collection_name: @collection.name
+					}
 				end
 			end
 			render json: data

@@ -93,11 +93,6 @@ module Mammoth::Api::V1
 			else
 				render json: {error: 'community update failed!'}
 			end
-			# if @collection.update(collection_params)
-			# 	return_collection
-			# else
-			# 	render json: {error: 'collection update failed!'}
-			# end
 		end
 
 		def destroy
