@@ -6,11 +6,13 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
 
   attributes :id, :username, :acct, :display_name, :locked, :bot, :discoverable, :group, :created_at,
              :note, :url, :avatar, :avatar_static, :header, :header_static,
-             :followers_count, :following_count, :statuses_count, :last_status_at
+             :followers_count, :following_count, :statuses_count, :last_status_at,:collection,:community
 
   has_one :moved_to_account, key: :moved, serializer: REST::AccountSerializer, if: :moved_and_not_nested?
 
   has_many :emojis, serializer: REST::CustomEmojiSerializer
+
+  #has_many :statues,each_serializer: Mammoth::StatusSerializer
 
   attribute :suspended, if: :suspended?
   attribute :silenced, key: :limited, if: :silenced?
@@ -34,6 +36,32 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
 
   def acct
     object.pretty_acct
+  end
+
+  def collection
+    object.user.id
+    user  = Mammoth::User.find(object.user.id)
+		user_communities= user.user_communities
+		count = 0
+		unless user_communities.empty?
+      ids = user_communities.pluck(:community_id).map(&:to_i)
+			collections = Mammoth::Collection.joins(:communities).where(communities: { id: ids }).distinct
+      count = collections.size
+    else
+      count
+    end
+  end
+
+  def community
+    @user = Mammoth::User.find(object.user.id)
+    @communities = @user&.communities || []
+    count = 0
+    if @communities.any?
+      count = @communities.size
+    else
+      count
+    end
+    
   end
 
   def note

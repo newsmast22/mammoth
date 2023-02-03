@@ -40,6 +40,7 @@ Mammoth::Engine.routes.draw do
           patch :update_credentials, to: 'users#update'
           post 'logout'
           get :show_details, to: 'users#show'
+          get  'get_user_profile_details' => "users#get_user_profile_details", as: "get_user_profile_details"
         end
       end
       
