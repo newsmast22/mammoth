@@ -6,7 +6,7 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
 
   attributes :id, :username, :acct, :display_name, :locked, :bot, :discoverable, :group, :created_at,
              :note, :url, :avatar, :avatar_static, :header, :header_static,
-             :followers_count, :following_count, :statuses_count, :last_status_at,:collection,:community
+             :followers_count, :following_count, :statuses_count, :last_status_at,:collection_count,:community_count
 
   has_one :moved_to_account, key: :moved, serializer: REST::AccountSerializer, if: :moved_and_not_nested?
 
@@ -38,7 +38,7 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
     object.pretty_acct
   end
 
-  def collection
+  def collection_count
     object.user.id
     user  = Mammoth::User.find(object.user.id)
 		user_communities= user.user_communities
@@ -52,7 +52,7 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
     end
   end
 
-  def community
+  def community_count
     @user = Mammoth::User.find(object.user.id)
     @communities = @user&.communities || []
     count = 0

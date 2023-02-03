@@ -41,26 +41,12 @@ module Mammoth::Api::V1
 
     def get_user_profile_details
       @account = current_account
-      #render json: @account.user.id
-      @statues = Status.where(account_id: current_account.id, reply: false)
-      #if @statues.any?
-        #render json: @account,root: 'account_data', serializer: Mammoth::CredentialAccountSerializer, adapter: :json
-       # @statuses,root: 'statues_data', each_serializer: Mammoth::StatusSerializer, adapter: :json
-
-      #end
-      
-      #render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, adapter: :json, 
-				# meta: { 
-				# 	community_followed_user_counts: community_followed_user_counts,
-				# 	community_name: community.name,
-				# 	community_description: community.description,
-				# 	community_url: community.image.url 
-				# 	}
-     # render json: @account, serializer: Mammoth::CredentialAccountSerializer
-     #result = single_serialize(@account, Mammoth::CredentialAccountSerializer).merge
-    #  (multiple_serialize(@statues, Mammoth::StatusSerializer))
-    #result = multiple_serialize(@statues, Mammoth::StatusSerializer)
-  render json: @statues, each_serializer: Mammoth::StatusSerializer
+      @statuses = Status.where(account_id: @account.id, reply: false)
+      account_data = single_serialize(@account, Mammoth::CredentialAccountSerializer)
+      render json: @statuses,root: 'statuses_data', each_serializer: Mammoth::StatusSerializer,adapter: :json,
+      meta:{
+      account_data: account_data
+      }
     end
 
     def show
@@ -105,17 +91,8 @@ module Mammoth::Api::V1
       ActiveModelSerializers::SerializableResource.new(
         collection,
         serializer: serializer,
-        adapter: adapter,
-        root: 'statues_data'
-      ).as_json
-    end
-
-    def multiple_serialize(collection, adapter = :json)
-      ActiveModelSerializers::SerializableResource.new(
-        collection,
-        each_serializer: Mammoth::StatusSerializer,
         adapter: adapter
-      ).as_json
+        ).as_json
     end
 
   end
