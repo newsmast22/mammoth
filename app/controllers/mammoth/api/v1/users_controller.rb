@@ -30,6 +30,7 @@ module Mammoth::Api::V1
 				image.original_filename = "avatar-#{time.usec.to_s}-#{}.jpg"
 				params[:avatar] = image
 			end
+      Rails.logger.info "Avatar param: #{params[:avatar]}"
 
       unless params[:header].nil?
         content_type = "image/jpg"
@@ -37,6 +38,8 @@ module Mammoth::Api::V1
 				image.original_filename = "header-#{time.usec.to_s}-#{}.jpg"
 				params[:header] = image
       end
+      Rails.logger.info "Header param: #{params[:header]}"
+      Rails.logger.info "Account params: #{account_params}"
       @account = current_account
       UpdateAccountService.new.call(@account, account_params, raise_error: true)
       UserSettingsDecorator.new(current_user).update(user_settings_params) if user_settings_params
