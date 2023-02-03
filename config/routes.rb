@@ -28,7 +28,7 @@ Mammoth::Engine.routes.draw do
 
       resources :collections do
         collection do
-          get  'get_collection_by_user' => "collections#get_collection_by_user", as: "get_collection_by_user"
+          get 'get_collection_by_user' => "collections#get_collection_by_user", as: "get_collection_by_user"
         end
       end
       

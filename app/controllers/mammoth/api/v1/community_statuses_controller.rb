@@ -111,7 +111,13 @@ module Mammoth::Api::V1
 			unless community_statuses.empty?
 				community_statues_ids= community_statuses.pluck(:status_id).map(&:to_i)
 				@statuses = Status.where(id: community_statues_ids)
-				render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, adapter: :json, meta: { community_followed_user_counts: community_followed_user_counts }
+				render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, adapter: :json, 
+				meta: { 
+					community_followed_user_counts: community_followed_user_counts,
+					community_name: community.name,
+					community_description: community.description,
+					community_url: community.image.url 
+					}
 			else
 				render json: {error: "Record not found"}
 			end

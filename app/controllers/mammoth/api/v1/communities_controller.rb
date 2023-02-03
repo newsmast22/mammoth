@@ -24,6 +24,7 @@ module Mammoth::Api::V1
 						updated_at: community.updated_at
 					}
 				end
+				render json: data
 			else
 				@user_communities = Mammoth::User.find(current_user.id).user_communities
 				user_communities_ids  = @user_communities.pluck(:community_id).map(&:to_i)
@@ -43,18 +44,22 @@ module Mammoth::Api::V1
 							image_updated_at: community.image_updated_at,
 							description: community.description,
 							image_url: community.image.url,
+							followers: Mammoth::UserCommunity.where(community_id: community.id).size,
 							collection_id: community.collection_id,
 							created_at: community.created_at,
 							updated_at: community.updated_at
 						}
 					end
-					data << {
+					render json: {data: data  ,
+					collection_data:{
 						collection_image_url: @collection.image.url,
 						collection_name: @collection.name
 					}
+				}
+				else # No record found!
+					render json: data
 				end
 			end
-			render json: data
 		end
 
 		def show

@@ -16,6 +16,7 @@ module Mammoth::Api::V1
         image_content_type: collection.image_content_type,
         image_file_size: collection.image_file_size,
         image_updated_at: collection.image_updated_at,
+				community_count: collection.communities.ids.size,
         created_at: collection.created_at,
         updated_at: collection.updated_at,
 				image_url: collection.image.url
