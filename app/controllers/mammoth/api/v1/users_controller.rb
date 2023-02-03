@@ -24,24 +24,43 @@ module Mammoth::Api::V1
 
     def update
       time = Time.new
-      unless params[:avatar].nil?
-				content_type = "image/jpg"
-				image = Paperclip.io_adapters.for(params[:avatar])
-				image.original_filename = "avatar-#{time.usec.to_s}-#{}.jpg"
-				params[:avatar] = image
-			end
-
-      unless params[:header].nil?
-        content_type = "image/jpg"
-				image = Paperclip.io_adapters.for(params[:header])
-				image.original_filename = "header-#{time.usec.to_s}-#{}.jpg"
-				params[:header] = image
-      end
       @account = current_account
+      unless params[:avatar].nil?
+				image = Paperclip.io_adapters.for(params[:avatar])
+        @account.avatar = image
+			end
+      unless params[:header].nil?
+				image = Paperclip.io_adapters.for(params[:header])
+        @account.header = image
+      end
       UpdateAccountService.new.call(@account, account_params, raise_error: true)
       UserSettingsDecorator.new(current_user).update(user_settings_params) if user_settings_params
       ActivityPub::UpdateDistributionWorker.perform_async(@account.id)
       render json: @account, serializer: Mammoth::CredentialAccountSerializer
+    end
+
+    def get_user_profile_details
+      @account = current_account
+      #render json: @account.user.id
+      @statues = Status.where(account_id: current_account.id, reply: false)
+      #if @statues.any?
+        #render json: @account,root: 'account_data', serializer: Mammoth::CredentialAccountSerializer, adapter: :json
+       # @statuses,root: 'statues_data', each_serializer: Mammoth::StatusSerializer, adapter: :json
+
+      #end
+      
+      #render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, adapter: :json, 
+				# meta: { 
+				# 	community_followed_user_counts: community_followed_user_counts,
+				# 	community_name: community.name,
+				# 	community_description: community.description,
+				# 	community_url: community.image.url 
+				# 	}
+     # render json: @account, serializer: Mammoth::CredentialAccountSerializer
+    #  result = single_serialize(@account, Mammoth::CredentialAccountSerializer).merge
+    #  (multiple_serialize(@statues, Mammoth::StatusSerializer))
+     #result = multiple_serialize(@statues, Mammoth::StatusSerializer)
+  render json: @statues
     end
 
     def show
@@ -80,6 +99,22 @@ module Mammoth::Api::V1
         'setting_default_sensitive' => source_params.fetch(:sensitive, @account.user.setting_default_sensitive),
         'setting_default_language' => source_params.fetch(:language, @account.user.setting_default_language),
       }
+    end
+
+    def single_serialize(collection, serializer, adapter = :json)
+      ActiveModelSerializers::SerializableResource.new(
+        collection,
+        serializer: serializer,
+        adapter: adapter
+      ).as_json
+    end
+
+    def multiple_serialize(collection, serializer, adapter = :json)
+      ActiveModelSerializers::SerializableResource.new(
+        collection,
+        each_serializer: serializer,
+        adapter: adapter
+      ).as_json
     end
 
   end
