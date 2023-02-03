@@ -57,10 +57,10 @@ module Mammoth::Api::V1
 				# 	community_url: community.image.url 
 				# 	}
      # render json: @account, serializer: Mammoth::CredentialAccountSerializer
-    #  result = single_serialize(@account, Mammoth::CredentialAccountSerializer).merge
+     #result = single_serialize(@account, Mammoth::CredentialAccountSerializer).merge
     #  (multiple_serialize(@statues, Mammoth::StatusSerializer))
-     #result = multiple_serialize(@statues, Mammoth::StatusSerializer)
-  render json: @statues
+    #result = multiple_serialize(@statues, Mammoth::StatusSerializer)
+  render json: @statues, each_serializer: Mammoth::StatusSerializer
     end
 
     def show
@@ -105,14 +105,15 @@ module Mammoth::Api::V1
       ActiveModelSerializers::SerializableResource.new(
         collection,
         serializer: serializer,
-        adapter: adapter
+        adapter: adapter,
+        root: 'statues_data'
       ).as_json
     end
 
-    def multiple_serialize(collection, serializer, adapter = :json)
+    def multiple_serialize(collection, adapter = :json)
       ActiveModelSerializers::SerializableResource.new(
         collection,
-        each_serializer: serializer,
+        each_serializer: Mammoth::StatusSerializer,
         adapter: adapter
       ).as_json
     end

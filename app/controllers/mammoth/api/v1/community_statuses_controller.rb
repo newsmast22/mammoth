@@ -105,6 +105,9 @@ module Mammoth::Api::V1
 		end
 
 		def get_community_statues
+			@user_communities = Mammoth::User.find(current_user.id).user_communities
+			user_communities_ids  = @user_communities.pluck(:community_id).map(&:to_i)
+
 			community = Mammoth::Community.find_by(slug: params[:id])
 			community_statuses = Mammoth::CommunityStatus.where(community_id: community.id)
 			community_followed_user_counts = Mammoth::UserCommunity.where(community_id: community.id).size
@@ -116,7 +119,9 @@ module Mammoth::Api::V1
 					community_followed_user_counts: community_followed_user_counts,
 					community_name: community.name,
 					community_description: community.description,
-					community_url: community.image.url 
+					community_url: community.image.url,
+					community_slug: community.slug,
+					is_joined: user_communities_ids.include?(community.id), 
 					}
 			else
 				render json: {error: "Record not found"}
