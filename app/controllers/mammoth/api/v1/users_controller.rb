@@ -40,13 +40,13 @@ module Mammoth::Api::V1
     end
 
     def get_user_profile_details
-      @account = current_account
-      @statuses = Status.where(account_id: @account.id, reply: false)
-      account_data = single_serialize(@account, Mammoth::CredentialAccountSerializer)
-      render json: @statuses,root: 'statuses_data', each_serializer: Mammoth::StatusSerializer,adapter: :json,
-      meta:{
-      account_data: account_data
-      }
+      account = current_account
+      get_user_statuses_info(account.id, account)
+    end
+
+    def get_profile_details_by_account
+      account = Account.find(params[:id])
+      get_user_statuses_info(params[:id], account)
     end
 
     def show
@@ -84,6 +84,15 @@ module Mammoth::Api::V1
         'setting_default_privacy' => source_params.fetch(:privacy, @account.user.setting_default_privacy),
         'setting_default_sensitive' => source_params.fetch(:sensitive, @account.user.setting_default_sensitive),
         'setting_default_language' => source_params.fetch(:language, @account.user.setting_default_language),
+      }
+    end
+
+    def get_user_statuses_info(account_id, account_info)
+      statuses = Status.where(account_id: account_id, reply: false)
+      account_data = single_serialize(account_info, Mammoth::CredentialAccountSerializer)
+      render json: statuses,root: 'statuses_data', each_serializer: Mammoth::StatusSerializer,adapter: :json,
+      meta:{
+      account_data: account_data
       }
     end
 
