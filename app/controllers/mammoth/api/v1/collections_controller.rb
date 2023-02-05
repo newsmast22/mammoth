@@ -57,15 +57,12 @@ module Mammoth::Api::V1
 		end
 
 		def create
-			time = Time.new
 			@new_status = Mammoth::Collection.new()
 			@new_status.name = collection_params[:name]
 			@new_status.slug = collection_params[:slug]
 			@new_status.save
 			unless collection_params[:image_data].nil?
-				content_type = "image/jpg"
 				image = Paperclip.io_adapters.for(collection_params[:image_data])
-				image.original_filename = "collection-#{time.usec.to_s}-#{}.jpg"
 				@new_status.image = image
 				@new_status.save
 			end
@@ -77,14 +74,10 @@ module Mammoth::Api::V1
 		end
 
     def update
-			time = Time.new
 			@collection.name = collection_params[:name]
 			@collection.save
-
 			unless collection_params[:image_data].nil?
-				content_type = "image/jpg"
 				image = Paperclip.io_adapters.for(collection_params[:image_data])
-				image.original_filename = "collection-#{time.usec.to_s}-#{}.jpg"
 				@collection.image = image
 				@collection.save
 			end

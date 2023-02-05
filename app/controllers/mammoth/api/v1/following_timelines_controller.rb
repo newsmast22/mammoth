@@ -10,7 +10,7 @@ module Mammoth::Api::V1
       if followed_account_ids.any?
         @statuses = Status.where(account_id: followed_account_ids,reply: false).order(created_at: :desc)
         if @statuses.any?
-          @statuses = @statuses.page(params[:page]).per(10)
+          @statuses = @statuses.page(params[:page]).per(20)
           render json: @statuses ,root: 'data', 
           each_serializer: Mammoth::StatusSerializer, adapter: :json, 
           meta: { pagination:

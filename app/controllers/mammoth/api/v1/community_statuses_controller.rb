@@ -36,9 +36,8 @@ module Mammoth::Api::V1
 			loaded_descendants  = cache_collection(descendants_results, Status)
 	
 			@context = Context.new(ancestors: loaded_ancestors, descendants: loaded_descendants)
-			statuses = [@status] + @context.ancestors + @context.descendants
 	
-			render json: @context, serializer: Mammoth::ContextSerializer, relationships: StatusRelationshipsPresenter.new(statuses, current_user&.account_id)
+			render json: @context, serializer: Mammoth::ContextSerializer
 		end
 
 		def index
@@ -78,10 +77,6 @@ module Mammoth::Api::V1
 				with_rate_limit: true
 			)
 
-			content_type = "image/jpg"
-			image = Paperclip.io_adapters.for(community_status_params[:image_data])
-			image.original_filename = "status-#{time.usec.to_s}-#{}.jpg"
-
 			if community_status_params[:community_id].nil?
 				@user_community = Mammoth::UserCommunity.find_by(user_id: current_user.id, is_primary: true).community
 				@community_id = @user_community.id
@@ -98,6 +93,7 @@ module Mammoth::Api::V1
 			@community_status.community_id = @community_id
 			@community_status.save
 			unless community_status_params[:image_data].nil?
+				image = Paperclip.io_adapters.for(community_status_params[:image_data])
 				@community_status.image = image
 				@community_status.save
 			end

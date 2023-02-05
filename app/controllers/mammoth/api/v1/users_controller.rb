@@ -23,7 +23,6 @@ module Mammoth::Api::V1
     end
 
     def update
-      time = Time.new
       @account = current_account
       unless params[:avatar].nil?
 				image = Paperclip.io_adapters.for(params[:avatar])
