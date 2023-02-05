@@ -67,7 +67,6 @@ module Mammoth::Api::V1
 		end
 
 		def create
-			time = Time.new
 			collection = Mammoth::Collection.find_by(slug: community_params[:collection_id])
 			@community = Mammoth::Community.new()
 			@community.name = community_params[:name]
@@ -77,7 +76,6 @@ module Mammoth::Api::V1
 			@community.save
 
 			unless community_params[:image_data].nil?
-				content_type = "image/jpg"
 				image = Paperclip.io_adapters.for(community_params[:image_data])
 				image.original_filename = "community-#{time.usec.to_s}-#{}.jpg"
 				@community.image = image
