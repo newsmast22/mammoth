@@ -38,11 +38,6 @@ module Mammoth::Api::V1
       render json: @account, serializer: Mammoth::CredentialAccountSerializer
     end
 
-    def get_user_profile_details
-      account = current_account
-      get_user_statuses_info(account.id, account)
-    end
-
     def get_profile_details_by_account
       account = Account.find(params[:id])
       get_user_statuses_info(params[:id], account)

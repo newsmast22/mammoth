@@ -9,7 +9,7 @@ module Mammoth::Api::V1
         primary_community_statuses = Mammoth::CommunityStatus.where(community_id: user_primary_community.community_id).order(created_at: :desc).pluck(:status_id).map(&:to_i)
         @statuses = Status.where(id: primary_community_statuses,reply: false).order(created_at: :desc).take(20)
       end
-      if @statuses.any?
+      unless @statuses.empty?
        # @statuses = @statuses.page(params[:page]).per(20)
         render json: @statuses,root: 'data', 
         each_serializer: Mammoth::StatusSerializer, adapter: :json
