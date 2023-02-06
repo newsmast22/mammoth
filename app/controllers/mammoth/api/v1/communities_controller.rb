@@ -89,7 +89,6 @@ module Mammoth::Api::V1
 		end
 
 		def update
-			time = Time.new
 			@community.name = community_params[:name]
 			@community.description = community_params[:description]
 			@community.save
