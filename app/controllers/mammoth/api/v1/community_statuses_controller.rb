@@ -37,7 +37,8 @@ module Mammoth::Api::V1
 	
 			@context = Context.new(ancestors: loaded_ancestors, descendants: loaded_descendants)
 	
-			render json: @context, serializer: Mammoth::ContextSerializer
+			statuses = [@status] + @context.ancestors + @context.descendants
+			render json: @context, serializer: Mammoth::ContextSerializer, relationships: StatusRelationshipsPresenter.new(statuses, current_user&.account_id)
 		end
 
 		def index
