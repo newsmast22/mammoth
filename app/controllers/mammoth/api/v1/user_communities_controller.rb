@@ -27,6 +27,7 @@ module Mammoth::Api::V1
             updated_at: community.updated_at
           }
         end
+        data = data.sort_by {|h| [h[:is_primary] ? 0 : 1,h[:slug]]}
         render json: data
       else
         render json: { error: 'no communities found' }
