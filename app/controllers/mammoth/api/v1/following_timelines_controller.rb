@@ -9,7 +9,7 @@ module Mammoth::Api::V1
       followed_account_ids = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
       if followed_account_ids.any?
         @statuses = Status.where(account_id: followed_account_ids,reply: false).order(created_at: :desc).take(20)
-        if @statuses.any?
+        unless @statuses.empty?
           #@statuses = @statuses.page(params[:page]).per(20)
           render json: @statuses ,root: 'data', 
           each_serializer: Mammoth::StatusSerializer, adapter: :json
