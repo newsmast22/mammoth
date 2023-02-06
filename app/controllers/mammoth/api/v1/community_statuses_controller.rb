@@ -121,7 +121,16 @@ module Mammoth::Api::V1
 					is_joined: user_communities_ids.include?(community.id), 
 					}
 			else
-				render json: {error: "Record not found"}
+				render json: { data: [],
+				meta: { 
+					community_followed_user_counts: community_followed_user_counts,
+					community_name: community.name,
+					community_description: community.description,
+					community_url: community.image.url,
+					community_slug: community.slug,
+					is_joined: user_communities_ids.include?(community.id), 
+					}
+				}
 			end
 		end
 
