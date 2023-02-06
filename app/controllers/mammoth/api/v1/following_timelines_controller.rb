@@ -8,17 +8,19 @@ module Mammoth::Api::V1
     def index
       followed_account_ids = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
       if followed_account_ids.any?
-        @statuses = Status.where(account_id: followed_account_ids,reply: false).order(created_at: :desc)
+        @statuses = Status.where(account_id: followed_account_ids,reply: false).order(created_at: :desc).take(20)
         if @statuses.any?
-          @statuses = @statuses.page(params[:page]).per(20)
+          #@statuses = @statuses.page(params[:page]).per(20)
           render json: @statuses ,root: 'data', 
-          each_serializer: Mammoth::StatusSerializer, adapter: :json, 
-          meta: { pagination:
-            { 
-              total_pages: @statuses.total_pages,
-              total_objects: @statuses.total_count,
-              current_page: @statuses.current_page
-            } }
+          each_serializer: Mammoth::StatusSerializer, adapter: :json
+          
+          # , 
+          # meta: { pagination:
+          #   { 
+          #     total_pages: @statuses.total_pages,
+          #     total_objects: @statuses.total_count,
+          #     current_page: @statuses.current_page
+          #   } }
         else
           render json: {error: "Record not found"}
         end
