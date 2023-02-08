@@ -77,7 +77,6 @@ module Mammoth::Api::V1
 
 			unless community_params[:image_data].nil?
 				image = Paperclip.io_adapters.for(community_params[:image_data])
-				image.original_filename = "community-#{time.usec.to_s}-#{}.jpg"
 				@community.image = image
 				@community.save
 			end
