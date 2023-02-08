@@ -8,7 +8,7 @@ module Mammoth::Api::V1
       @communities = @user&.communities || []
       @user_communities = Mammoth::UserCommunity.find_by(user_id: current_user.id,is_primary: true)
       
-      if @communities.any?
+      unless @communities.empty?
         data = []
         @communities.each do |community|
           data << {

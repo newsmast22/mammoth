@@ -50,7 +50,7 @@ module Mammoth::Api::V1
     end
 
     def logout
-      Doorkeeper::AccessToken.where(resource_owner_id: current_user.id).destroy_all
+      Doorkeeper::AccessToken.where(resource_owner_id: current_user.id, token: doorkeeper_token.token).last.destroy
       render json: {message: 'logout successed'}
     end
 
