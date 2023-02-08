@@ -17,7 +17,8 @@ module Mammoth::Api::V1
           username: user.account.username,
           display_name: user.account.display_name.presence || user.account.username,
           email: user.email,
-          image_url: user.account.avatar.url
+          image_url: user.account.avatar.url,
+          bio: user.account.note
         }
       end
       render json: {data: data}
