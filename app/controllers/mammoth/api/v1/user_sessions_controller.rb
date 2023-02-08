@@ -59,6 +59,7 @@ module Mammoth::Api::V1
 
     def verify_reset_password_otp
       if @user.otp_code == params[:confirmed_otp_code]
+        @user.update(otp_code: nil)
         render json: {message: 'Reset password OTP verification successed.'}, status: 200
       else
         render json: {error: 'Reset password OTP verification failed.'}, status: 422
@@ -85,6 +86,7 @@ module Mammoth::Api::V1
       @user = User.find(params[:user_id])
       if @user.otp_code == params[:confirmed_otp_code]
         @user.confirmed_at = Time.now.utc
+        @user.otp_code = nil
         @user.save(validate: false)
 
         @app = doorkeeper_token.application
