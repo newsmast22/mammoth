@@ -5,7 +5,7 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
   include FormattingHelper
 
   attributes :id, :username, :acct, :display_name, :locked, :bot, :discoverable, :group, :created_at,
-             :note, :url, :avatar, :avatar_static, :header, :header_static,
+             :note, :url, :avatar, :avatar_static, :header, :header_static,:primary_community_slug,:primary_community_name,
              :followers_count, :following_count, :statuses_count, :last_status_at,:collection_count,:community_count
 
   has_one :moved_to_account, key: :moved, serializer: REST::AccountSerializer, if: :moved_and_not_nested?
@@ -61,7 +61,24 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
     else
       count
     end
-    
+  end
+
+  def primary_community_slug
+    user_communities = Mammoth::UserCommunity.where(user_id: object.user.id,is_primary: true).last
+    if user_communities.present?
+      Mammoth::Community.find(user_communities.community_id).slug
+    else
+      ""
+    end
+  end
+
+  def primary_community_name
+    user_communities = Mammoth::UserCommunity.where(user_id: object.user.id,is_primary: true).last
+    if user_communities.present?
+      Mammoth::Community.find(user_communities.community_id).name
+    else
+      ""
+    end
   end
 
   def note
