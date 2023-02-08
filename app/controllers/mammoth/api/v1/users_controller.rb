@@ -83,12 +83,16 @@ module Mammoth::Api::V1
     end
 
     def get_user_statuses_info(account_id, account_info)
+      is_my_account = current_account.id == account_info.id ? true : false
+      account_followed = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
+      
       statuses = Status.where(account_id: account_id, reply: false)
       account_data = single_serialize(account_info, Mammoth::CredentialAccountSerializer)
       render json: statuses,root: 'statuses_data', each_serializer: Mammoth::StatusSerializer,adapter: :json,
       meta:{
-      account_data: account_data
+      account_data: account_data.merge(:is_my_account => is_my_account, :is_followed => account_followed.include?(account_id.to_i))
       }
+
     end
 
     def single_serialize(collection, serializer, adapter = :json)
