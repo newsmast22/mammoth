@@ -59,13 +59,17 @@ module Mammoth::Api::V1
       countries = ISO3166::Country.all
       data = []
       unless countries.empty?
+        countries.each do |country|
+          data << {
+            alpha2: country.alpha2,
+            common_name: country.common_name,
+            emoji_flag: country.emoji_flag
+          }
+        end
+        render json: data
       else
-        render json: {error: "No data" }
+        render json: data
       end
-      
-      #render json: { countries: ISO3166::Country.pluck(:alpha2, :iso_short_name)}
-      # c = ISO3166::Country.new('US')
-      render json: countries
     end
 
     private
