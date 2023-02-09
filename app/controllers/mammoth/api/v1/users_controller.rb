@@ -55,6 +55,19 @@ module Mammoth::Api::V1
       render json: {message: 'logout successed'}
     end
 
+    def get_country_list
+      countries = ISO3166::Country.all
+      data = []
+      unless countries.empty?
+      else
+        render json: {error: "No data" }
+      end
+      
+      #render json: { countries: ISO3166::Country.pluck(:alpha2, :iso_short_name)}
+      # c = ISO3166::Country.new('US')
+      render json: countries
+    end
+
     private
 
     def account_params
