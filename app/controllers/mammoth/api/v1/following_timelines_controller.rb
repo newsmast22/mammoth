@@ -25,7 +25,7 @@ module Mammoth::Api::V1
           render json: {error: "Record not found"}
         end
       else
-        render json: {error: "Record not found"}
+        render json: {data: []}
       end
     end
 

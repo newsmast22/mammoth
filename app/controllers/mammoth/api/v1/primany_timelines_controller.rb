@@ -20,10 +20,14 @@ module Mammoth::Api::V1
           #     current_page: @statuses.current_page
           #   } }
         else
-          render json: {error: "Record not found"}
+          render json: {
+             error: "Record not found", 
+             primary_community_name:user_primary_community.community.name,
+             primary_community_slug: user_primary_community.community.slug 
+            }
         end
       else
-        render json: {error: "Record not found"}
+        render json: {data: [] }
       end
     end
 
