@@ -55,22 +55,22 @@ module Mammoth::Api::V1
       render json: {message: 'logout successed'}
     end
 
-    def get_country_list
-      countries = ISO3166::Country.all
-      data = []
-      unless countries.empty?
-        countries.each do |country|
-          data << {
-            alpha2: country.alpha2,
-            common_name: country.common_name,
-            emoji_flag: country.emoji_flag
-          }
-        end
-        render json: data
-      else
-        render json: data
-      end
-    end
+    # def get_country_list
+    #   countries = ISO3166::Country.all
+    #   data = []
+    #   unless countries.empty?
+    #     countries.each do |country|
+    #       data << {
+    #         alpha2: country.alpha2,
+    #         common_name: country.common_name,
+    #         emoji_flag: country.emoji_flag
+    #       }
+    #     end
+    #     render json: data
+    #   else
+    #     render json: data
+    #   end
+    # end
 
     private
 
