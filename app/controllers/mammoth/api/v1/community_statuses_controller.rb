@@ -34,9 +34,8 @@ module Mammoth::Api::V1
 			descendants_results = @status.descendants(descendants_limit, current_account, descendants_depth_limit)
 			loaded_ancestors    = cache_collection(ancestors_results, Status)
 			loaded_descendants  = cache_collection(descendants_results, Status)
-	
-			@context = Context.new(ancestors: loaded_ancestors, descendants: loaded_descendants)
-	
+			order_reply_statues_desc = 	loaded_descendants.sort_by{|e| e[:created_at]}
+			@context = Context.new(ancestors: loaded_ancestors, descendants: order_reply_statues_desc)
 			statuses = [@status] + @context.ancestors + @context.descendants
 			render json: @context, serializer: Mammoth::ContextSerializer, relationships: StatusRelationshipsPresenter.new(statuses, current_user&.account_id)
 		end
