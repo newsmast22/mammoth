@@ -217,7 +217,15 @@ class Mammoth::StatusSerializer < ActiveModel::Serializer
     attributes :name, :url
 
     def url
-      tag_url(object)
+      # Begin::orignal_code
+      #tag_url(object)
+      # End::original_code
+
+      #Begin::MKK's modified_code
+      tagged_url_str = tag_url(object).to_s
+      tagged_url_str.gsub("/tags/", "/api/v1/tag_timelines/")
+      #End::MKK's modified_code
+
     end
   end
 end
