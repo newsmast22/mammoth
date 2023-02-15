@@ -34,6 +34,8 @@ Mammoth::Engine.routes.draw do
       
       resources :primany_timelines
       resources :following_timelines
+      resources :tag_timelines
+      resources :trend_tags
       resources :users, only: [] do
         collection do
           get 'suggestion'
