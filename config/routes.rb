@@ -8,6 +8,7 @@ Mammoth::Engine.routes.draw do
       get  'get_reset_password_otp' => 'user_sessions#get_reset_password_otp', as: 'get_reset_password_otp'
       post 'verify_reset_password_otp' => 'user_sessions#verify_reset_password_otp', as: 'verify_reset_password_otp'
       put  'reset_password' => 'user_sessions#reset_password', as: 'reset_password'
+      get  'search' => 'search#index', as: 'search'
 
       resources :communities
 
