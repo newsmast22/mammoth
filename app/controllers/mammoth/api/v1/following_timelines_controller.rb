@@ -8,7 +8,15 @@ module Mammoth::Api::V1
     def index
       followed_account_ids = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
       if followed_account_ids.any?
-        @statuses = Status.where(account_id: followed_account_ids,reply: false).order(created_at: :desc).take(10)
+        #Begin::Filter with country 
+        if params[:country].present?
+          account_ids = Account.where(country: params[:country]).pluck(:id).map(&:to_i)
+          filtered_ids = followed_account_ids & account_ids
+          @statuses = Status.where(account_id: filtered_ids,reply: false).order(created_at: :desc).take(10)
+        else
+          @statuses = Status.where(account_id: followed_account_ids,reply: false).order(created_at: :desc).take(10)
+        end
+        #End::Filter with country
         unless @statuses.empty?
           #@statuses = @statuses.page(params[:page]).per(20)
           render json: @statuses ,root: 'data', 
