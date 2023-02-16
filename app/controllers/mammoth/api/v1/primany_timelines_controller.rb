@@ -7,7 +7,14 @@ module Mammoth::Api::V1
       user_primary_community= Mammoth::UserCommunity.where(user_id: current_user.id, is_primary: true).last
       if user_primary_community.present?
         primary_community_statuses = Mammoth::CommunityStatus.where(community_id: user_primary_community.community_id).order(created_at: :desc).pluck(:status_id).map(&:to_i)
-        @statuses = Status.where(id: primary_community_statuses,reply: false).order(created_at: :desc).take(10)
+        #Begin::Filter with country 
+        if params[:country].present?
+          account_ids = Account.where(country: params[:country]).pluck(:id).map(&:to_i)
+          @statuses = Status.where(id: primary_community_statuses,reply: false,account_id: account_ids).order(created_at: :desc).take(10)
+        else
+          @statuses = Status.where(id: primary_community_statuses,reply: false).order(created_at: :desc).take(10)
+        end
+        #End::Filter with country
         unless @statuses.empty?
         # @statuses = @statuses.page(params[:page]).per(20)
           render json: @statuses,root: 'data', 
