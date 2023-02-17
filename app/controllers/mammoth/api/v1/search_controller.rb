@@ -7,8 +7,8 @@ module Mammoth::Api::V1
     RESULTS_LIMIT = 20
 
     before_action :require_user!
-    before_action -> { authorize_if_got_token! :read, :'read:search' }
-    before_action :validate_search_params!
+    #before_action -> { authorize_if_got_token! :read, :'read:search' }
+    before_action :validate_search_params!, only: [:create]
 
     def index
       @search = Search.new(search_results)
@@ -17,6 +17,37 @@ module Mammoth::Api::V1
       unprocessable_entity
     rescue ActiveRecord::RecordNotFound
       not_found
+    end
+
+    def search_my_communities
+      @search = Search.new(search_results)
+      render json: @search, serializer: Mammoth::SearchSerializer
+    rescue Mastodon::SyntaxError
+      unprocessable_entity
+    rescue ActiveRecord::RecordNotFound
+      not_found
+    end
+
+    def get_all_community_status_timelines
+      @statuses = Status.where(reply: false).where.not(account_id: current_account.id).order(created_at: :desc).take(10)
+      unless @statuses.empty?
+        render json: @statuses,root: 'data', 
+          each_serializer: Mammoth::StatusSerializer, adapter: :json
+      else
+        render json: {error: "Record not found"}
+      end
+    end
+
+    def get_my_community_status_timelines
+      user_community_ids = Mammoth::UserCommunity.where(user_id: current_account.user.id).pluck(:community_id).map(&:to_i)
+      community_statuses_ids = Mammoth::CommunityStatus.where(community_id: user_community_ids).order(created_at: :desc).pluck(:status_id).map(&:to_i)
+      @statuses = Status.where(reply: false,id: community_statuses_ids).order(created_at: :desc).take(10)
+     unless @statuses.empty?
+        render json: @statuses,root: 'data', 
+        each_serializer: Mammoth::StatusSerializer, adapter: :json
+      else
+       render json: {error: "Record not found"}
+     end
     end
 
     private

@@ -36,9 +36,7 @@ module Mammoth::Api::V1
     end
 
     def create
-
       Mammoth::UserCommunity.where(user_id: current_user.id).destroy_all
-      
       user_community_params[:interested_communities].each do |slug|
         @community = Mammoth::Community.find_by(slug: slug)
         @user_community = Mammoth::UserCommunity.create!(

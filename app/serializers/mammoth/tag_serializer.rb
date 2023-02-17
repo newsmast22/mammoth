@@ -1,7 +1,7 @@
 class Mammoth::TagSerializer < ActiveModel::Serializer
   include RoutingHelper
 
-  attributes :name, :url, :history
+  attributes :name, :url, :history, :post_count
 
   attribute :following, if: :current_user?
 
@@ -14,6 +14,10 @@ class Mammoth::TagSerializer < ActiveModel::Serializer
     tagged_url_str = tag_url(object).to_s
     tagged_url_str.gsub("/tags/", "/api/v1/tag_timelines/")
     #End::MKK's modified_code
+  end
+
+  def post_count
+    Mammoth::StatusTag.where(tag_id: object.id).count
   end
 
   def name

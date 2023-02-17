@@ -5,9 +5,12 @@ module Mammoth::Api::V1
 
     def suggestion
       @user  = Mammoth::User.find(current_user.id)
-      @users = Mammoth::User.joins(:user_communities).where.not(id: @user.id).where(user_communities: {community_id: @user.communities.ids}).distinct
+      if params[:limit]
+        @users = Mammoth::User.joins(:user_communities).where.not(id: @user.id).where(user_communities: {community_id: @user.communities.ids}).distinct.limit(params[:limit])
+      else
+        @users = Mammoth::User.joins(:user_communities).where.not(id: @user.id).where(user_communities: {community_id: @user.communities.ids}).distinct
+      end
       account_followed = Follow.where(account_id: current_account).pluck(:target_account_id).map(&:to_i)
-
       data   = []
       @users.each do |user|
         data << {
@@ -26,11 +29,6 @@ module Mammoth::Api::V1
 
     def update
       @account = current_account
-      unless params[:country].nil? || params[:dob].nil?
-        @account.country = params[:country]
-        @account.dob = params[:dob]
-        @account.save(validate: false)
-      end
       unless params[:avatar].nil?
 				image = Paperclip.io_adapters.for(params[:avatar])
         @account.avatar = image
@@ -42,6 +40,16 @@ module Mammoth::Api::V1
       UpdateAccountService.new.call(@account, account_params, raise_error: true)
       UserSettingsDecorator.new(current_user).update(user_settings_params) if user_settings_params
       ActivityPub::UpdateDistributionWorker.perform_async(@account.id)
+      render json: @account, serializer: Mammoth::CredentialAccountSerializer
+    end
+
+    def update_account
+      @account = current_account
+      unless params[:country].nil? || params[:dob].nil?
+        @account.country = params[:country]
+        @account.dob = params[:dob]
+        @account.save(validate: false)
+      end
       render json: @account, serializer: Mammoth::CredentialAccountSerializer
     end
 

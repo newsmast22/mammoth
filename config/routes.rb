@@ -8,7 +8,8 @@ Mammoth::Engine.routes.draw do
       get  'get_reset_password_otp' => 'user_sessions#get_reset_password_otp', as: 'get_reset_password_otp'
       post 'verify_reset_password_otp' => 'user_sessions#verify_reset_password_otp', as: 'verify_reset_password_otp'
       put  'reset_password' => 'user_sessions#reset_password', as: 'reset_password'
-      get  'search' => 'search#index', as: 'search'
+      get  'search_all_commnities' => 'search_all_commnities#index', as: 'search_all_commnities'
+      get  'search_my_communities' => 'search_my_communities#index', as: 'search_my_communities'
 
       resources :communities
 
@@ -32,6 +33,13 @@ Mammoth::Engine.routes.draw do
           get 'get_collection_by_user' => "collections#get_collection_by_user", as: "get_collection_by_user"
         end
       end
+
+      resources :search do
+        collection do
+          get 'get_all_community_status_timelines' => "search#get_all_community_status_timelines", as: "get_all_community_status_timelines"
+          get 'get_my_community_status_timelines' => "search#get_my_community_status_timelines", as: "get_my_community_status_timelines"
+        end
+      end
       
       resources :primany_timelines
       resources :following_timelines
@@ -41,6 +49,7 @@ Mammoth::Engine.routes.draw do
         collection do
           get 'suggestion'
           patch :update_credentials, to: 'users#update'
+          post 'update_account' => "users#update_account", as: "update_account"
           post 'logout'
           get :show_details, to: 'users#show'
           get  'get_profile_details_by_account' => "users#get_profile_details_by_account", as: "get_profile_details_by_account"
