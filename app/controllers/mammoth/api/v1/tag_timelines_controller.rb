@@ -7,8 +7,26 @@ module Mammoth::Api::V1
     def show
       if params[:id].present?
         @statuses = @tag.statuses.where(reply: false).order(created_at: :desc).take(10)
-        render json: @statuses,root: 'data', 
-        each_serializer: Mammoth::StatusSerializer, adapter: :json
+        tag = Tag.find_normalized(params[:id]) || Tag.new(name: Tag.normalize(params[:id]), display_name: params[:id])
+        tagFollow = TagFollow.where(tag_id: tag.id)
+        unless @statuses.empty?
+          render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, adapter: :json, 
+          meta: { 
+            tag_name: tag.display_name,
+            is_followed: tagFollow.pluck(:account_id).map(&:to_i).include?(current_account.id),
+            post_count: Mammoth::StatusTag.where(tag_id: tag.id).count,
+            following_count: tagFollow.count,
+            }
+        else
+          render json: { data: [],
+            meta: { 
+              tag_name: tag.display_name,
+              is_followed: tagFollow.pluck(:account_id).map(&:to_i).include?(current_account.id),
+              post_count: Mammoth::StatusTag.where(tag_id: tag.id).count,
+              following_count: tagFollow.count,
+              }
+            }
+        end 
       else
         render json: {
           error: "Record not found"
