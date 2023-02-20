@@ -45,7 +45,13 @@ Mammoth::Engine.routes.draw do
       resources :primany_timelines
       resources :following_timelines
       resources :tag_timelines
-      resources :trend_tags
+
+      resources :trend_tags do
+        collection do
+          get 'get_my_community_trend_tag' => 'trend_tags#get_my_community_trend_tag', as: "get_my_community_trend_tag"
+        end
+      end
+      
       resources :users, only: [] do
         collection do
           get 'suggestion'
