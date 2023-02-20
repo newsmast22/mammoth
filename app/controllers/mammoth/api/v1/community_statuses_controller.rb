@@ -133,6 +133,26 @@ module Mammoth::Api::V1
 			end
 		end
 
+		def get_my_community_statues
+			@user_communities = Mammoth::User.find(current_user.id).user_communities
+			user_communities_ids  = @user_communities.pluck(:community_id).map(&:to_i)
+			if user_communities_ids.any?
+				community_statuses = Mammoth::CommunityStatus.where(community_id: user_communities_ids)
+				community_followed_user_counts = Mammoth::UserCommunity.where(community_id: user_communities_ids).size
+				unless community_statuses.empty?
+					community_statues_ids= community_statuses.pluck(:status_id).map(&:to_i)
+					@statuses = Status.where(id: community_statues_ids,reply: false).take(10)
+					render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, adapter: :json
+				else
+					render json: { data: []}
+				end
+			else
+				render json: {
+					error: "Record not found"
+				 }
+			end
+		end
+
     private
 
 		def set_status
