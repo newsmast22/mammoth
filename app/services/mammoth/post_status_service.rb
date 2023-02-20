@@ -189,11 +189,7 @@ class Mammoth::PostStatusService < BaseService
   end
 
   def attach_image
-    time = Time.new
-
-    content_type = "image/jpg"
 		image = Paperclip.io_adapters.for(@options[:image_data])
-		image.original_filename = "status-#{time.usec.to_s}-#{}.jpg"
   end
 
   def scheduled_options
