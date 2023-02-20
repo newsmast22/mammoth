@@ -27,6 +27,30 @@ module Mammoth::Api::V1
       render json: {data: data}
     end
 
+    def global_suggestion
+      @user  = Mammoth::User.find(current_user.id)
+      if params[:limit]
+        @users = Mammoth::User.where.not(id: @user.id).where(role_id: nil).distinct.limit(params[:limit])
+      else
+        @users = Mammoth::User.where.not(id: @user.id).where(role_id: nil).distinct
+      end
+      account_followed = Follow.where(account_id: current_account).pluck(:target_account_id).map(&:to_i)
+      data   = []
+      @users.each do |user|
+        data << {
+          account_id: user.account_id.to_s,
+          is_followed: account_followed.include?(user.account_id), 
+          user_id: user.id.to_s,
+          username: user.account.username,
+          display_name: user.account.display_name.presence || user.account.username,
+          email: user.email,
+          image_url: user.account.avatar.url,
+          bio: user.account.note
+        }
+      end
+      render json: {data: data}
+    end
+
     def update
       @account = current_account
       unless params[:avatar].nil?

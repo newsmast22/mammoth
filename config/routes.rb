@@ -16,6 +16,7 @@ Mammoth::Engine.routes.draw do
       resources :community_statuses do
         collection do
           get  'get_community_statues' => 'community_statuses#get_community_statues', as: 'get_community_statues'
+          get  'get_my_community_statues' => 'community_statuses#get_my_community_statues', as: 'get_my_community_statues'
         end
         member do
           get :context
@@ -48,6 +49,7 @@ Mammoth::Engine.routes.draw do
       resources :users, only: [] do
         collection do
           get 'suggestion'
+          get 'global_suggestion'
           patch :update_credentials, to: 'users#update'
           post 'update_account' => "users#update_account", as: "update_account"
           post 'logout'
