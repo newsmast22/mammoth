@@ -13,7 +13,7 @@ module Mammoth::Api::V1
           render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, adapter: :json, 
           meta: { 
             tag_name: tag.display_name,
-            is_followed: tagFollow.pluck(:account_id).map(&:to_i).include?(current_account.id),
+            following: tagFollow.pluck(:account_id).map(&:to_i).include?(current_account.id),
             post_count: Mammoth::StatusTag.where(tag_id: tag.id).count,
             following_count: tagFollow.count,
             }
@@ -21,7 +21,7 @@ module Mammoth::Api::V1
           render json: { data: [],
             meta: { 
               tag_name: tag.display_name,
-              is_followed: tagFollow.pluck(:account_id).map(&:to_i).include?(current_account.id),
+              following: tagFollow.pluck(:account_id).map(&:to_i).include?(current_account.id),
               post_count: Mammoth::StatusTag.where(tag_id: tag.id).count,
               following_count: tagFollow.count,
               }
