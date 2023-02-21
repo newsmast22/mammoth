@@ -8,7 +8,7 @@ module Mammoth::Api::V1
     #End::Original code
 
     def index
-      render json: @tag.take(10),each_serializer: Mammoth::TagSerializer
+      render json: @tag.take(5),each_serializer: Mammoth::TagSerializer
       #render json: @tags, each_serializer: Mammoth::TagSerializer, relationships: TagRelationshipsPresenter.new(@tags, current_user&.account_id)
     end
 
@@ -26,7 +26,7 @@ module Mammoth::Api::V1
           .order("count(tag_id) desc").select('tag_id')
           .pluck(:tag_id).map(&:to_i)
           tag = Tag.where(id: tag_ids)
-          render json: tag.take(10),each_serializer: Mammoth::TagSerializer
+          render json: tag.take(5),each_serializer: Mammoth::TagSerializer
 				else
 					render json: { data: []}
 				end
