@@ -2,13 +2,31 @@ module Mammoth::Api::V1
   class TrendTagsController < Api::BaseController
     before_action :require_user!
 		before_action -> { doorkeeper_authorize! :read}
+    extend ActiveSupport::Concern
+
     #Begin::Original code
-    before_action :set_tags
+    #before_action :set_tags
     #End::Original code
 
     def index
-      render json: @tags,each_serializer: Mammoth::TagSerializer
+      tag_ids = Mammoth::StatusTag
+      .group("tag_id")
+      .having("count(tag_id) > 0 ")
+      .order("count(tag_id) desc").select('tag_id')
+      .pluck(:tag_id).map(&:to_i)
+
+      if tag_ids.any?
+        @tag = Tag.find(tag_ids).take(5)
+        render json: @tag,each_serializer: Mammoth::TagSerializer
+      else
+        render json: {
+          error: "Record not found"
+         }
+      end
+      
+      #Begin::Original code
       #render json: @tags, each_serializer: Mammoth::TagSerializer, relationships: TagRelationshipsPresenter.new(@tags, current_user&.account_id)
+      #End::Original code
     end
 
     def get_my_community_trend_tag
@@ -24,8 +42,15 @@ module Mammoth::Api::V1
           .having("count(tag_id) > 0 ")
           .order("count(tag_id) desc").select('tag_id')
           .pluck(:tag_id).map(&:to_i)
-          tag = Tag.where(id: tag_ids)
-          render json: tag.take(5),each_serializer: Mammoth::TagSerializer
+
+          if tag_ids.any?
+            @tag = Tag.find(tag_ids).take(5)
+            render json: @tag,each_serializer: Mammoth::TagSerializer
+          else
+            render json: {
+              error: "Record not found"
+             }
+          end
 				else
 					render json: { data: []}
 				end
@@ -35,23 +60,23 @@ module Mammoth::Api::V1
     private
 
     #Begin::Original code
-    def enabled?
-      Setting.trends
-    end
+    # def enabled?
+    #   Setting.trends
+    # end
   
-    def set_tags
-      @tags = begin
-        if enabled?
-          tags_from_trends.limit(5)
-        else
-          []
-        end
-      end
-    end
+    # def set_tags
+    #   @tags = begin
+    #     if enabled?
+    #       tags_from_trends.limit(5)
+    #     else
+    #       []
+    #     end
+    #   end
+    # end
 
-    def tags_from_trends
-      Trends.tags.query.allowed
-    end
+    # def tags_from_trends
+    #   Trends.tags.query.allowed
+    # end
     #End::Original code
   end
 end
