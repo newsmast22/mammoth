@@ -5,7 +5,12 @@ module Mammoth::Api::V1
 		before_action :set_user_timeline_setting, only: %i[index]
 
     def index
-      render json: @user_timeline_setting
+      if @user_timeline_setting.nil?
+       render json:{data: []} 
+      else
+        render json: {data:@user_timeline_setting}
+      end
+      
     end
 
     def create
@@ -29,10 +34,10 @@ module Mammoth::Api::V1
         selected_filters: [
         :is_filter_turn_on,
         :default_country,
-        timeline_filters: [
-          :is_location_filter_turn_on,
-          selected_countries: []
-        ]
+          location_filter:[
+            :is_location_filter_turn_on,
+            selected_countries: []
+          ]
         ]
       )
 		end
