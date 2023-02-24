@@ -75,6 +75,8 @@ Mammoth::Engine.routes.draw do
         end
       end
 
+      resources :user_timeline_settings
+
     end
   end
 end
