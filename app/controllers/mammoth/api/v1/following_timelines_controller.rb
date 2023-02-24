@@ -8,15 +8,9 @@ module Mammoth::Api::V1
     def index
       followed_account_ids = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
       if followed_account_ids.any?
-        #Begin::Filter with country 
-        if params[:country].present?
-          account_ids = Account.where(country: params[:country]).pluck(:id).map(&:to_i)
-          filtered_ids = followed_account_ids & account_ids
-          @statuses = Status.where(account_id: filtered_ids,reply: false).order(created_at: :desc).take(10)
-        else
-          @statuses = Status.where(account_id: followed_account_ids,reply: false).order(created_at: :desc).take(10)
-        end
-        #End::Filter with country
+        #Begin::Filter
+        fetch_filter_timeline_data(followed_account_ids)
+        #End::Filter
         unless @statuses.empty?
           #@statuses = @statuses.page(params[:page]).per(20)
           render json: @statuses ,root: 'data', 
@@ -34,6 +28,25 @@ module Mammoth::Api::V1
         end
       else
         render json: {data: []}
+      end
+    end
+
+    private
+
+    def fetch_filter_timeline_data(followed_account_ids)
+      @user_timeline_setting = Mammoth::UserTimelineSetting.find_by(user_id: current_user.id)
+      unless @user_timeline_setting.nil? || @user_timeline_setting.selected_filters["is_filter_turn_on"] == false || @user_timeline_setting.selected_filters["location_filter"]["is_location_filter_turn_on"] == false
+        if @user_timeline_setting.selected_filters["location_filter"]["selected_countries"].any?
+          account_ids = Account.where(country: @user_timeline_setting.selected_filters["location_filter"]["selected_countries"]).pluck(:id).map(&:to_i)
+          filtered_ids = followed_account_ids & account_ids
+          @statuses = Status.where(account_id: filtered_ids,reply: false).order(created_at: :desc).take(10)
+        else
+          account_ids = Account.where(country: @user_timeline_setting.selected_filters["default_country"]).pluck(:id).map(&:to_i)
+          filtered_ids = followed_account_ids & account_ids
+          @statuses = Status.where(account_id: filtered_ids,reply: false).order(created_at: :desc).take(10)
+        end
+      else 
+        @statuses = Status.where(account_id: followed_account_ids,reply: false).order(created_at: :desc).take(10)
       end
     end
 
