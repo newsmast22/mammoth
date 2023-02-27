@@ -25,7 +25,7 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
     attributes :name, :value, :verified_at
 
     def value
-      account_field_value_format(object)
+      object.value
     end
   end
 
