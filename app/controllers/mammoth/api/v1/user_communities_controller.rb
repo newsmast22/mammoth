@@ -49,6 +49,21 @@ module Mammoth::Api::V1
         Mammoth::UserCommunity.find_by(community_id: @community.id, user_id: current_user.id)
                               .update(is_primary: true)
       end
+
+      #Begin::Create UserTimeLineSetting
+      Mammoth::UserTimelineSetting.where(user_id: current_user.id).destroy_all
+      Mammoth::UserTimelineSetting.create!(
+        user_id: current_user.id,
+        selected_filters: {
+          default_country: current_user.account.country,
+          location_filter: {
+            selected_countries: [],
+            is_location_filter_turn_on: false
+          },
+          is_filter_turn_on: true
+        }
+      )
+      #End:Create UserTimeLineSetting
 	    render json: {message: 'User with community successfully saved!'}
 		end
 
