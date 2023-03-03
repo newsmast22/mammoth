@@ -14,8 +14,7 @@ module Mammoth::Api::V1
         unless @statuses.empty?
           #@statuses = @statuses.page(params[:page]).per(20)
           render json: @statuses ,root: 'data', 
-          each_serializer: Mammoth::StatusSerializer, adapter: :json
-          
+          each_serializer: Mammoth::StatusSerializer, adapter: :json 
           # , 
           # meta: { pagination:
           #   { 
@@ -34,19 +33,32 @@ module Mammoth::Api::V1
     private
 
     def fetch_filter_timeline_data(followed_account_ids)
+      followed_tag_ids = TagFollow.where(account_id: current_account.id).pluck(:tag_id).map(&:to_i)
       @user_timeline_setting = Mammoth::UserTimelineSetting.find_by(user_id: current_user.id)
       unless @user_timeline_setting.nil? || @user_timeline_setting.selected_filters["is_filter_turn_on"] == false || @user_timeline_setting.selected_filters["location_filter"]["is_location_filter_turn_on"] == false
         if @user_timeline_setting.selected_filters["location_filter"]["selected_countries"].any?
           account_ids = Account.where(country: @user_timeline_setting.selected_filters["location_filter"]["selected_countries"]).pluck(:id).map(&:to_i)
           filtered_ids = followed_account_ids & account_ids
-          @statuses = Status.where(account_id: filtered_ids,reply: false).order(created_at: :desc).take(10)
-        else
-          account_ids = Account.where(country: @user_timeline_setting.selected_filters["default_country"]).pluck(:id).map(&:to_i)
-          filtered_ids = followed_account_ids & account_ids
-          @statuses = Status.where(account_id: filtered_ids,reply: false).order(created_at: :desc).take(10)
+          if followed_tag_ids.any?
+            user_followed_statuses = Status.where(account_id: filtered_ids,reply: false).order(created_at: :desc).to_sql
+            tag_followed_statuses = Status.where(reply: false).order(created_at: :desc).to_sql
+            combined_statuses  = Status.from("(((#{user_followed_statuses} ) UNION ( #{tag_followed_statuses} ))) statuses")
+            .order(created_at: :desc).take(10)
+            @statuses = Status.where(account_id: filtered_ids,reply: false).order(created_at: :desc).take(10) || combined_statuses
+          else
+            @statuses = Status.where(account_id: filtered_ids,reply: false).order(created_at: :desc).take(10)
+          end
         end
       else 
-        @statuses = Status.where(account_id: followed_account_ids,reply: false).order(created_at: :desc).take(10)
+        if followed_tag_ids.any?
+          user_followed_statuses = Status.where(account_id: followed_account_ids,reply: false).order(created_at: :desc).to_sql
+          tag_followed_statuses = Status.where(reply: false).order(created_at: :desc).to_sql
+          combined_statuses = Status.from("(((#{user_followed_statuses} ) UNION ( #{tag_followed_statuses} ))) statuses")
+          .order(created_at: :desc).take(10)
+          @statuses  = Status.where(account_id: followed_account_ids,reply: false).order(created_at: :desc).take(10) || combined_statuses
+        else
+          @statuses = Status.where(account_id: followed_account_ids,reply: false).order(created_at: :desc).take(10) 
+        end
       end
     end
 
