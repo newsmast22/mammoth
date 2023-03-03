@@ -61,7 +61,42 @@ module Mammoth::Api::V1
 				image = Paperclip.io_adapters.for(params[:header])
         @account.header = image
       end
-      UpdateAccountService.new.call(@account, account_params, raise_error: true)
+      json_val = nil
+
+      if params[:fields].size == 7
+          json_val = {
+            "0": {
+              name: params[:fields][0][:name],
+              value: params[:fields][0][:value]
+            },
+            "1": {
+              name: params[:fields][1][:name],
+              value: params[:fields][1][:value]
+            },
+            "2": {
+              name: params[:fields][2][:name],
+              value: params[:fields][2][:value]
+            },
+            "3": {
+              name: params[:fields][3][:name],
+              value: params[:fields][3][:value]
+            },
+            "4": {
+              name: params[:fields][4][:name],
+              value: params[:fields][4][:value]
+            },
+            "5": {
+              name: params[:fields][5][:name],
+              value: params[:fields][5][:value]
+            },
+            "6": {
+              name: params[:fields][6][:name],
+              value: params[:fields][6][:value]
+            }
+          } 
+        params[:fields_attributes] = json_val
+      end
+      UpdateAccountService.new.call(@account, account_params.except(:fields), raise_error: true)
       UserSettingsDecorator.new(current_user).update(user_settings_params) if user_settings_params
       ActivityPub::UpdateDistributionWorker.perform_async(@account.id)
       render json: @account, serializer: Mammoth::CredentialAccountSerializer
@@ -123,6 +158,7 @@ module Mammoth::Api::V1
         :hide_collections,
         :country,
         :dob,
+        fields: [:name, :value],
         fields_attributes: [:name, :value]
       )
     end
