@@ -4,7 +4,7 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
   include RoutingHelper
   include FormattingHelper
 
-  attributes :id, :username, :acct, :display_name, :locked, :bot, :discoverable, :group, :created_at,
+  attributes :id, :username, :acct, :display_name, :locked, :bot, :discoverable,:hide_collections, :group, :created_at,
              :note, :url, :avatar, :avatar_static, :header, :header_static,:primary_community_slug,:primary_community_name,
              :followers_count, :following_count, :statuses_count, :last_status_at,:collection_count,:community_count,
              :country,:country_common_name,:dob
@@ -152,6 +152,10 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
 
   def discoverable
     object.suspended? ? false : object.discoverable
+  end
+
+  def hide_collections
+    object.suspended? ? false : object.hide_collections
   end
 
   def moved_to_account
