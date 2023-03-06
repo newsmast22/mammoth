@@ -7,7 +7,7 @@ module Mammoth::Api::V1
     RESULTS_LIMIT = 20
 
     before_action :require_user!
-    #before_action -> { authorize_if_got_token! :read, :'read:search' }
+    before_action -> { authorize_if_got_token! :read, :'read:search' }
     before_action :validate_search_params!, only: [:create]
 
     def index

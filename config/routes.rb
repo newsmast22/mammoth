@@ -58,10 +58,12 @@ Mammoth::Engine.routes.draw do
           get 'global_suggestion'
           patch :update_credentials, to: 'users#update'
           post 'update_account' => "users#update_account", as: "update_account"
+          post 'update_account_sources' => "users#update_account_sources", as: "update_account_sources"
           post 'logout'
           get :show_details, to: 'users#show'
-          get  'get_profile_details_by_account' => "users#get_profile_details_by_account", as: "get_profile_details_by_account"
-          get  'get_country_list' => "users#get_country_list", as: "get_country_list"
+          get 'get_profile_details_by_account' => "users#get_profile_details_by_account", as: "get_profile_details_by_account"
+          get 'get_country_list' => "users#get_country_list", as: "get_country_list"
+          get 'get_source_list' => "users#get_source_list", as: "get_source_list"
         end
       end
       

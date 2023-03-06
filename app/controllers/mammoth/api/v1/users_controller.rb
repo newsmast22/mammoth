@@ -112,6 +112,82 @@ module Mammoth::Api::V1
       render json: @account, serializer: Mammoth::CredentialAccountSerializer
     end
 
+    def update_account_sources
+      @account = current_account
+      if params[:contributor_role].present? || params[:voices].present? || params[:media].present?
+
+        contributor_role = get_id_by_slug_value("contributorRole" ,params[:contributor_role])
+        @account.contributor_role_id = contributor_role == nil ? nil : contributor_role.id
+        
+        voice =  get_id_by_slug_value("voice" ,params[:voices])
+        @account.voice_id = voice == nil ? params[:voices] : voice.id
+        
+        media =  get_id_by_slug_value("media" ,params[:media])
+        @account.media_id = media == nil ? params[:media] : media.id
+
+        @account.save(validate: false)
+        render json: {
+          contributor_role_name: contributor_role == nil ? nil : contributor_role.name,
+          contributor_role_slug: contributor_role == nil ? nil: contributor_role.slug,
+          media_name: media == nil ? nil : media.name,
+          media_slug: media == nil ? nil : media.slug,
+          voices_name: voice == nil ? nil : voice.name,
+          voices_slug: voice == nil ? nil : voice.slug
+        }
+      else
+        render json: {error: 'Please select at least one element.'}, status: 422
+      end
+    end
+
+    def get_source_list
+      contributor_role_data = []
+      media_data = []
+      voice_data = []
+
+      contributor_roles = Mammoth::ContributorRole.all
+      unless contributor_roles.empty?
+        contributor_roles.each do |contributor_role|
+          contributor_role_data << {
+            contributor_role_id: contributor_role.id,
+            contributor_role_name: contributor_role.name,
+            contributor_role_slug: contributor_role.slug
+          }
+        end
+      end
+      
+      medias = Mammoth::Media.all
+      unless medias.empty?
+        medias.each do |media|
+          media_data << {
+            media_id: media.id,
+            media_name: media.name,
+            media_slug: media.slug
+          }
+        end
+      end
+
+      voices = Mammoth::Voice.all
+      unless voices.empty?
+        voices.each do |voice|
+          voice_data << {
+            voice_id: voice.id,
+            voice_name: voice.name,
+            voice_slug: voice.slug
+          }
+        end
+      end
+
+      if contributor_role_data.any? || media_data.any? || voice_data.any?
+        render json: {
+          contributor_role: contributor_role_data,
+          media: media_data,
+          voices: voice_data
+        }
+      else
+        render json: {error: "Record not found"}
+      end
+    end
+
     def get_profile_details_by_account
       account = Account.find(params[:id])
       get_user_statuses_info(params[:id], account)
@@ -194,6 +270,35 @@ module Mammoth::Api::V1
         serializer: serializer,
         adapter: adapter
         ).as_json
+    end
+
+    def get_id_by_slug_value(model_name,slug_value)
+      unless slug_value.nil?
+        if model_name == "contributorRole"
+          contributor_role =  Mammoth::ContributorRole.where(slug: slug_value).last
+          if contributor_role.present?
+            return contributor_role
+          else
+            return nil
+          end
+        elsif model_name == "media"
+          media =  Mammoth::Media.where(slug: slug_value).last
+          if media.present?
+            return media
+          else
+            return nil
+          end
+        else # voice
+          voice =  Mammoth::Voice.where(slug: slug_value).last
+          if voice.present?
+            return voice
+          else
+            return nil
+          end
+         end
+      else
+        nil
+      end
     end
 
   end

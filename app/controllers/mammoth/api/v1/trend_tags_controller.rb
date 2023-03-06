@@ -14,16 +14,18 @@ module Mammoth::Api::V1
       .having("count(tag_id) > 0 ")
       .order("count(tag_id) desc").select('tag_id')
       .pluck(:tag_id).map(&:to_i)
-
       if tag_ids.any?
-        @tag = Tag.find(tag_ids).take(5)
+        if params[:limit]
+          @tag = Tag.where(id: tag_ids).limit(params[:limit])
+        else
+          @tag = @tag = Tag.find(tag_ids)
+        end
         render json: @tag,each_serializer: Mammoth::TagSerializer
       else
         render json: {
           error: "Record not found"
          }
       end
-      
       #Begin::Original code
       #render json: @tags, each_serializer: Mammoth::TagSerializer, relationships: TagRelationshipsPresenter.new(@tags, current_user&.account_id)
       #End::Original code
@@ -43,7 +45,12 @@ module Mammoth::Api::V1
           .order("count(tag_id) desc").select('tag_id')
           .pluck(:tag_id).map(&:to_i)
           if tag_ids.any?
-            @tag = Tag.find(tag_ids).take(5)
+            if params[:limit]
+              @tag = Tag.where(id: tag_ids).limit(params[:limit])
+            else
+              @tag = @tag = Tag.find(tag_ids)
+            end
+
             render json: @tag,each_serializer: Mammoth::TagSerializer
           else
             render json: {
