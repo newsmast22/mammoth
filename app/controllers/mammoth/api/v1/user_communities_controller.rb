@@ -22,7 +22,7 @@ module Mammoth::Api::V1
             image_updated_at: community.image_updated_at,
             description: community.description,
             image_url: community.image.url,
-            collection_id: 3,
+            collection_id: community.collection.id,
             followers: Mammoth::UserCommunity.where(community_id: community.id).size,
             created_at: community.created_at,
             updated_at: community.updated_at

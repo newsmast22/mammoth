@@ -7,24 +7,52 @@ module Mammoth::Api::V1
 		def index
 			data = []
 			if params[:collection_id].nil?
+
+				#Begin::check user have selected community 
+				user = Mammoth::User.find(current_user.id)
+				user_communities_ids = user&.user_communities.pluck(:community_id).map(&:to_i) || []
+				#End::check user have selected community 
+
 				@communities = Mammoth::Community.all
-				@communities.each do |community|
-					data << {
-						id: community.id,
-						name: community.name,
-						slug: community.slug,
-						image_file_name: community.image_file_name,
-						image_content_type: community.image_content_type,
-						image_file_size: community.image_file_size,
-						image_updated_at: community.image_updated_at,
-						description: community.description,
-						image_url: community.image.url,
-						collection_id: community.collection_id,
-						created_at: community.created_at,
-						updated_at: community.updated_at
-					}
+
+				if user_communities_ids.any?
+					@communities.each do |community|
+						data << {
+							id: community.id,
+							name: community.name,
+							slug: community.slug,
+							is_joined: user_communities_ids.include?(community.id), 
+							image_file_name: community.image_file_name,
+							image_content_type: community.image_content_type,
+							image_file_size: community.image_file_size,
+							image_updated_at: community.image_updated_at,
+							description: community.description,
+							image_url: community.image.url,
+							collection_id: community.collection_id,
+							created_at: community.created_at,
+							updated_at: community.updated_at
+						}
+					end
+					render json: data
+				else
+					@communities.each do |community|
+						data << {
+							id: community.id,
+							name: community.name,
+							slug: community.slug,
+							image_file_name: community.image_file_name,
+							image_content_type: community.image_content_type,
+							image_file_size: community.image_file_size,
+							image_updated_at: community.image_updated_at,
+							description: community.description,
+							image_url: community.image.url,
+							collection_id: community.collection_id,
+							created_at: community.created_at,
+							updated_at: community.updated_at
+						}
+					end
+					render json: data
 				end
-				render json: data
 			else
 				@user_communities = Mammoth::User.find(current_user.id).user_communities
 				user_communities_ids  = @user_communities.pluck(:community_id).map(&:to_i)
