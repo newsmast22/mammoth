@@ -32,8 +32,31 @@ module Mammoth::Api::V1
           error: "Record not found"
          }
       end      
-
     end
+
+    # require 'rss'
+    # require 'open-uri'
+    # def rss 
+    #   rss_results = []
+    #   url = 'https://rss.app/feeds/E6fryGxw2Vo0OPyU.xml'
+    #   URI.open(url) do |rss|
+    #     feed = RSS::Parser.parse(rss)
+    #     puts '----------------------------------------'
+    #     puts feed
+    #     puts '-----------------------------------------'
+    #     puts "Title: #{feed.channel.title}"
+    #     feed.items.each do |item|
+    #       puts "Item: #{item.title}"
+    #     end
+
+    #     feed.items.each do |result|
+    #       result = { title: result.title, date: result.pubDate, link: result.link, description: result.description }
+    #       rss_results.push(result)
+    #     end
+
+    #     render json: rss_results
+    #   end
+    # end
 
     private
 
