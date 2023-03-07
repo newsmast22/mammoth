@@ -49,6 +49,7 @@ Mammoth::Engine.routes.draw do
       resources :trend_tags do
         collection do
           get 'get_my_community_trend_tag' => 'trend_tags#get_my_community_trend_tag', as: "get_my_community_trend_tag"
+          get 'get_featured_hashtag' => 'trend_tags#get_featured_hashtag', as: "get_featured_hashtag"
         end
       end
       
