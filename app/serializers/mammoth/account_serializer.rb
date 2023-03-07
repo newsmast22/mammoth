@@ -139,7 +139,7 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
   end
 
   def display_name
-    object.suspended? ? '' : object.display_name
+    object.suspended? ? '' : object.display_name.empty? ? object.username : object.display_name
   end
 
   def locked
