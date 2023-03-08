@@ -4,5 +4,6 @@ module Mammoth
     belongs_to :media, class_name: "Mammoth::Media",  optional: true
     belongs_to :voice, class_name: "Mammoth::Voice",  optional: true
     belongs_to :contributor_role, class_name: "Mammoth::ContributorRole",  optional: true
+    belongs_to :subtitle, class_name: "Mammoth::Subtitle",  optional: true
   end
 end
