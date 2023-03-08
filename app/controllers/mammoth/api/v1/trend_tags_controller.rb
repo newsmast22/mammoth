@@ -63,11 +63,6 @@ module Mammoth::Api::V1
       end
     end
 
-    def get_featured_hashtag
-      featured_tags = current_account.featured_tags.order(statuses_count: :desc)
-      render json: featured_tags, each_serializer: Mammoth::FeaturedTagSerializer
-    end
-
     private
 
     #Begin::Original code

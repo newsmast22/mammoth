@@ -49,7 +49,6 @@ Mammoth::Engine.routes.draw do
       resources :trend_tags do
         collection do
           get 'get_my_community_trend_tag' => 'trend_tags#get_my_community_trend_tag', as: "get_my_community_trend_tag"
-          get 'get_featured_hashtag' => 'trend_tags#get_featured_hashtag', as: "get_featured_hashtag"
         end
       end
       
@@ -65,6 +64,7 @@ Mammoth::Engine.routes.draw do
           get 'get_profile_details_by_account' => "users#get_profile_details_by_account", as: "get_profile_details_by_account"
           get 'get_country_list' => "users#get_country_list", as: "get_country_list"
           get 'get_source_list' => "users#get_source_list", as: "get_source_list"
+          get 'get_subtitles_list' => "users#get_subtitles_list", as: "get_subtitles_list"
         end
       end
       

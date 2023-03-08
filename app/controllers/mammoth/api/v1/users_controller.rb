@@ -114,29 +114,45 @@ module Mammoth::Api::V1
 
     def update_account_sources
       @account = current_account
-      if params[:contributor_role].present? || params[:voices].present? || params[:media].present?
+      contributor_role_name = ""
+      subtitle_name = ""
+      save_flag = false
 
-        contributor_role = get_id_by_slug_value("contributorRole" ,params[:contributor_role])
-        @account.contributor_role_id = contributor_role == nil ? nil : contributor_role.id
-        
-        voice =  get_id_by_slug_value("voice" ,params[:voices])
-        @account.voice_id = voice == nil ? params[:voices] : voice.id
-        
-        media =  get_id_by_slug_value("media" ,params[:media])
-        @account.media_id = media == nil ? params[:media] : media.id
+      if params[:contributor_role].present? 
+        @account.contributor_role_id = params[:contributor_role]
+        contributor_role_name = Mammoth::ContributorRole.find(params[:contributor_role].map(&:to_i).last).name
+        save_flag = true
+      end
 
+      if params[:voices].present? 
+        @account.voice_id = params[:voices].map(&:to_i)
+        save_flag = true
+      end
+
+      if params[:media].present?
+        @account.media_id = params[:media].map(&:to_i)
+        save_flag = true
+      end
+
+      if params[:subtitle].present?
+        subtitle =  Mammoth::Subtitle.where(slug: params[:subtitle]).last
+        if subtitle.present?
+          @account.subtitle_id = subtitle.id  
+          subtitle_name = subtitle.name
+          save_flag = true
+        end
+      end
+
+      if save_flag
         @account.save(validate: false)
         render json: {
-          contributor_role_name: contributor_role == nil ? nil : contributor_role.name,
-          contributor_role_slug: contributor_role == nil ? nil: contributor_role.slug,
-          media_name: media == nil ? nil : media.name,
-          media_slug: media == nil ? nil : media.slug,
-          voices_name: voice == nil ? nil : voice.name,
-          voices_slug: voice == nil ? nil : voice.slug
+          message: 'Successfully saved',
+          contributor_role_name: contributor_role_name,
+          subtitle_name: subtitle_name
         }
       else
-        render json: {error: 'Please select at least one element.'}, status: 422
-      end
+        render json: {error: "Record not found"}
+      end      
     end
 
     def get_source_list
@@ -150,7 +166,8 @@ module Mammoth::Api::V1
           contributor_role_data << {
             contributor_role_id: contributor_role.id,
             contributor_role_name: contributor_role.name,
-            contributor_role_slug: contributor_role.slug
+            contributor_role_slug: contributor_role.slug,
+            is_checked: current_account.contributor_role_id.include?(contributor_role.id)
           }
         end
       end
@@ -161,7 +178,8 @@ module Mammoth::Api::V1
           media_data << {
             media_id: media.id,
             media_name: media.name,
-            media_slug: media.slug
+            media_slug: media.slug,
+            is_checked: current_account.media_id.include?(media.id)
           }
         end
       end
@@ -172,7 +190,8 @@ module Mammoth::Api::V1
           voice_data << {
             voice_id: voice.id,
             voice_name: voice.name,
-            voice_slug: voice.slug
+            voice_slug: voice.slug,
+            is_checked: current_account.voice_id.include?(voice.id)
           }
         end
       end
@@ -186,6 +205,25 @@ module Mammoth::Api::V1
       else
         render json: {error: "Record not found"}
       end
+    end
+
+    def get_subtitles_list 
+      subtitle_data = []
+      subtitles = Mammoth::Subtitle.all
+      unless subtitles.empty?
+        subtitles.each do |subtitle|
+          subtitle_data << {
+            subtitle_id: subtitle.id,
+            subtitle_name: subtitle.name,
+            subtitle_slug: subtitle.slug,
+            is_checked: current_account.subtitle_id == subtitle.id ? true : false
+          }
+        end
+        render json: subtitle_data
+      else
+        render json: {error: "Record not found"}
+      end
+      
     end
 
     def get_profile_details_by_account
@@ -270,35 +308,6 @@ module Mammoth::Api::V1
         serializer: serializer,
         adapter: adapter
         ).as_json
-    end
-
-    def get_id_by_slug_value(model_name,slug_value)
-      unless slug_value.nil?
-        if model_name == "contributorRole"
-          contributor_role =  Mammoth::ContributorRole.where(slug: slug_value).last
-          if contributor_role.present?
-            return contributor_role
-          else
-            return nil
-          end
-        elsif model_name == "media"
-          media =  Mammoth::Media.where(slug: slug_value).last
-          if media.present?
-            return media
-          else
-            return nil
-          end
-        else # voice
-          voice =  Mammoth::Voice.where(slug: slug_value).last
-          if voice.present?
-            return voice
-          else
-            return nil
-          end
-         end
-      else
-        nil
-      end
     end
 
   end
