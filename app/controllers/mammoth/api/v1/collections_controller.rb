@@ -93,6 +93,23 @@ module Mammoth::Api::V1
 			
 		end
 
+		def create_subtitle
+			Mammoth::Subtitle.create(slug: params[:slug], name: params[:name])
+			render json: {message: "saved"}
+		end
+
+		def create_media
+			Mammoth::Media.create(slug: params[:slug], name: params[:name])
+			render json: {message: "saved"}
+		end
+
+		def create_voice
+			Mammoth::Voice.create(slug: params[:slug], name: params[:name])
+			render json: {message: "saved"}
+		end
+
+		
+
     private
 
     def return_collection
