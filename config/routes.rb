@@ -32,6 +32,12 @@ Mammoth::Engine.routes.draw do
       resources :collections do
         collection do
           get 'get_collection_by_user' => "collections#get_collection_by_user", as: "get_collection_by_user"
+
+          #begin::need to delete
+          post 'create_subtitle' => "collections#create_subtitle", as: "create_subtitle"
+          post 'create_media' => "collections#create_media", as: "create_media"
+          post 'create_voice' => "collections#create_voice", as: "create_voice"
+          #end::need to delete
         end
       end
 
