@@ -119,18 +119,23 @@ module Mammoth::Api::V1
       save_flag = false
 
       if params[:contributor_role].present? 
-        @account.contributor_role_id = params[:contributor_role]
-        contributor_role_name = Mammoth::ContributorRole.find(params[:contributor_role].map(&:to_i).last).name
+        contributor_role = Mammoth::ContributorRole.where(slug: params[:contributor_role]).last 
+        @account.contributor_role_id = contributor_role.id
+        contributor_role_name = contributor_role.name
         save_flag = true
       end
 
       if params[:voices].present? 
-        @account.voice_id = params[:voices].map(&:to_i)
+        puts "---------------------- voices -----------------"
+        puts params[:voices]
+        @account.voice_id = Mammoth::Voice.where(slug: params[:voices]).last.id
         save_flag = true
       end
 
       if params[:media].present?
-        @account.media_id = params[:media].map(&:to_i)
+        puts "---------------------- media -----------------"
+        puts params[:media]
+        @account.media_id = Mammoth::Media.where(slug: params[:media]).last.id
         save_flag = true
       end
 
