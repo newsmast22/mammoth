@@ -7,7 +7,7 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
   attributes :id, :username, :acct, :display_name, :locked, :bot, :discoverable,:hide_collections, :group, :created_at,
              :note, :url, :avatar, :avatar_static, :header, :header_static,:primary_community_slug,:primary_community_name,
              :followers_count, :following_count, :statuses_count, :last_status_at,:collection_count,:community_count,
-             :country,:country_common_name,:dob
+             :country,:country_common_name,:dob,:subtitle,:contributor_role,:voices,:media
 
   has_one :moved_to_account, key: :moved, serializer: REST::AccountSerializer, if: :moved_and_not_nested?
 
@@ -62,6 +62,43 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
   def acct
     object.pretty_acct
   end
+
+  def subtitle
+    subtitle = Mammoth::Subtitle.where(id: object.subtitle_id).last
+    if subtitle.present?
+      subtitle.name
+    else
+      ""
+    end
+  end
+
+  def contributor_role
+    contributor_role = Mammoth::ContributorRole.where(id: object.contributor_role_id).last
+    if contributor_role.present?
+      contributor_role.name
+    else
+      ""
+    end
+  end
+
+  def media
+    media = Mammoth::Media.where(id: object.media_id).last
+    if media.present?
+      media.name
+    else
+      ""
+    end
+  end
+
+  def voices
+    voice = Mammoth::Voice.where(id: object.voice_id).last
+    if voice.present?
+      voice.name
+    else
+      ""
+    end
+  end
+
 
   def collection_count
     object.user.id
