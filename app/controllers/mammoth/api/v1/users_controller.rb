@@ -126,15 +126,11 @@ module Mammoth::Api::V1
       end
 
       if params[:voices].present? 
-        puts "---------------------- voices -----------------"
-        puts params[:voices]
         @account.voice_id = Mammoth::Voice.where(slug: params[:voices]).last.id
         save_flag = true
       end
 
       if params[:media].present?
-        puts "---------------------- media -----------------"
-        puts params[:media]
         @account.media_id = Mammoth::Media.where(slug: params[:media]).last.id
         save_flag = true
       end
@@ -172,7 +168,7 @@ module Mammoth::Api::V1
             contributor_role_id: contributor_role.id,
             contributor_role_name: contributor_role.name,
             contributor_role_slug: contributor_role.slug,
-            is_checked: current_account.contributor_role_id.include?(contributor_role.id)
+            is_checked: current_account.contributor_role_id == contributor_role.id ? true : false
           }
         end
       end
@@ -184,7 +180,7 @@ module Mammoth::Api::V1
             media_id: media.id,
             media_name: media.name,
             media_slug: media.slug,
-            is_checked: current_account.media_id.include?(media.id)
+            is_checked: current_account.media_id == media.id ? true : false
           }
         end
       end
@@ -196,7 +192,7 @@ module Mammoth::Api::V1
             voice_id: voice.id,
             voice_name: voice.name,
             voice_slug: voice.slug,
-            is_checked: current_account.voice_id.include?(voice.id)
+            is_checked: current_account.voice_id == voice.id ? true : false
           }
         end
       end
