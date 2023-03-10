@@ -37,6 +37,11 @@ module Mammoth::Api::V1
           location_filter:[
             :is_location_filter_turn_on,
             selected_countries: []
+          ],
+          source_filter:[
+            :selected_contributor_role,
+            :selected_media,
+            :selected_voices
           ]
         ]
       )
