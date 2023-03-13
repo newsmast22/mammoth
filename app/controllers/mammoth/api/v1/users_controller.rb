@@ -119,19 +119,19 @@ module Mammoth::Api::V1
       save_flag = false
 
       if params[:contributor_role].present? 
-        contributor_role = Mammoth::ContributorRole.where(slug: params[:contributor_role]).last 
-        @account.contributor_role_id = contributor_role.id
+        contributor_role = Mammoth::ContributorRole.where(id: params[:contributor_role].last.to_i).last 
+        @account.contributor_role_id = params[:contributor_role]
         contributor_role_name = contributor_role.name
         save_flag = true
       end
 
       if params[:voices].present? 
-        @account.voice_id = Mammoth::Voice.where(slug: params[:voices]).last.id
+        @account.voice_id = params[:voices]
         save_flag = true
       end
 
       if params[:media].present?
-        @account.media_id = Mammoth::Media.where(slug: params[:media]).last.id
+        @account.media_id = params[:media]
         save_flag = true
       end
 
@@ -234,7 +234,36 @@ module Mammoth::Api::V1
 
     def show
       @account = current_account
-      render json: @account, serializer: Mammoth::CredentialAccountSerializer
+      community_images = []
+      following_account_images = []
+
+      @user  = Mammoth::User.find(current_user.id)
+			@user_communities= @user.user_communities
+      #begin::get collection images
+			unless @user_communities.empty?
+        community_ids = @user_communities.pluck(:community_id).map(&:to_i)
+        communities = Mammoth::Community.where(id: community_ids).take(2)
+        communities.each do |community|
+					community_images << community.image.url
+				end
+      end
+      #end::get community images
+
+      #begin:get following images
+      followed_account_ids = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
+      if followed_account_ids.any?
+
+        Account.where(id: followed_account_ids).take(2).each do |following_account|
+					following_account_images << following_account.avatar.url
+				end
+      end
+      #end:get following images
+
+      render json: @account,root: 'data', serializer: Mammoth::CredentialAccountSerializer,adapter: :json,
+      meta:{
+        community_images_url: community_images,
+        following_images_url: following_account_images
+      }
     end
 
     def logout
