@@ -7,8 +7,8 @@ module Mammoth
     belongs_to :subtitle, class_name: "Mammoth::Subtitle",  optional: true
 
     scope :primary_timeline_countries_filter,->(country_alpah2_name) {where(country: country_alpah2_name)}
-    scope :primary_timeline_contributor_role_filter,->(id) {where( contributor_role_id: id)}
-    scope :primary_timeline_voice_filter,->(id) {where(voice_id: id)}
-    scope :primary_timeline_media_filter,->(id) {where(media_id: id)}
+    scope :primary_timeline_contributor_role_filter,->(id) {where( "contributor_role_id @> ARRAY[?]::integer[]",id)}
+    scope :primary_timeline_voice_filter,->(id) {where("voice_id @> ARRAY[?]::integer[] ", id)}
+    scope :primary_timeline_media_filter,->(id) {where("media_id @> ARRAY[?]::integer[] ", id)}
   end
 end

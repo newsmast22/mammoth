@@ -17,7 +17,7 @@ module Mammoth::Api::V1
         unless @statuses.empty?
         # @statuses = @statuses.page(params[:page]).per(20)
 
-          render json: @statuses.order(created_at: :desc).take(2),root: 'data', 
+          render json: @statuses.order(created_at: :desc).take(10),root: 'data', 
           each_serializer: Mammoth::StatusSerializer, adapter: :json
           # , 
           # meta: { pagination:
@@ -65,16 +65,16 @@ module Mammoth::Api::V1
       #begin::country filter
       accounts = Mammoth::Account.primary_timeline_countries_filter(@user_timeline_setting.selected_filters["location_filter"]["selected_countries"]) if @user_timeline_setting.selected_filters["location_filter"]["selected_countries"].any?
 
-      return @statuses = [] accounts.blank?
+      return @statuses = [] if accounts.blank?
       #end::country filter
 
-      #begin:: source: contributor_role, voice, media
+      #begin:: source filter: contributor_role, voice, media
       accounts = Mammoth::Account.primary_timeline_contributor_role_filter(@user_timeline_setting.selected_filters["source_filter"]["selected_contributor_role"]) if @user_timeline_setting.selected_filters["source_filter"]["selected_contributor_role"].present?
 
       accounts = Mammoth::Account.primary_timeline_voice_filter(@user_timeline_setting.selected_filters["source_filter"]["selected_voices"]) if @user_timeline_setting.selected_filters["source_filter"]["selected_voices"].present?
 
       accounts = Mammoth::Account.primary_timeline_media_filter(@user_timeline_setting.selected_filters["source_filter"]["selected_media"]) if @user_timeline_setting.selected_filters["source_filter"]["selected_media"].present?
-      #end:: source: contributor_role, voice, media
+      #end:: source filter: contributor_role, voice, media
 
       unless accounts.blank?
         account_ids = accounts.pluck(:id).map(&:to_i) 
