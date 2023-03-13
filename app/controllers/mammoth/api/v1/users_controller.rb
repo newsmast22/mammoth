@@ -237,9 +237,9 @@ module Mammoth::Api::V1
       community_images = []
       following_account_images = []
 
+      #begin::get collection images
       @user  = Mammoth::User.find(current_user.id)
 			@user_communities= @user.user_communities
-      #begin::get collection images
 			unless @user_communities.empty?
         community_ids = @user_communities.pluck(:community_id).map(&:to_i)
         communities = Mammoth::Community.where(id: community_ids).take(2)
@@ -329,7 +329,7 @@ module Mammoth::Api::V1
       meta:{
       account_data: account_data.merge(:is_my_account => is_my_account, :is_followed => account_followed.include?(account_id.to_i))
       }
-
+#
     end
 
     def single_serialize(collection, serializer, adapter = :json)
