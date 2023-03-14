@@ -72,7 +72,6 @@ module Mammoth::Api::V1
       #end:: source filter: contributor_role, voice, media
 
       @statuses = @statuses.filter_timeline_with_accounts(accounts.pluck(:id).map(&:to_i))
-
     end
 
 
