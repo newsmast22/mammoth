@@ -168,7 +168,8 @@ module Mammoth::Api::V1
             contributor_role_id: contributor_role.id,
             contributor_role_name: contributor_role.name,
             contributor_role_slug: contributor_role.slug,
-            is_checked: current_account.contributor_role_id == contributor_role.id ? true : false
+            #is_checked: current_account.contributor_role_id == contributor_role.id ? true : false
+            is_checked: current_account.contributor_role_id.include?(contributor_role.id)
           }
         end
       end
@@ -180,7 +181,8 @@ module Mammoth::Api::V1
             media_id: media.id,
             media_name: media.name,
             media_slug: media.slug,
-            is_checked: current_account.media_id == media.id ? true : false
+            #is_checked: current_account.media_id == media.id ? true : false
+            is_checked: current_account.media_id.include?(media.id)
           }
         end
       end
@@ -192,7 +194,8 @@ module Mammoth::Api::V1
             voice_id: voice.id,
             voice_name: voice.name,
             voice_slug: voice.slug,
-            is_checked: current_account.voice_id == voice.id ? true : false
+            #is_checked: current_account.voice_id == voice.id ? true : false
+            is_checked: current_account.voice_id.include?(voice.id)
           }
         end
       end
