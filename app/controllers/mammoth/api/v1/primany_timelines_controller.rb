@@ -9,20 +9,20 @@ module Mammoth::Api::V1
         primary_community_statuses = Mammoth::CommunityStatus.where(community_id: user_primary_community.community_id).order(created_at: :desc).pluck(:status_id).map(&:to_i)
 
         #Begin::Filter
-        fetch_filter_timeline_data(primary_community_statuses)
-        #fetch_primary_timeline_filter(primary_community_statuses)
+        #fetch_filter_timeline_data(primary_community_statuses)
+        fetch_primary_timeline_filter(primary_community_statuses)
         #End::Filter
 
-        #@statuses = Status.where(id: primary_community_statuses,reply: false).order(created_at: :desc).take(10)
-        #@statuses = []
         unless @statuses.empty?
         # @statuses = @statuses.page(params[:page]).per(20)
 
-          # render json: @statuses.order(created_at: :desc).take(10),root: 'data', 
-          # each_serializer: Mammoth::StatusSerializer, adapter: :json
-
-          render json: @statuses,root: 'data', 
+          render json: @statuses.order(created_at: :desc).take(10),root: 'data', 
           each_serializer: Mammoth::StatusSerializer, adapter: :json
+
+          #render json: @statuses.order(created_at: :desc).take(1)
+
+          # render json: @statuses,root: 'data', 
+          # each_serializer: Mammoth::StatusSerializer, adapter: :json
           # , 
           # meta: { pagination:
           #   { 
@@ -44,50 +44,40 @@ module Mammoth::Api::V1
 
     private
 
-    def fetch_filter_timeline_data(primary_community_statues_ids)
+    def fetch_primary_timeline_filter(primary_community_statues_ids)
       @user_timeline_setting = Mammoth::UserTimelineSetting.find_by(user_id: current_user.id)
-      unless @user_timeline_setting.nil? || @user_timeline_setting.selected_filters["is_filter_turn_on"] == false || @user_timeline_setting.selected_filters["location_filter"]["is_location_filter_turn_on"] == false
-        if @user_timeline_setting.selected_filters["location_filter"]["selected_countries"].any?
-          account_ids = Account.where(country: @user_timeline_setting.selected_filters["location_filter"]["selected_countries"]).pluck(:id).map(&:to_i)
-          @statuses = Status.where(id: primary_community_statues_ids,reply: false,account_id: account_ids).order(created_at: :desc).take(10)
-        else
-          account_ids = Account.where(country: @user_timeline_setting.selected_filters["default_country"]).pluck(:id).map(&:to_i)
-          @statuses = Status.where(id: primary_community_statues_ids,reply: false,account_id: account_ids).order(created_at: :desc).take(10)
-        end
-      else 
-        @statuses = Status.where(id: primary_community_statues_ids,reply: false).order(created_at: :desc).take(10)
+
+      @statuses = Mammoth::Status.primary_timeline_filter(primary_community_statues_ids)
+
+      return @statuses if @user_timeline_setting.nil? || @user_timeline_setting.selected_filters["is_filter_turn_on"] == false 
+
+      #begin::country filter
+      is_country_filter = false
+      
+      # filter: country_filter_on && selected_country exists
+      if @user_timeline_setting.selected_filters["location_filter"]["selected_countries"].any? && @user_timeline_setting.selected_filters["location_filter"]["is_location_filter_turn_on"] == true
+        accounts = Mammoth::Account.filter_timeline_with_countries(@user_timeline_setting.selected_filters["location_filter"]["selected_countries"]) 
+        is_country_filter = true
       end
+
+      if is_country_filter == true && accounts.blank? == true
+        return @statuses = []
+      end
+      #end::country filter
+
+      #begin:: source filter: contributor_role, voice, media
+      accounts = Mammoth::Account.all if accounts.blank?
+
+      accounts = accounts.filter_timeline_with_contributor_role(@user_timeline_setting.selected_filters["source_filter"]["selected_contributor_role"]) if @user_timeline_setting.selected_filters["source_filter"]["selected_contributor_role"].present?
+
+      accounts = accounts.filter_timeline_with_voice(@user_timeline_setting.selected_filters["source_filter"]["selected_voices"]) if @user_timeline_setting.selected_filters["source_filter"]["selected_voices"].present?
+
+      accounts = accounts.filter_timeline_with_media(@user_timeline_setting.selected_filters["source_filter"]["selected_media"]) if @user_timeline_setting.selected_filters["source_filter"]["selected_media"].present?
+      #end:: source filter: contributor_role, voice, media
+
+      @statuses = @statuses.filter_timeline_with_accounts(accounts.pluck(:id).map(&:to_i))
+
     end
-
-    # def fetch_primary_timeline_filter(primary_community_statues_ids)
-    #   @user_timeline_setting = Mammoth::UserTimelineSetting.find_by(user_id: current_user.id)
-
-    #   @statuses = Mammoth::Status.primary_timeline_filter(primary_community_statues_ids)
-
-    #   return @statuses if @user_timeline_setting.nil? || @user_timeline_setting.selected_filters["is_filter_turn_on"] == false 
-
-    #   #begin::country filter
-    #   accounts = Mammoth::Account.primary_timeline_countries_filter(@user_timeline_setting.selected_filters["location_filter"]["selected_countries"]) if @user_timeline_setting.selected_filters["location_filter"]["selected_countries"].any?
-
-    #   return @statuses = [] if accounts.blank?
-    #   #end::country filter
-
-    #   #begin:: source filter: contributor_role, voice, media
-    #   accounts = Mammoth::Account.primary_timeline_contributor_role_filter(@user_timeline_setting.selected_filters["source_filter"]["selected_contributor_role"]) if @user_timeline_setting.selected_filters["source_filter"]["selected_contributor_role"].present?
-
-    #   accounts = Mammoth::Account.primary_timeline_voice_filter(@user_timeline_setting.selected_filters["source_filter"]["selected_voices"]) if @user_timeline_setting.selected_filters["source_filter"]["selected_voices"].present?
-
-    #   accounts = Mammoth::Account.primary_timeline_media_filter(@user_timeline_setting.selected_filters["source_filter"]["selected_media"]) if @user_timeline_setting.selected_filters["source_filter"]["selected_media"].present?
-    #   #end:: source filter: contributor_role, voice, media
-
-    #   unless accounts.blank?
-    #     account_ids = accounts.pluck(:id).map(&:to_i) 
-    #     return @statuses.primary_timeline_accounts_filter(account_ids)
-    #   else
-    #     return @statuses = []
-    #   end
-
-    # end
 
   end
 end
