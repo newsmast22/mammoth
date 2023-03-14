@@ -39,9 +39,9 @@ module Mammoth::Api::V1
             selected_countries: []
           ],
           source_filter:[
-            :selected_contributor_role,
-            :selected_media,
-            :selected_voices
+            selected_contributor_role: [],
+            selected_media: [],
+            selected_voices: []
           ]
         ]
       )
