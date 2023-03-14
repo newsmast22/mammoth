@@ -6,9 +6,9 @@ module Mammoth
     belongs_to :contributor_role, class_name: "Mammoth::ContributorRole",  optional: true
     belongs_to :subtitle, class_name: "Mammoth::Subtitle",  optional: true
 
-    scope :primary_timeline_countries_filter,->(country_alpah2_name) {where(country: country_alpah2_name)}
-    scope :primary_timeline_contributor_role_filter,->(id) {where( "contributor_role_id @> ARRAY[?]::integer[]",id)}
-    scope :primary_timeline_voice_filter,->(id) {where("voice_id @> ARRAY[?]::integer[] ", id)}
-    scope :primary_timeline_media_filter,->(id) {where("media_id @> ARRAY[?]::integer[] ", id)}
+    scope :filter_timeline_with_countries,->(country_alpah2_name) {where(country: country_alpah2_name)}
+    scope :filter_timeline_with_contributor_role,->(id) {where( "contributor_role_id && ARRAY[?]::integer[]",id)}
+    scope :filter_timeline_with_voice,->(id) {where("voice_id && ARRAY[?]::integer[] ", id)}
+    scope :filter_timeline_with_media,->(id) {where("media_id && ARRAY[?]::integer[] ", id)}
   end
 end
