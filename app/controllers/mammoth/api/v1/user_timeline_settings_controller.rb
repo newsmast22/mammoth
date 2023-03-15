@@ -42,6 +42,9 @@ module Mammoth::Api::V1
             selected_contributor_role: [],
             selected_media: [],
             selected_voices: []
+          ],
+          communities_filter:[
+            selected_communities: [],
           ]
         ]
       )

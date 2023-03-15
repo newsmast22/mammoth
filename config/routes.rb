@@ -11,7 +11,11 @@ Mammoth::Engine.routes.draw do
       get  'search_all_commnities' => 'search_all_commnities#index', as: 'search_all_commnities'
       get  'search_my_communities' => 'search_my_communities#index', as: 'search_my_communities'
 
-      resources :communities
+      resources :communities do 
+        collection do 
+          get  'communitiesWithCollection' => 'communities#communitiesWithCollection', as: 'communitiesWithCollection'
+        end
+      end
 
       resources :community_statuses do
         collection do
