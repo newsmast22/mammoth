@@ -279,7 +279,8 @@ module Mammoth::Api::V1
           data << {
             alpha2: country.alpha2,
             common_name: country.common_name,
-            emoji_flag: country.emoji_flag
+            emoji_flag: country.emoji_flag,
+            country_code: country.country_code
           }
         end
         render json: data
