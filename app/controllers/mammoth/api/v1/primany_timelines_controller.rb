@@ -4,6 +4,19 @@ module Mammoth::Api::V1
 		before_action -> { doorkeeper_authorize! :read , :write}
 
     def index
+      #Begin::Create UserTimeLineSetting
+      userTimeLineSetting = Mammoth::UserTimelineSetting.where(user_id: current_user.id).last
+      if userTimeLineSetting.nil?
+        create_userTimelineSetting()
+      elsif userTimeLineSetting.selected_filters.dig('location_filter').nil?
+        create_userTimelineSetting()
+      elsif userTimeLineSetting.selected_filters.dig('source_filter').nil?
+        create_userTimelineSetting()
+      elsif userTimeLineSetting.selected_filters.dig('communities_filter').nil?
+        create_userTimelineSetting()
+      end
+      #End:Create UserTimeLineSetting
+
       user_primary_community= Mammoth::UserCommunity.where(user_id: current_user.id, is_primary: true).last
       if user_primary_community.present?
         primary_community_statuses = Mammoth::CommunityStatus.where(community_id: user_primary_community.community_id).order(created_at: :desc).pluck(:status_id).map(&:to_i)
@@ -45,6 +58,8 @@ module Mammoth::Api::V1
     private
 
     def fetch_primary_timeline_filter(primary_community_statues_ids)
+      return @statuses = [] unless primary_community_statues_ids.any?
+
       @user_timeline_setting = Mammoth::UserTimelineSetting.find_by(user_id: current_user.id)
 
       @statuses = Mammoth::Status.primary_timeline_filter(primary_community_statues_ids)
@@ -65,7 +80,7 @@ module Mammoth::Api::V1
       end
       #end::country filter
 
-      #begin:: source filter: contributor_role, voice, media
+      #begin::source filter: contributor_role, voice, media
       accounts = Mammoth::Account.all if accounts.blank?
 
       accounts = accounts.filter_timeline_with_contributor_role(@user_timeline_setting.selected_filters["source_filter"]["selected_contributor_role"]) if @user_timeline_setting.selected_filters["source_filter"]["selected_contributor_role"].present?
@@ -73,10 +88,42 @@ module Mammoth::Api::V1
       accounts = accounts.filter_timeline_with_voice(@user_timeline_setting.selected_filters["source_filter"]["selected_voices"]) if @user_timeline_setting.selected_filters["source_filter"]["selected_voices"].present?
 
       accounts = accounts.filter_timeline_with_media(@user_timeline_setting.selected_filters["source_filter"]["selected_media"]) if @user_timeline_setting.selected_filters["source_filter"]["selected_media"].present?
-      #end:: source filter: contributor_role, voice, media
+
+      #end::source filter: contributor_role, voice, media
 
       @statuses = @statuses.filter_timeline_with_accounts(accounts.pluck(:id).map(&:to_i))
 
+      #begin::community filter
+      if @user_timeline_setting.selected_filters["communities_filter"]["selected_communities"].present?
+        status_tag_ids = Mammoth::CommunityStatus.group(:community_id,:status_id).where(community_id: @user_timeline_setting.selected_filters["communities_filter"]["selected_communities"]).pluck(:status_id).map(&:to_i)
+        @statuses = @statuses.merge(Mammoth::Status.filter_with_status_ids(status_tag_ids))
+      end
+      #end::community filter
+
+    end
+
+    def create_userTimelineSetting
+      userTimeLineSetting = Mammoth::UserTimelineSetting.where(user_id: current_user.id)
+      userTimeLineSetting.destroy_all
+      Mammoth::UserTimelineSetting.create!(
+        user_id: current_user.id,
+        selected_filters: {
+          default_country: current_user.account.country,
+          location_filter: {
+            selected_countries: [],
+            is_location_filter_turn_on: false
+          },
+          is_filter_turn_on: true,
+          source_filter: {
+            selected_media: [],
+            selected_voices: [],
+            selected_contributor_role: []
+          },
+          communities_filter: {
+            selected_communities: []
+          }
+        }
+      )
     end
 
   end

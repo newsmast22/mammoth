@@ -100,4 +100,4 @@ module Mammoth
     end
 
   end
-end
+end\

@@ -6,11 +6,24 @@ module Mammoth::Api::V1
 
 
     def index
+      #Begin::Create UserTimeLineSetting
+      userTimeLineSetting = Mammoth::UserTimelineSetting.where(user_id: current_user.id).last
+      if userTimeLineSetting.nil?
+        create_userTimelineSetting()
+      elsif userTimeLineSetting.selected_filters.dig('location_filter').nil?
+        create_userTimelineSetting()
+      elsif userTimeLineSetting.selected_filters.dig('source_filter').nil?
+        create_userTimelineSetting()
+      elsif userTimeLineSetting.selected_filters.dig('communities_filter').nil?
+        create_userTimelineSetting()
+      end
+      #End:Create UserTimeLineSetting
+
       followed_account_ids = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
       followed_tag_ids = TagFollow.where(account_id: current_account.id).pluck(:tag_id).map(&:to_i)
       status_tag_ids = Mammoth::StatusTag.group(:tag_id,:status_id).where(tag_id:followed_tag_ids).pluck(:status_id).map(&:to_i)
       
-      filtered_followed_statuses = Mammoth::Status.filter_followed_tags(status_tag_ids).or( Mammoth::Status.filter_followed_accounts(followed_account_ids))
+      filtered_followed_statuses = Mammoth::Status.filter_with_status_ids(status_tag_ids).or( Mammoth::Status.filter_followed_accounts(followed_account_ids))
 
 
       unless filtered_followed_statuses.blank?
@@ -72,8 +85,38 @@ module Mammoth::Api::V1
       #end:: source filter: contributor_role, voice, media
 
       @statuses = @statuses.filter_timeline_with_accounts(accounts.pluck(:id).map(&:to_i))
+
+      #begin::community filter
+      if @user_timeline_setting.selected_filters["communities_filter"]["selected_communities"].present?
+        status_tag_ids = Mammoth::CommunityStatus.group(:community_id,:status_id).where(community_id: @user_timeline_setting.selected_filters["communities_filter"]["selected_communities"]).pluck(:status_id).map(&:to_i)
+        @statuses = @statuses.merge(Mammoth::Status.filter_with_status_ids(status_tag_ids))
+      end
+      #end::community filter
     end
 
+    def create_userTimelineSetting
+      userTimeLineSetting = Mammoth::UserTimelineSetting.where(user_id: current_user.id)
+      userTimeLineSetting.destroy_all
+      Mammoth::UserTimelineSetting.create!(
+        user_id: current_user.id,
+        selected_filters: {
+          default_country: current_user.account.country,
+          location_filter: {
+            selected_countries: [],
+            is_location_filter_turn_on: false
+          },
+          is_filter_turn_on: true,
+          source_filter: {
+            selected_media: [],
+            selected_voices: [],
+            selected_contributor_role: []
+          },
+          communities_filter: {
+            selected_communities: []
+          }
+        }
+      )
+    end
 
     # begin::mastodon paginations
     # def index
