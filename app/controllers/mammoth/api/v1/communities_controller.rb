@@ -137,6 +137,21 @@ module Mammoth::Api::V1
 			
 		end
 
+		def communitiesWithCollection 
+			data = []
+			collections  =Mammoth::Collection.all
+			collections.each do |collection|
+				data << {
+					collection_id: collection.id,
+					collection_name: collection.name,
+					collection_slug: collection.slug,
+					communities: collection.communities,
+				}
+			end
+
+			render json: data
+		end
+
 		private
 
 		def return_community
