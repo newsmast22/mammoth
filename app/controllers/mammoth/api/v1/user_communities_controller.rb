@@ -51,18 +51,29 @@ module Mammoth::Api::V1
       end
 
       #Begin::Create UserTimeLineSetting
-      Mammoth::UserTimelineSetting.where(user_id: current_user.id).destroy_all
-      Mammoth::UserTimelineSetting.create!(
-        user_id: current_user.id,
-        selected_filters: {
-          default_country: current_user.account.country,
-          location_filter: {
-            selected_countries: [],
-            is_location_filter_turn_on: false
-          },
-          is_filter_turn_on: true
-        }
-      )
+      userTimeLineSetting = Mammoth::UserTimelineSetting.where(user_id: current_user.id)
+      if userTimeLineSetting.blank?
+        userTimeLineSetting.destroy_all
+        Mammoth::UserTimelineSetting.create!(
+          user_id: current_user.id,
+          selected_filters: {
+            default_country: current_user.account.country,
+            location_filter: {
+              selected_countries: [],
+              is_location_filter_turn_on: false
+            },
+            is_filter_turn_on: true,
+            source_filter: {
+              selected_media: [],
+              selected_voices: [],
+              selected_contributor_role: []
+            },
+            communities_filter: {
+              selected_communities: []
+            }
+          }
+        )
+      end
       #End:Create UserTimeLineSetting
 	    render json: {message: 'User with community successfully saved!'}
 		end
