@@ -61,40 +61,48 @@ module Mammoth::Api::V1
 				image = Paperclip.io_adapters.for(params[:header])
         @account.header = image
       end
-      json_val = nil
+      social_media_json = nil
 
-      if params[:fields].size == 7
-          json_val = {
+      if params[:fields].size == 9
+          social_media_json = {
             "0": {
-              name: params[:fields][0][:name],
-              value: params[:fields][0][:value]
+              name: "Website",
+              value: params[:fields][0][:value].present? ? params[:fields][0][:value] : ""
             },
             "1": {
-              name: params[:fields][1][:name],
-              value: params[:fields][1][:value]
+              name: "Twitter",
+              value: params[:fields][1][:value].present? ? params[:fields][1][:value] : ""
             },
             "2": {
-              name: params[:fields][2][:name],
-              value: params[:fields][2][:value]
+              name: "TikTok",
+              value: params[:fields][2][:value].present? ? params[:fields][2][:value] : ""
             },
             "3": {
-              name: params[:fields][3][:name],
-              value: params[:fields][3][:value]
+              name: "Youtube",
+              value: params[:fields][3][:value].present? ? params[:fields][3][:value] : ""
             },
             "4": {
-              name: params[:fields][4][:name],
-              value: params[:fields][4][:value]
+              name: "Linkedin",
+              value: params[:fields][4][:value].present? ? params[:fields][4][:value] : ""
             },
             "5": {
-              name: params[:fields][5][:name],
-              value: params[:fields][5][:value]
+              name: "Instagram",
+              value: params[:fields][5][:value].present? ? params[:fields][5][:value] : ""
             },
             "6": {
-              name: params[:fields][6][:name],
-              value: params[:fields][6][:value]
+              name: "Substack",
+              value: params[:fields][6][:value].present? ? params[:fields][6][:value] : ""
+            },
+            "7": {
+              name: "Facebook",
+              value: params[:fields][7][:value].present? ? params[:fields][7][:value] : ""
+            },
+            "8": {
+              name: "Email",
+              value: params[:fields][8][:value].present? ? params[:fields][8][:value] : ""
             }
           } 
-        params[:fields_attributes] = json_val
+        params[:fields_attributes] = social_media_json
       end
       UpdateAccountService.new.call(@account, account_params.except(:fields), raise_error: true)
       UserSettingsDecorator.new(current_user).update(user_settings_params) if user_settings_params
