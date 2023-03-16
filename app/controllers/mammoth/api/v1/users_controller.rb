@@ -125,23 +125,31 @@ module Mammoth::Api::V1
       contributor_role_name = ""
       subtitle_name = ""
       save_flag = false
+      about_me_array = []
 
       if params[:contributor_role].present? 
-        contributor_role = Mammoth::ContributorRole.where(id: params[:contributor_role].last.to_i).last 
-        @account.contributor_role_id = params[:contributor_role]
+        contributor_role = Mammoth::AboutMeTitle.find_by(slug: "contributor_role").about_me_title_options.where(id: params[:contributor_role] ).last 
+        about_me_array = about_me_array + params[:contributor_role]
         contributor_role_name = contributor_role.name
         save_flag = true
       end
 
       if params[:voices].present? 
-        @account.voice_id = params[:voices]
+        about_me_array = about_me_array + params[:voices]
         save_flag = true
       end
 
       if params[:media].present?
-        @account.media_id = params[:media]
+        about_me_array = about_me_array + params[:media]
         save_flag = true
       end
+
+      if about_me_array.any?
+        puts "-------------- about me -----------------"
+        puts about_me_array
+        @account.about_me_title_option_ids = about_me_array
+      end
+      
 
       if params[:subtitle].present?
         subtitle =  Mammoth::Subtitle.where(slug: params[:subtitle]).last
@@ -169,38 +177,38 @@ module Mammoth::Api::V1
       media_data = []
       voice_data = []
 
-      contributor_roles = Mammoth::ContributorRole.all
+      contributor_roles = Mammoth::AboutMeTitle.find_by(slug: "contributor_role").about_me_title_options
       unless contributor_roles.empty?
         contributor_roles.each do |contributor_role|
           contributor_role_data << {
             contributor_role_id: contributor_role.id,
             contributor_role_name: contributor_role.name,
             contributor_role_slug: contributor_role.slug,
-            is_checked: current_account.contributor_role_id.include?(contributor_role.id)
+            is_checked: current_account.about_me_title_option_ids.include?(contributor_role.id)
           }
         end
       end
       
-      medias = Mammoth::Media.all
+      medias = Mammoth::AboutMeTitle.find_by(slug: "media").about_me_title_options
       unless medias.empty?
         medias.each do |media|
           media_data << {
             media_id: media.id,
             media_name: media.name,
             media_slug: media.slug,
-            is_checked: current_account.media_id.include?(media.id)
+            is_checked: current_account.about_me_title_option_ids.include?(media.id)
           }
         end
       end
 
-      voices = Mammoth::Voice.all
+      voices = Mammoth::AboutMeTitle.find_by(slug: "voice").about_me_title_options
       unless voices.empty?
         voices.each do |voice|
           voice_data << {
             voice_id: voice.id,
             voice_name: voice.name,
             voice_slug: voice.slug,
-            is_checked: current_account.voice_id.include?(voice.id)
+            is_checked: current_account.about_me_title_option_ids.include?(voice.id)
           }
         end
       end
