@@ -77,7 +77,7 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
   end
 
   def contributor_role
-    contributor_role = Mammoth::AboutMeTitle.find_by(slug: "contributor_role").about_me_title_options.where(id:object.about_me_title_option_ids ).last
+    contributor_role = Mammoth::AboutMeTitle.find_by(slug: "contributor_roles").about_me_title_options.where(id:object.about_me_title_option_ids ).last
     if contributor_role.present?
       contributor_role.name
     else
@@ -86,7 +86,7 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
   end
 
   def voices
-    voice = Mammoth::AboutMeTitle.find_by(slug: "voice").about_me_title_options.where(id:object.about_me_title_option_ids).last
+    voice = Mammoth::AboutMeTitle.find_by(slug: "voices").about_me_title_options.where(id:object.about_me_title_option_ids).last
     if voice.present?
       voice.name
     else
