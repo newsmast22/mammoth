@@ -77,7 +77,7 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
   end
 
   def contributor_role
-    contributor_role = Mammoth::ContributorRole.where(id: object.contributor_role_id).last
+    contributor_role = Mammoth::AboutMeTitle.find_by(slug: "contributor_role").about_me_title_options.where(id:object.about_me_title_option_ids ).last
     if contributor_role.present?
       contributor_role.name
     else
@@ -85,17 +85,8 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
     end
   end
 
-  def media
-    media = Mammoth::Media.where(id: object.media_id).last
-    if media.present?
-      media.name
-    else
-      ""
-    end
-  end
-
   def voices
-    voice = Mammoth::Voice.where(id: object.voice_id).last
+    voice = Mammoth::AboutMeTitle.find_by(slug: "voice").about_me_title_options.where(id:object.about_me_title_option_ids).last
     if voice.present?
       voice.name
     else
@@ -103,6 +94,14 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
     end
   end
 
+  def media
+    media = Mammoth::AboutMeTitle.find_by(slug: "media").about_me_title_options.where(id:object.about_me_title_option_ids).last
+    if media.present?
+      media.name
+    else
+      ""
+    end
+  end
 
   def collection_count
     object.user.id
