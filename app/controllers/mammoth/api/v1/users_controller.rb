@@ -175,7 +175,7 @@ module Mammoth::Api::V1
       media_data = []
       voice_data = []
 
-      contributor_roles = Mammoth::AboutMeTitle.find_by(slug: "contributor_roles").about_me_title_options
+      contributor_roles = Mammoth::AboutMeTitle.find_by(slug: "contributor_roles").about_me_title_options.order(:name)
       unless contributor_roles.empty?
         contributor_roles.each do |contributor_role|
           contributor_role_data << {
@@ -187,7 +187,7 @@ module Mammoth::Api::V1
         end
       end
       
-      medias = Mammoth::AboutMeTitle.find_by(slug: "media").about_me_title_options
+      medias = Mammoth::AboutMeTitle.find_by(slug: "media").about_me_title_options.order(:name)
       unless medias.empty?
         medias.each do |media|
           media_data << {
@@ -199,7 +199,7 @@ module Mammoth::Api::V1
         end
       end
 
-      voices = Mammoth::AboutMeTitle.find_by(slug: "voices").about_me_title_options
+      voices = Mammoth::AboutMeTitle.find_by(slug: "voices").about_me_title_options.order(:name)
       unless voices.empty?
         voices.each do |voice|
           voice_data << {
