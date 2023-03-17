@@ -128,7 +128,7 @@ module Mammoth::Api::V1
       about_me_array = []
 
       if params[:contributor_role].present? 
-        contributor_role = Mammoth::AboutMeTitle.find_by(slug: "contributor_role").about_me_title_options.where(id: params[:contributor_role] ).last 
+        contributor_role = Mammoth::AboutMeTitle.find_by(slug: "contributor_roles").about_me_title_options.where(id: params[:contributor_role] ).last 
         about_me_array = about_me_array + params[:contributor_role]
         contributor_role_name = contributor_role.name
         save_flag = true
@@ -145,8 +145,6 @@ module Mammoth::Api::V1
       end
 
       if about_me_array.any?
-        puts "-------------- about me -----------------"
-        puts about_me_array
         @account.about_me_title_option_ids = about_me_array
       end
       
