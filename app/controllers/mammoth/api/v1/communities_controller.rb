@@ -139,14 +139,16 @@ module Mammoth::Api::V1
 
 		def communitiesWithCollection 
 			data = []
-			collections  =Mammoth::Collection.all
+			collections  =Mammoth::Collection.all.order(:name)
 			collections.each do |collection|
-				data << {
-					collection_id: collection.id,
-					collection_name: collection.name,
-					collection_slug: collection.slug,
-					communities: collection.communities,
-				}
+				unless collection.communities.blank?
+					data << {
+						collection_id: collection.id,
+						collection_name: collection.name,
+						collection_slug: collection.slug,
+						communities: collection.communities.order(:name),
+					}
+				end
 			end
 
 			render json: data
