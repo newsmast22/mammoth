@@ -31,24 +31,42 @@ module Mammoth::Api::V1
     def register_with_phone
       domain = ENV['LOCAL_DOMAIN'] || Rails.configuration.x.local_domain
       
-      @account = Account.where(username: params[:username]).first_or_initialize(username: params[:username])
-      @account.save(validate: false)
+      # @account = Account.where(username: params[:username]).first_or_initialize(username: params[:username])
+      # @account.save(validate: false)
 
-      @user = User.where(phone: params[:phone])
-                  .first_or_initialize(
-                    email: "#{params[:phone]}@#{domain}",
-                    phone: params[:phone],
-                    password: params[:password], 
-                    password_confirmation: params[:password_cofirmation], 
-                    role: UserRole.find('-99'), 
-                    account: @account, 
-                    agreement: true,
-                    otp_code: @otp_code,
-                    approved: true
-                  )
+      # @user = User.where(username: user_params[:username])
+      #             .first_or_initialize(
+      #               created_by_application: doorkeeper_token.application, 
+      #               sign_up_ip: request.remote_ip, 
+      #               email: "#{user_params[:phone]}@#{domain}",
+      #               phone: user_params[:phone],
+      #               password: user_params[:password], 
+      #               password_confirmation: user_params[:password], 
+      #               account: @account, 
+      #               agreement: user_params[:agreement],
+      #               otp_code: @otp_code,
+      #               account_attributes: user_params.slice(:display_name, :username),
+      #               invite_request_attributes: { text: user_params[:reason] } 
+      # )
 
-      @user.save(validate: false)
+      @user = User.create!(
+        created_by_application: doorkeeper_token.application, 
+        sign_up_ip: request.remote_ip, 
+        email: "#{user_params[:phone]}@#{domain}", 
+        password: user_params[:password], 
+        agreement: user_params[:agreement],
+        locale: user_params[:locale],
+        otp_code: @otp_code,
+        phone: user_params[:phone],
+        password_confirmation: user_params[:password], 
+        account_attributes: user_params.slice(:display_name, :username),
+        invite_request_attributes: { text: user_params[:reason] }
+      )
+
+      # @user.save(validate: false)
       render json: {data: @user}
+    rescue ActiveRecord::RecordInvalid => e
+        render json: ValidationErrorFormatter.new(e, 'account.username': :username, 'invite_request.text': :reason).as_json, status: :unprocessable_entity
     end
 
     def get_reset_password_otp
@@ -117,7 +135,7 @@ module Mammoth::Api::V1
     end
 
     def user_params
-      params.permit(:display_name, :username, :email, :password, :agreement, :locale, :reason)
+      params.permit(:display_name, :username, :email, :password, :agreement, :locale, :reason,:phone)
     end
 
   end
