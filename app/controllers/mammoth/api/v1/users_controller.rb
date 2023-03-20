@@ -71,31 +71,31 @@ module Mammoth::Api::V1
             },
             "1": {
               name: "Twitter",
-              value: params[:fields][1][:value].present? ? params[:fields][1][:value] : ""
+              value: params[:fields][1][:value].present? ? "https://twitter.com/"+params[:fields][1][:value].strip: ""
             },
             "2": {
               name: "TikTok",
-              value: params[:fields][2][:value].present? ? params[:fields][2][:value] : ""
+              value: params[:fields][2][:value].present? ? "https://www.tiktok.com/@"+params[:fields][2][:value] : ""
             },
             "3": {
               name: "Youtube",
-              value: params[:fields][3][:value].present? ? params[:fields][3][:value] : ""
+              value: params[:fields][3][:value].present? ? "https://www.youtube.com/channel/"+params[:fields][3][:value] : ""
             },
             "4": {
               name: "Linkedin",
-              value: params[:fields][4][:value].present? ? params[:fields][4][:value] : ""
+              value: params[:fields][4][:value].present? ? "https://www.linkedin.com/in/"+params[:fields][4][:value] : ""
             },
             "5": {
               name: "Instagram",
-              value: params[:fields][5][:value].present? ? params[:fields][5][:value] : ""
+              value: params[:fields][5][:value].present? ? "https://www.instagram.com/"+params[:fields][5][:value] : ""
             },
             "6": {
               name: "Substack",
-              value: params[:fields][6][:value].present? ? params[:fields][6][:value] : ""
+              value: params[:fields][6][:value].present? ? "https://"+params[:fields][6][:value]+".substack.com" : ""
             },
             "7": {
               name: "Facebook",
-              value: params[:fields][7][:value].present? ? params[:fields][7][:value] : ""
+              value: params[:fields][7][:value].present? ? "https://www.facebook.com/"+params[:fields][7][:value] : ""
             },
             "8": {
               name: "Email",
