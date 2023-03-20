@@ -11,7 +11,19 @@ module Mammoth::Api::V1
     override_rate_limit_headers :create, family: :statuses
 
     def create
-      @status = ReblogService.new.call(current_account, @reblog, reblog_params)
+      @status = Mammoth::ReblogService.new.call(current_account, @reblog, reblog_params)
+
+      @community_id = Mammoth::CommunityStatus.find_by(status_id: params[:status_id]).community_id
+
+      @community_status = Mammoth::CommunityStatus.new()
+			@community_status.status_id = @status.id
+			@community_status.community_id = @community_id
+			@community_status.save
+			unless params[:image_data].nil?
+				image = Paperclip.io_adapters.for(params[:image_data])
+				@community_status.image = image
+				@community_status.save
+			end
 
       render json: @status, serializer: Mammoth::StatusSerializer
     end
