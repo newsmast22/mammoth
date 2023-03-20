@@ -4,7 +4,7 @@ module Mammoth::Api::V1
     before_action -> { doorkeeper_authorize! :write, :'write:accounts' }, only: [:create]
     before_action :check_enabled_registrations, only: [:create]
     before_action :generate_otp, except: [:verify_otp, :verify_reset_password_otp, :update_password]
-    before_action :find_by_email, only: [:get_reset_password_otp, :verify_reset_password_otp, :reset_password]
+    before_action :find_by_email_phone, only: [:get_reset_password_otp, :verify_reset_password_otp, :reset_password]
     skip_before_action :require_authenticated_user!
     
     def register_with_email
@@ -71,7 +71,11 @@ module Mammoth::Api::V1
 
     def get_reset_password_otp
       @user.update(otp_code: @otp_code)
-      Mammoth::Mailer.with(user: @user).reset_password_confirmation.deliver_now
+      if params[:email].present?
+        Mammoth::Mailer.with(user: @user).reset_password_confirmation.deliver_now
+      else
+
+      end
       render json: {data: @user}
     end
 
@@ -124,8 +128,12 @@ module Mammoth::Api::V1
 
     private
 
-    def find_by_email
-      @user = User.find_by(email: params[:email])
+    def find_by_email_phone
+      if params[:email].present?
+        @user = User.find_by(email: params[:email])
+      else
+        @user = User.find_by(phone: params[:phone])
+      end
       raise ActiveRecord::RecordNotFound unless @user
     end
 
