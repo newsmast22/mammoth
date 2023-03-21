@@ -77,6 +77,15 @@ module Mammoth::Api::V1
 				with_rate_limit: true
 			)
 
+			#begin::comment for reblog post
+			unless @thread.nil?
+				unless @thread.reblog_of_id.nil?
+					@status.update_attribute(:in_reply_to_id, @thread.id)
+				end
+			end
+			#end::comment for reblog post
+			
+
 			if community_status_params[:community_id].nil?
 				@user_community = Mammoth::UserCommunity.find_by(user_id: current_user.id, is_primary: true).community
 				@community_id = @user_community.id
