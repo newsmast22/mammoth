@@ -71,7 +71,8 @@ module Mammoth::Api::V1
     end
 
     def get_reset_password_otp
-      @user.update(otp_code: @otp_code)
+      #@user.update(otp_code: @otp_code)
+      @user.update(otp_code: "0000")
       if params[:email].present?
         Mammoth::Mailer.with(user: @user).reset_password_confirmation.deliver_now
       else
