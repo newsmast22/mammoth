@@ -7,6 +7,7 @@ module Mammoth::Api::V1
     before_action :find_by_email_phone, only: [:get_reset_password_otp, :verify_reset_password_otp, :reset_password]
     skip_before_action :require_authenticated_user!
     
+    require 'aws-sdk-sns'
     def register_with_email
       @user = User.create!(
         created_by_application: doorkeeper_token.application, 
@@ -56,27 +57,27 @@ module Mammoth::Api::V1
         password: user_params[:password], 
         agreement: user_params[:agreement],
         locale: user_params[:locale],
-        #otp_code: @otp_code,
-        otp_code: "0000",
+        otp_code: @otp_code,
         phone: user_params[:phone],
         password_confirmation: user_params[:password], 
         account_attributes: user_params.slice(:display_name, :username),
         invite_request_attributes: { text: user_params[:reason] }
       )
 
-      # @user.save(validate: false)
+    @user.save(validate: false)
+    set_sns_publich(user_params[:phone],)
+
       render json: {data: @user}
     rescue ActiveRecord::RecordInvalid => e
         render json: ValidationErrorFormatter.new(e, 'account.username': :username, 'invite_request.text': :reason).as_json, status: :unprocessable_entity
     end
 
     def get_reset_password_otp
-      #@user.update(otp_code: @otp_code)
-      @user.update(otp_code: "0000")
+      @user.update(otp_code: @otp_code)
       if params[:email].present?
         Mammoth::Mailer.with(user: @user).reset_password_confirmation.deliver_now
       else
-
+        set_sns_publich(params[:phone])
       end
       render json: {data: @user}
     end
@@ -140,8 +141,31 @@ module Mammoth::Api::V1
     end
 
     def generate_otp
-      number_array = (1..9).to_a
-      @otp_code = (0...4).collect { number_array[Kernel.rand(number_array.length)] }.join
+      @otp_code = (1000..9999).to_a.sample
+    end
+
+    def set_sns_publich(phone)
+      @client = Aws::SNS::Client.new(
+        region: ENV['SMS_REGION'],
+        access_key_id: ENV['AWS_SMS_ACCESS_KEY_ID'],
+        secret_access_key: ENV['AWS_SMS_SECRET_ACCESS_KEY']
+      )
+      @client.set_sms_attributes({
+        attributes: { # required
+          "DefaultSenderID" => "Newsmast",
+          "DefaultSMSType" => "Transactional"
+        },
+      })
+      @client.publish({
+        phone_number: phone,
+        message: "#{@otp_code} is your Newsmast verification code.", # required
+        message_attributes: {
+          "String" => {
+            data_type: "String", # required
+            string_value: "String",
+          },
+        }
+      })
     end
 
     def user_params

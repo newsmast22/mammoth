@@ -20,6 +20,7 @@ class Mammoth::PostStatusService < BaseService
   # @option [Doorkeeper::Application] :application
   # @option [String] :idempotency Optional idempotency key
   # @option [Boolean] :with_rate_limit
+  # @option [Boolean] :is_only_for_followers
   # @return [Status]
   def call(account, options = {})
     @account     = account
@@ -170,6 +171,7 @@ class Mammoth::PostStatusService < BaseService
       language: valid_locale_cascade(@options[:language], @account.user&.preferred_posting_language, I18n.default_locale),
       application: @options[:application],
       rate_limit: @options[:with_rate_limit],
+      is_only_for_followers: @options[:is_only_for_followers]
       #image: attach_image
     }.compact
   end
