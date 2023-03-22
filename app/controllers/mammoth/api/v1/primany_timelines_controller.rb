@@ -61,8 +61,12 @@ module Mammoth::Api::V1
       return @statuses = [] unless primary_community_statues_ids.any?
 
       @user_timeline_setting = Mammoth::UserTimelineSetting.find_by(user_id: current_user.id)
+			account_followed_ids = Follow.where(account_id: current_account).pluck(:target_account_id).map(&:to_i)
+      account_followed_ids.push(current_account.id)
 
-      @statuses = Mammoth::Status.primary_timeline_filter(primary_community_statues_ids)
+      @statuses = Mammoth::Status.filter_with_community_status_ids(primary_community_statues_ids)
+      @statuses = @statuses.filter_is_only_for_followers(account_followed_ids)
+
 
       return @statuses if @user_timeline_setting.nil? || @user_timeline_setting.selected_filters["is_filter_turn_on"] == false 
 

@@ -338,9 +338,10 @@ module Mammoth::Api::V1
       community_images = []
       following_account_images = []
       is_my_account = current_account.id == account_info.id ? true : false
-      account_followed = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
+      account_followed_ids = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
       
-      statuses = Status.where(account_id: account_id, reply: false)
+      statuses = Mammoth::Status.filter_is_only_for_followers_profile_details(account_id)
+      statuses = statuses.filter_is_only_for_followers(account_followed_ids)
 
       #begin::get collection images
       @user  = Mammoth::User.find(current_user.id)
@@ -367,7 +368,7 @@ module Mammoth::Api::V1
       account_data = single_serialize(account_info, Mammoth::CredentialAccountSerializer)
       render json: statuses,root: 'statuses_data', each_serializer: Mammoth::StatusSerializer,adapter: :json,
       meta:{
-        account_data: account_data.merge(:is_my_account => is_my_account, :is_followed => account_followed.include?(account_id.to_i)),
+        account_data: account_data.merge(:is_my_account => is_my_account, :is_followed => account_followed_ids.include?(account_id.to_i)),
         community_images_url: community_images,
         following_images_url: following_account_images
       }

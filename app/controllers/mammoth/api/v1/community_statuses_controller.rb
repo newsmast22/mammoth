@@ -74,16 +74,17 @@ module Mammoth::Api::V1
 				application: doorkeeper_token.application,
 				poll: community_status_params[:poll],
 				idempotency: request.headers['Idempotency-Key'],
-				with_rate_limit: true
+				with_rate_limit: true,
+				is_only_for_followers: community_status_params[:is_only_for_followers]
 			)
 
-			#begin::comment for reblog post
-			unless @thread.nil?
-				unless @thread.reblog_of_id.nil?
-					@status.update_attribute(:in_reply_to_id, @thread.id)
-				end
-			end
-			#end::comment for reblog post
+			# #begin::comment for reblog post
+			# unless @thread.nil?
+			# 	unless @thread.reblog_of_id.nil?
+			# 		@status.update_attribute(:in_reply_to_id, @thread.id)
+			# 	end
+			# end
+			# #end::comment for reblog post
 			
 
 			if community_status_params[:community_id].nil?
@@ -113,12 +114,16 @@ module Mammoth::Api::V1
 			@user_communities = Mammoth::User.find(current_user.id).user_communities
 			user_communities_ids  = @user_communities.pluck(:community_id).map(&:to_i)
 
+			account_followed_ids = Follow.where(account_id: current_account).pluck(:target_account_id).map(&:to_i)
+
 			community = Mammoth::Community.find_by(slug: params[:id])
 			community_statuses = Mammoth::CommunityStatus.where(community_id: community.id)
 			community_followed_user_counts = Mammoth::UserCommunity.where(community_id: community.id).size
 			unless community_statuses.empty?
+				account_followed_ids.push(current_account.id)
 				community_statues_ids= community_statuses.pluck(:status_id).map(&:to_i)
-				@statuses = Status.where(id: community_statues_ids,reply: false)
+				@statuses = Mammoth::Status.filter_with_community_status_ids(community_statues_ids)
+				@statuses = @statuses.filter_is_only_for_followers(account_followed_ids)
 				render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, adapter: :json, 
 				meta: { 
 					community_followed_user_counts: community_followed_user_counts,
@@ -186,6 +191,7 @@ module Mammoth::Api::V1
 				:visibility,
 				:language,
 				:scheduled_at,
+				:is_only_for_followers,
 				media_ids: [],
 				poll: [
 					:multiple,
