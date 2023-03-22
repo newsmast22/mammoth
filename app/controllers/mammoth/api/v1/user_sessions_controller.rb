@@ -147,8 +147,8 @@ module Mammoth::Api::V1
     def set_sns_publich(phone)
       @client = Aws::SNS::Client.new(
         region: ENV['SMS_REGION'],
-        access_key_id: ENV['AWS_SMS_ACCESS_KEY_ID'],
-        secret_access_key: ENV['AWS_SMS_SECRET_ACCESS_KEY']
+        access_key_id: ENV['SMS_ACCESS_KEY_ID'],
+        secret_access_key: ENV['SMS_SECRET_ACCESS_KEY']
       )
       @client.set_sms_attributes({
         attributes: { # required
