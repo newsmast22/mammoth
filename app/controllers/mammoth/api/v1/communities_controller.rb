@@ -299,19 +299,19 @@ module Mammoth::Api::V1
 			when "Website"
 				value
 			when "Twitter"
-				"https://twitter.com/"+value
+				value == "" ? "" : "https://twitter.com/"+value
 			when "TikTok"
-				"https://www.tiktok.com/"+value
+				value == "" ? "" : "https://www.tiktok.com/"+value
 			when "Youtube"
-				"https://www.youtube.com/channel/"+value
+				value == "" ? "" : "https://www.youtube.com/channel/"+value
 			when "Linkedin"
-				"https://www.linkedin.com/in/"+value
+				value == "" ? "" : "https://www.linkedin.com/in/"+value
 			when "Instagram"
-				"https://www.instagram.com/"+value
+				value == "" ? "" : "https://www.instagram.com/"+value
 			when "Substack"
-				"https://"+value+".substack.com"
+				value == "" ? "" : "https://"+value+".substack.com"
 			when "Facebook"
-				"https://www.facebook.com/"+value  
+				value == "" ? "" : "https://www.facebook.com/"+value  
 			when "Email"
 				value
 			end	
