@@ -65,12 +65,12 @@ class Mammoth::StatusSerializer < ActiveModel::Serializer
     else
       ""
     end
-    
   end
 
   def is_only_for_followers
     object.is_only_for_followers
   end
+
 
   def id
     object.id.to_s

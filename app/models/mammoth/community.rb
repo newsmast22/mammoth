@@ -56,13 +56,30 @@ module Mammoth
 
     validates_attachment_content_type :image, content_type: IMAGE_MIME_TYPES
     validates_attachment_size :image, less_than: IMAGE_LIMIT
-
+    
     def image_name=(name)
       self.image_file_name = name if name.present?
     end
 
     def image_data=(data)
       self.image = {data: data} if data.present?
+    end
+
+    has_attached_file :header,
+    styles: THUMBNAIL_STYLES
+    # ,
+    # processors: [:lazy_thumbnail, :blurhash_transcoder, :color_extractor],
+    # convert_options: GLOBAL_CONVERT_OPTIONS
+
+    validates_attachment_content_type :header, content_type: IMAGE_MIME_TYPES
+    validates_attachment_size :header, less_than: IMAGE_LIMIT
+
+    def header_name=(name)
+      self.header_file_name = name if name.present?
+    end
+
+    def header_data=(data)
+      self.header = {data: data} if data.present?
     end
 
   end

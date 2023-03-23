@@ -71,31 +71,31 @@ module Mammoth::Api::V1
             },
             "1": {
               name: "Twitter",
-              value: params[:fields][1][:value].present? ? "https://twitter.com/"+params[:fields][1][:value].strip: ""
+              value: params[:fields][1][:value].present? ? get_social_media_username("Twitter",params[:fields][1][:value].strip) : ""
             },
             "2": {
               name: "TikTok",
-              value: params[:fields][2][:value].present? ? "https://www.tiktok.com/@"+params[:fields][2][:value] : ""
+              value: params[:fields][2][:value].present? ? get_social_media_username("TikTok",params[:fields][2][:value].strip) : ""
             },
             "3": {
               name: "Youtube",
-              value: params[:fields][3][:value].present? ? "https://www.youtube.com/channel/"+params[:fields][3][:value] : ""
+              value: params[:fields][3][:value].present? ? get_social_media_username("Youtube",params[:fields][3][:value].strip) : ""
             },
             "4": {
               name: "Linkedin",
-              value: params[:fields][4][:value].present? ? "https://www.linkedin.com/in/"+params[:fields][4][:value] : ""
+              value: params[:fields][4][:value].present? ? get_social_media_username("Linkedin",params[:fields][4][:value].strip) : ""
             },
             "5": {
               name: "Instagram",
-              value: params[:fields][5][:value].present? ? "https://www.instagram.com/"+params[:fields][5][:value] : ""
+              value: params[:fields][5][:value].present? ? get_social_media_username("Instagram",params[:fields][5][:value].strip) : ""
             },
             "6": {
               name: "Substack",
-              value: params[:fields][6][:value].present? ? "https://"+params[:fields][6][:value]+".substack.com" : ""
+              value: params[:fields][6][:value].present? ? get_social_media_username("Substack",params[:fields][6][:value].strip) : ""
             },
             "7": {
               name: "Facebook",
-              value: params[:fields][7][:value].present? ? "https://www.facebook.com/"+params[:fields][7][:value] : ""
+              value: params[:fields][7][:value].present? ? get_social_media_username("Facebook",params[:fields][7][:value].strip) : ""
             },
             "8": {
               name: "Email",
@@ -381,6 +381,58 @@ module Mammoth::Api::V1
         serializer: serializer,
         adapter: adapter
         ).as_json
+    end
+
+    def get_social_media_username(name,value)
+      case name
+      when "Website"
+        value
+      when "Twitter"
+        if (value.include?("https://twitter.com/"))
+          username = value.to_s.split('/').last
+        else
+          username = value
+        end
+      when "TikTok"
+        if (value.include?("https://www.tiktok.com/"))
+          username = value.to_s.split('/').last
+        else
+          username = value
+        end
+      when "Youtube"
+        if (value.include?("https://www.youtube.com/channel/"))
+          username = value.to_s.split('/').last
+        else
+          username = value
+        end
+      when "Linkedin"
+        if (value.include?("https://www.linkedin.com/in/"))
+          username = value.to_s.split('/').last
+        else
+          username = value
+        end
+      when "Instagram"
+        if (value.include?("https://www.instagram.com/"))
+          username = value.to_s.split('/').last
+        else
+          username = value
+        end
+      when "Substack"
+        if (value.include?("substack.com"))
+          username = value.to_s.split('/').last
+          username = username.to_s.split('.').first
+        else
+          username = value
+        end
+      when "Facebook"
+        if (value.include?("https://www.facebook.com/"))
+          username = value.to_s.split('/').last
+        else
+          username = value
+        end
+      when "Email"
+        object.value
+      end
     end
 
   end

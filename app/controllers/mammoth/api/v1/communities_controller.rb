@@ -91,7 +91,34 @@ module Mammoth::Api::V1
 		end
 
 		def show
-			return_community
+			if @community.present?
+				field_datas = []
+				if @community.fields.present?
+						@community.fields.each do |key, value|
+							field_datas << {
+								name: value["name"],
+								value: get_social_media_fields(value["name"],value["value"])
+							}
+						end		
+				end
+				data = {
+					id: @community.id,
+					name: @community.name,
+					slug: @community.slug,
+					image_url: @community.image.url,
+					header_url: @community.header.url,
+					description: @community.description,
+					collection_id: @community.collection_id,
+					created_at: @community.created_at,
+					updated_at: @community.updated_at,
+					is_country_filtering: @community.is_country_filtering,
+					field: field_datas
+				}
+			else		
+				data = {error: "Record not found"}
+			end
+			
+			render json: data
 		end
 
 		def create
@@ -116,13 +143,65 @@ module Mammoth::Api::V1
 		end
 
 		def update
+			collection = Mammoth::Collection.find_by(slug: community_params[:collection_id])
 			@community.name = community_params[:name]
 			@community.description = community_params[:description]
+			@community.is_country_filtering = community_params[:is_country_filtering]
+			@community.collection_id = collection.id
+
+			social_media_json = nil
+      if community_params[:fields].size == 9
+          social_media_json = {
+            "0": {
+              name: "Website",
+              value: community_params[:fields][0][:value].present? ? community_params[:fields][0][:value] : ""
+            },
+            "1": {
+              name: "Twitter",
+              value: community_params[:fields][1][:value].present? ? get_social_media_username("Twitter",community_params[:fields][1][:value].strip) : ""
+            },
+            "2": {
+              name: "TikTok",
+              value: community_params[:fields][2][:value].present? ? get_social_media_username("TikTok",community_params[:fields][2][:value].strip) : ""
+            },
+            "3": {
+              name: "Youtube",
+              value: community_params[:fields][3][:value].present? ? get_social_media_username("Youtube",community_params[:fields][3][:value].strip) : ""
+            },
+            "4": {
+              name: "Linkedin",
+              value: community_params[:fields][4][:value].present? ? get_social_media_username("Linkedin",community_params[:fields][4][:value].strip) : ""
+            },
+            "5": {
+              name: "Instagram",
+              value: community_params[:fields][5][:value].present? ? get_social_media_username("Instagram",community_params[:fields][5][:value].strip) : ""
+            },
+            "6": {
+              name: "Substack",
+              value: community_params[:fields][6][:value].present? ? get_social_media_username("Substack",community_params[:fields][6][:value].strip) : ""
+            },
+            "7": {
+              name: "Facebook",
+              value: community_params[:fields][7][:value].present? ? get_social_media_username("Facebook",community_params[:fields][7][:value].strip) : ""
+            },
+            "8": {
+              name: "Email",
+              value: community_params[:fields][8][:value].present? ? community_params[:fields][8][:value] : ""
+            }
+          } 
+					@community.fields = social_media_json
+			end
 			@community.save
 
 			unless community_params[:image_data].nil?
 				image = Paperclip.io_adapters.for(community_params[:image_data])
 				@community.image = image
+				@community.save
+			end
+
+			unless community_params[:header_data].nil?
+				header_image = Paperclip.io_adapters.for(community_params[:header_data])
+				@community.header = header_image
 				@community.save
 			end
 
@@ -150,7 +229,6 @@ module Mammoth::Api::V1
 					}
 				end
 			end
-
 			render json: data
 		end
 
@@ -164,8 +242,93 @@ module Mammoth::Api::V1
 			@community = Mammoth::Community.find_by(slug: params[:id])
 		end
 
+		def get_social_media_username(name,value)
+      case name
+      when "Website"
+        value
+      when "Twitter"
+        if (value.include?("https://twitter.com/"))
+          username = value.to_s.split('/').last
+        else
+          username = value
+        end
+      when "TikTok"
+        if (value.include?("https://www.tiktok.com/"))
+          username = value.to_s.split('/').last
+        else
+          username = value
+        end
+      when "Youtube"
+        if (value.include?("https://www.youtube.com/channel/"))
+          username = value.to_s.split('/').last
+        else
+          username = value
+        end
+      when "Linkedin"
+        if (value.include?("https://www.linkedin.com/in/"))
+          username = value.to_s.split('/').last
+        else
+          username = value
+        end
+      when "Instagram"
+        if (value.include?("https://www.instagram.com/"))
+          username = value.to_s.split('/').last
+        else
+          username = value
+        end
+      when "Substack"
+        if (value.include?("substack.com"))
+          username = value.to_s.split('/').last
+          username = username.to_s.split('.').first
+        else
+          username = value
+        end
+      when "Facebook"
+        if (value.include?("https://www.facebook.com/"))
+          username = value.to_s.split('/').last
+        else
+          username = value
+        end
+      when "Email"
+        object.value
+      end
+    end
+
+		def get_social_media_fields(name,value)
+			case name
+			when "Website"
+				value
+			when "Twitter"
+				"https://twitter.com/"+value
+			when "TikTok"
+				"https://www.tiktok.com/"+value
+			when "Youtube"
+				"https://www.youtube.com/channel/"+value
+			when "Linkedin"
+				"https://www.linkedin.com/in/"+value
+			when "Instagram"
+				"https://www.instagram.com/"+value
+			when "Substack"
+				"https://"+value+".substack.com"
+			when "Facebook"
+				"https://www.facebook.com/"+value  
+			when "Email"
+				value
+			end	
+		end
+
 		def community_params
-			params.require(:community).permit(:name, :slug, :image_data, :description, :collection_id)
+			params.require(:community).permit(
+				:name,
+				:slug,
+				:image_data, 
+				:header_data,
+				:description, 
+				:collection_id,
+				:is_country_filtering,
+				fields: [:name, :value],
+        fields_attributes: [:name, :value],
+			)
 		end
 	end
 end

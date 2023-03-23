@@ -17,6 +17,8 @@ Mammoth::Engine.routes.draw do
         end
       end
 
+      resources :community_feeds
+
       resource :reblog_statuses, only: :create
 
       resources :community_statuses do

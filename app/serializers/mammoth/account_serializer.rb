@@ -7,7 +7,7 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
   attributes :id, :username, :acct, :display_name, :locked, :bot, :discoverable,:hide_collections, :group, :created_at,
              :note, :url, :avatar, :avatar_static, :header, :header_static,:primary_community_slug,:primary_community_name,
              :followers_count, :following_count, :statuses_count, :last_status_at,:collection_count,:community_count,
-             :country,:country_common_name,:dob,:subtitle,:contributor_role,:voices,:media,:hash_tag_count
+             :country,:country_common_name,:dob,:subtitle,:contributor_role,:voices,:media,:hash_tag_count,:is_account_followed
 
   has_one :moved_to_account, key: :moved, serializer: REST::AccountSerializer, if: :moved_and_not_nested?
 
@@ -25,8 +25,28 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
     attributes :name, :value, :verified_at
 
     def value
-      object.value
+      case object.name
+      when "Website"
+        object.value
+      when "Twitter"
+        "https://twitter.com/"+object.value
+      when "TikTok"
+        "https://www.tiktok.com/"+object.value
+      when "Youtube"
+        "https://www.youtube.com/channel/"+object.value
+      when "Linkedin"
+        "https://www.linkedin.com/in/"+object.value
+      when "Instagram"
+        "https://www.instagram.com/"+object.value
+      when "Substack"
+        "https://"+object.value+".substack.com"
+      when "Facebook"
+        "https://www.facebook.com/"+object.value  
+      when "Email"
+        object.value
+      end
     end
+
   end
 
   has_many :fields
@@ -144,6 +164,11 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
     else
       ""
     end
+  end
+
+  def is_account_followed
+    account_followed_ids = Follow.where(account_id: object.id).pluck(:target_account_id).map(&:to_i)
+    account_followed_ids.include?(object.id)
   end
 
   def note
