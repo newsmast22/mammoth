@@ -111,7 +111,19 @@ module Mammoth::Api::V1
 		end
 
 		def get_community_statues
-			@user_communities = Mammoth::User.find(current_user.id).user_communities
+			@user = Mammoth::User.find(current_user.id)
+			#begin::check is community-admin
+			is_community_admin = false
+			# user_community_admin= Mammoth::CommunityAdmin.where(user_id: @user.id).last
+			# if user_community_admin.present?
+			# 	is_community_admin = true
+			# end
+			if current_user.email == "akp@binarylab.io" || current_user.email == "minkhantkyawmdy35@gmail.com" || current_user.email = "minkhantkyaw1@gmail.com"
+				is_community_admin = true
+			end
+			
+			#end::check is community-admin
+			@user_communities = @user.user_communities
 			user_communities_ids  = @user_communities.pluck(:community_id).map(&:to_i)
 
 			account_followed_ids = Follow.where(account_id: current_account).pluck(:target_account_id).map(&:to_i)
@@ -132,6 +144,7 @@ module Mammoth::Api::V1
 					community_url: community.image.url,
 					community_slug: community.slug,
 					is_joined: user_communities_ids.include?(community.id), 
+					is_admin: is_community_admin
 					}
 			else
 				render json: { data: [],
@@ -141,7 +154,8 @@ module Mammoth::Api::V1
 					community_description: community.description,
 					community_url: community.image.url,
 					community_slug: community.slug,
-					is_joined: user_communities_ids.include?(community.id), 
+					is_joined: user_communities_ids.include?(community.id),
+					is_admin: is_community_admin,
 					}
 				}
 			end
@@ -166,6 +180,7 @@ module Mammoth::Api::V1
 				 }
 			end
 		end
+		
 
     private
 
