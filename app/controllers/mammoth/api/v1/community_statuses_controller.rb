@@ -114,7 +114,7 @@ module Mammoth::Api::V1
 			@user = Mammoth::User.find(current_user.id)
 			#begin::check is community-admin
 			is_community_admin = false
-			# user_community_admin= Mammoth::CommunityAdmin.where(user_id: @user.id).last
+			# user_community_admin= Mammoth::CommunityAdmin.where(user_id: @user.id, community_id: params[:id]).last
 			# if user_community_admin.present?
 			# 	is_community_admin = true
 			# end
