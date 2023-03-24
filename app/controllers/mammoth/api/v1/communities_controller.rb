@@ -92,6 +92,7 @@ module Mammoth::Api::V1
 
 		def show
 			if @community.present?
+				is_admin = false
 				field_datas = []
 				if @community.fields.present?
 						@community.fields.each do |key, value|
@@ -101,6 +102,7 @@ module Mammoth::Api::V1
 							}
 						end		
 				end
+				is_admin = Mammoth::CommunityAdmin.where(community_id:@community.id,user_id: current_user.id).exists?
 				data = {
 					id: @community.id,
 					name: @community.name,
@@ -112,12 +114,12 @@ module Mammoth::Api::V1
 					created_at: @community.created_at,
 					updated_at: @community.updated_at,
 					is_country_filtering: @community.is_country_filtering,
+					is_admin: is_admin,
 					field: field_datas
 				}
 			else		
 				data = {error: "Record not found"}
 			end
-			
 			render json: data
 		end
 

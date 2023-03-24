@@ -273,10 +273,22 @@ module Mammoth::Api::V1
       end
       #end:get following images
 
+      #begin::check community admin & communnity_slug
+      is_admin = false
+      community_slug = ""
+      community_admin = Mammoth::CommunityAdmin.where(user_id: current_user.id).last
+      if community_admin.present?
+        is_admin = true
+        community_slug = community_admin.community.slug
+      end
+      #end::check community admin & communnity_slug
+
       render json: @account,root: 'data', serializer: Mammoth::CredentialAccountSerializer,adapter: :json,
       meta:{
         community_images_url: community_images,
-        following_images_url: following_account_images
+        following_images_url: following_account_images,
+        is_admin: is_admin,
+        community_slug: community_slug 
       }
     end
 
@@ -365,12 +377,24 @@ module Mammoth::Api::V1
       end
       #end:get following images
 
+      #begin::check community admin & communnity_slug
+      is_admin = false
+      community_slug = ""
+      community_admin = Mammoth::CommunityAdmin.where(user_id: current_user.id).last
+      if community_admin.present?
+        is_admin = true
+        community_slug = community_admin.community.slug
+      end
+      #end::check community admin & communnity_slug
+
       account_data = single_serialize(account_info, Mammoth::CredentialAccountSerializer)
       render json: statuses,root: 'statuses_data', each_serializer: Mammoth::StatusSerializer,adapter: :json,
       meta:{
         account_data: account_data.merge(:is_my_account => is_my_account, :is_followed => account_followed_ids.include?(account_id.to_i)),
         community_images_url: community_images,
-        following_images_url: following_account_images
+        following_images_url: following_account_images,
+        is_admin: is_admin,
+        community_slug: community_slug 
       }
 
     end

@@ -77,7 +77,8 @@ module Mammoth::Api::V1
       if params[:email].present?
         Mammoth::Mailer.with(user: @user).reset_password_confirmation.deliver_now
       else
-        set_sns_publich(params[:phone])
+        phone_no = "+"+params[:phone]
+        set_sns_publich(phone_no)
       end
       render json: {data: @user}
     end
@@ -135,7 +136,13 @@ module Mammoth::Api::V1
       if params[:email].present?
         @user = User.find_by(email: params[:email])
       else
-        @user = User.find_by(phone: params[:phone])
+        phone_no = ""
+        if (params[:phone].include?("+"))
+          phone_no = params[:phone]
+        else
+          phone_no = "+"+params[:phone]
+        end
+        @user = User.find_by(phone: phone_no)
       end
       raise ActiveRecord::RecordNotFound unless @user
     end

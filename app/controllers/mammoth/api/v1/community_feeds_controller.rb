@@ -5,8 +5,9 @@ module Mammoth::Api::V1
 		before_action :set_community_feed, only: %i[show update destroy]
 
     def index
-      @community_feeds = Mammoth::CommunityFeed.where(community_id: params[:community_id])
-      if community_feeds.present?
+      community = Mammoth::Community.find_by(slug: params[:id])
+      @community_feeds = Mammoth::CommunityFeed.where(community_id: community.id)
+      if @community_feeds.present?
         render json: @community_feeds
       else
         render json: {error: "Record not found"}
@@ -22,7 +23,7 @@ module Mammoth::Api::V1
         @community_feed = Mammoth::CommunityFeed.create!(
             community_id: @community.id,
             name: community_feed_params[:name],
-            slug: community_feed_params[:slug],
+            slug: community_feed_params[:name].downcase.parameterize(separator: '_'),
             custom_url: community_feed_params[:custom_url]
         )
       if @community_feed
