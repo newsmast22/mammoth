@@ -167,8 +167,9 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
   end
 
   def is_followed
-    account_followed_ids = Follow.where(account_id: current_user.account.id).pluck(:target_account_id).map(&:to_i)
-    account_followed_ids.include?(object.id)
+    # account_followed_ids = Follow.where(account_id: current_user.account.id).pluck(:target_account_id).map(&:to_i)
+    # account_followed_ids.include?(object.id)
+    false
   end
 
   def note
