@@ -115,7 +115,7 @@ module Mammoth::Api::V1
 					updated_at: @community.updated_at,
 					is_country_filtering: @community.is_country_filtering,
 					is_admin: is_admin,
-					field: field_datas
+					fields: field_datas
 				}
 			else		
 				data = {error: "Record not found"}
