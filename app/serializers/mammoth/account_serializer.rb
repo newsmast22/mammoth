@@ -7,7 +7,7 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
   attributes :id, :username, :acct, :display_name, :locked, :bot, :discoverable,:hide_collections, :group, :created_at,
              :note, :url, :avatar, :avatar_static, :header, :header_static,:primary_community_slug,:primary_community_name,
              :followers_count, :following_count, :statuses_count, :last_status_at,:collection_count,:community_count,
-             :country,:country_common_name,:dob,:subtitle,:contributor_role,:voices,:media,:hash_tag_count,:is_account_followed
+             :country,:country_common_name,:dob,:subtitle,:contributor_role,:voices,:media,:hash_tag_count,:is_followed
 
   has_one :moved_to_account, key: :moved, serializer: REST::AccountSerializer, if: :moved_and_not_nested?
 
@@ -166,8 +166,8 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
     end
   end
 
-  def is_account_followed
-    account_followed_ids = Follow.where(account_id: object.id).pluck(:target_account_id).map(&:to_i)
+  def is_followed
+    account_followed_ids = Follow.where(account_id: current_user.account.id).pluck(:target_account_id).map(&:to_i)
     account_followed_ids.include?(object.id)
   end
 
