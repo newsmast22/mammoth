@@ -136,7 +136,7 @@ module Mammoth::Api::V1
 				community_statues_ids= community_statuses.pluck(:status_id).map(&:to_i)
 				@statuses = Mammoth::Status.filter_with_community_status_ids(community_statues_ids)
 				@statuses = @statuses.filter_is_only_for_followers(account_followed_ids)
-				render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, adapter: :json, 
+				render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, current_user: @current_user, adapter: :json, 
 				meta: { 
 					community_followed_user_counts: community_followed_user_counts,
 					community_name: community.name,
