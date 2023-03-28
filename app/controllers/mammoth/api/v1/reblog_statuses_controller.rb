@@ -13,8 +13,10 @@ module Mammoth::Api::V1
     def create
       @status = Mammoth::ReblogService.new.call(current_account, @reblog, reblog_params)
 
-      @community_id = Mammoth::CommunityStatus.find_by(status_id: params[:status_id]).community_id
+      @community_id = Mammoth::CommunityStatus.find_by(status_id: params[:status_id]).community_id unless params[:community_id].present?
 
+      @community_id = Mammoth::Community.find_by(slug: params[:community_id]).id if params[:community_id].present?
+              
       @community_status = Mammoth::CommunityStatus.new()
 			@community_status.status_id = @status.id
 			@community_status.community_id = @community_id

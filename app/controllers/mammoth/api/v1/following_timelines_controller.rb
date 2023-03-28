@@ -23,7 +23,7 @@ module Mammoth::Api::V1
       followed_tag_ids = TagFollow.where(account_id: current_account.id).pluck(:tag_id).map(&:to_i)
       status_tag_ids = Mammoth::StatusTag.group(:tag_id,:status_id).where(tag_id:followed_tag_ids).pluck(:status_id).map(&:to_i)
       
-      filtered_followed_statuses = Mammoth::Status.filter_with_status_ids(status_tag_ids).or( Mammoth::Status.filter_followed_accounts(followed_account_ids))
+      filtered_followed_statuses = Mammoth::Status.filter_with_status_ids(status_tag_ids,current_account.id).or( Mammoth::Status.filter_followed_accounts(followed_account_ids))
 
 
       unless filtered_followed_statuses.blank?
@@ -31,6 +31,8 @@ module Mammoth::Api::V1
         fetch_following_filter_timeline(filtered_followed_statuses)
         #End::Filter
         unless @statuses.empty?
+          puts "******************** filtered_followed_statuses ********************"
+puts @statuses.inspect
           #@statuses = @statuses.page(params[:page]).per(20)
           # render json: @statuses.order(created_at: :desc).take(10) ,root: 'data', 
           # each_serializer: Mammoth::StatusSerializer, adapter: :json 
@@ -89,7 +91,7 @@ module Mammoth::Api::V1
       #begin::community filter
       if @user_timeline_setting.selected_filters["communities_filter"]["selected_communities"].present?
         status_tag_ids = Mammoth::CommunityStatus.group(:community_id,:status_id).where(community_id: @user_timeline_setting.selected_filters["communities_filter"]["selected_communities"]).pluck(:status_id).map(&:to_i)
-        @statuses = @statuses.merge(Mammoth::Status.filter_with_status_ids(status_tag_ids))
+        @statuses = @statuses.merge(Mammoth::Status.filter_with_community_status_ids(status_tag_ids))
       end
       #end::community filter
     end

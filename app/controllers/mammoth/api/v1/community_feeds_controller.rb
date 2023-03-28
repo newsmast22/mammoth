@@ -47,7 +47,7 @@ module Mammoth::Api::V1
 
     def destroy
       @community_feed.destroy
-      render json: {error: 'community-feed deleted successfully!'}
+      render json: {message: 'community-feed deleted successfully!'}
     end
 
     private

@@ -112,23 +112,19 @@ module Mammoth::Api::V1
 
 		def get_community_statues
 			@user = Mammoth::User.find(current_user.id)
+			community = Mammoth::Community.find_by(slug: params[:id])
 			#begin::check is community-admin
 			is_community_admin = false
-			# user_community_admin= Mammoth::CommunityAdmin.where(user_id: @user.id, community_id: params[:id]).last
-			# if user_community_admin.present?
-			# 	is_community_admin = true
-			# end
-			if current_user.email == "akp@binarylab.io" || current_user.email == "minkhantkyawmdy35@gmail.com" || current_user.email = "minkhantkyaw1@gmail.com"
+			user_community_admin= Mammoth::CommunityAdmin.where(user_id: @user.id, community_id: community.id).last
+			if user_community_admin.present?
 				is_community_admin = true
 			end
-			
 			#end::check is community-admin
 			@user_communities = @user.user_communities
 			user_communities_ids  = @user_communities.pluck(:community_id).map(&:to_i)
 
 			account_followed_ids = Follow.where(account_id: current_account).pluck(:target_account_id).map(&:to_i)
 
-			community = Mammoth::Community.find_by(slug: params[:id])
 			community_statuses = Mammoth::CommunityStatus.where(community_id: community.id)
 			community_followed_user_counts = Mammoth::UserCommunity.where(community_id: community.id).size
 			unless community_statuses.empty?
