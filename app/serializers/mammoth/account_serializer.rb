@@ -8,6 +8,7 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
              :note, :url, :avatar, :avatar_static, :header, :header_static,:primary_community_slug,:primary_community_name,
              :followers_count, :following_count, :statuses_count, :last_status_at,:collection_count,:community_count,
              :country,:country_common_name,:dob,:subtitle,:contributor_role,:voices,:media,:hash_tag_count,:is_followed
+             
 
   has_one :moved_to_account, key: :moved, serializer: REST::AccountSerializer, if: :moved_and_not_nested?
 
@@ -53,6 +54,15 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
 
   def id
     object.id.to_s
+  end
+
+  def is_followed
+    if  @instance_options[:current_user].present?
+      account_followed_ids = Follow.where(account_id: @instance_options[:current_user].account.id).pluck(:target_account_id).map(&:to_i)
+      account_followed_ids.include?(object.id)
+    else
+      return false
+    end
   end
 
   def country
@@ -164,12 +174,6 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
     else
       ""
     end
-  end
-
-  def is_followed
-    # account_followed_ids = Follow.where(account_id: current_user.account.id).pluck(:target_account_id).map(&:to_i)
-    # account_followed_ids.include?(object.id)
-    false
   end
 
   def note
