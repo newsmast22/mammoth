@@ -11,9 +11,10 @@ module Mammoth
     scope :filter_with_status_ids, ->(status_ids) { where.not(id: status_ids).where(reply: false) }
 
     scope :filter_is_only_for_followers, ->(account_ids) { where(is_only_for_followers: false).or(where(is_only_for_followers: true, account_id: account_ids)) }
-
     scope :filter_is_only_for_followers_community_statuses, ->(status_ids,account_ids) { where(id: status_ids, reply: false,is_only_for_followers: false).or(where(is_only_for_followers: true, account_id: account_ids,reply: false)) }
     scope :filter_is_only_for_followers_profile_details, ->(account_id) {where(account_id: account_id, reply: false)}
+    
+    scope :filter_with_words, ->(words) {where("LOWER(statuses.text) like '%#{words}%' OR LOWER(statuses.spoiler_text) like '%#{words}%'")}
 
   end
 end

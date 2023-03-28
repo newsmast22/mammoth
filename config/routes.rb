@@ -53,6 +53,9 @@ Mammoth::Engine.routes.draw do
         collection do
           get 'get_all_community_status_timelines' => "search#get_all_community_status_timelines", as: "get_all_community_status_timelines"
           get 'get_my_community_status_timelines' => "search#get_my_community_status_timelines", as: "get_my_community_status_timelines"
+          post 'create_user_search_setting' => "search#create_user_search_setting", as: "create_user_search_setting"
+          get 'get_user_search_setting' => "search#get_user_search_setting", as: "get_user_search_setting"
+
         end
       end
       

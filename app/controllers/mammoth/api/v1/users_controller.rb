@@ -10,6 +10,7 @@ module Mammoth::Api::V1
       else
         @users = Mammoth::User.joins(:user_communities).where.not(id: @user.id).where(user_communities: {community_id: @user.communities.ids}).distinct
       end
+      @users = @users.filter_with_words(params[:words].downcase) if params[:words].present?
       account_followed = Follow.where(account_id: current_account).pluck(:target_account_id).map(&:to_i)
       data   = []
       @users.each do |user|
@@ -34,6 +35,7 @@ module Mammoth::Api::V1
       else
         @users = Mammoth::User.where.not(id: @user.id).where(role_id: nil).distinct
       end
+      @users = @users.filter_with_words(params[:words].downcase) if params[:words].present?
       account_followed = Follow.where(account_id: current_account).pluck(:target_account_id).map(&:to_i)
       data   = []
       @users.each do |user|
