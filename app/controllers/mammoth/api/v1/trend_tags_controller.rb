@@ -16,10 +16,11 @@ module Mammoth::Api::V1
       .pluck(:tag_id).map(&:to_i)
       if tag_ids.any?
         if params[:limit]
-          @tag = Tag.where(id: tag_ids).limit(params[:limit])
+          @tag = Mammoth::Tag.where(id: tag_ids).limit(params[:limit])
         else
-          @tag = @tag = Tag.find(tag_ids)
+          @tag = Mammoth::Tag.where(id: tag_ids)
         end
+        @tag = @tag.filter_with_words(params[:words].downcase) if params[:words].present?
         render json: @tag,each_serializer: Mammoth::TagSerializer
       else
         render json: {
@@ -46,11 +47,11 @@ module Mammoth::Api::V1
           .pluck(:tag_id).map(&:to_i)
           if tag_ids.any?
             if params[:limit]
-              @tag = Tag.where(id: tag_ids).limit(params[:limit])
+              @tag = Mammoth::Tag.where(id: tag_ids).limit(params[:limit])
             else
-              @tag = @tag = Tag.find(tag_ids)
+              @tag = Mammoth::Tag.where(id: tag_ids)
             end
-
+            @tag = @tag.filter_with_words(params[:words].downcase) if params[:words].present?
             render json: @tag,each_serializer: Mammoth::TagSerializer
           else
             render json: {
