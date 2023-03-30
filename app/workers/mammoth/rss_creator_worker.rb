@@ -17,7 +17,7 @@ module Mammoth
           fetch_feed(url)
         end
       else
-        # schedular
+        # scheduler
         Mammoth::CommunityFeed.where.not(custom_url: nil).each do |feed|
           @cid     = feed.community_id
           @account = feed.account
