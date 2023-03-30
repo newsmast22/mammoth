@@ -19,6 +19,7 @@ module Mammoth
     # end
 
     config.autoload_paths << File.expand_path("../app/services/mammoth", __FILE__)
+    config.autoload_paths << File.expand_path("../app/workers/mammoth", __FILE__)
 
   end
 end

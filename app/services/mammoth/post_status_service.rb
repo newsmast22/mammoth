@@ -171,7 +171,9 @@ class Mammoth::PostStatusService < BaseService
       language: valid_locale_cascade(@options[:language], @account.user&.preferred_posting_language, I18n.default_locale),
       application: @options[:application],
       rate_limit: @options[:with_rate_limit],
-      is_only_for_followers: @options[:is_only_for_followers]
+      is_only_for_followers: @options[:is_only_for_followers],
+      rss_link: @options[:rss_link],
+      is_rss_content: @options[:is_rss_content],
       #image: attach_image
     }.compact
   end
