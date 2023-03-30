@@ -24,7 +24,8 @@ module Mammoth::Api::V1
             community_id: @community.id,
             name: community_feed_params[:name],
             slug: community_feed_params[:name].downcase.parameterize(separator: '_'),
-            custom_url: community_feed_params[:custom_url]
+            custom_url: community_feed_params[:custom_url],
+            account_id: current_user.account.id
         )
       if @community_feed
         render json: @community_feed
