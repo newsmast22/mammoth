@@ -123,7 +123,7 @@ module Mammoth::Api::V1
 			@user_communities = @user.user_communities
 			user_communities_ids  = @user_communities.pluck(:community_id).map(&:to_i)
 
-			account_followed_ids = Follow.where(account_id: current_account).pluck(:target_account_id).map(&:to_i)
+			account_followed_ids = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
 
 			community_statuses = Mammoth::CommunityStatus.where(community_id: community.id)
 			community_followed_user_counts = Mammoth::UserCommunity.where(community_id: community.id).size

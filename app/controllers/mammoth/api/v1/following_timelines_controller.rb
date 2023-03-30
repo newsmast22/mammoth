@@ -31,8 +31,6 @@ module Mammoth::Api::V1
         fetch_following_filter_timeline(filtered_followed_statuses)
         #End::Filter
         unless @statuses.empty?
-          puts "******************** filtered_followed_statuses ********************"
-puts @statuses.inspect
           #@statuses = @statuses.page(params[:page]).per(20)
           # render json: @statuses.order(created_at: :desc).take(10) ,root: 'data', 
           # each_serializer: Mammoth::StatusSerializer, adapter: :json 
