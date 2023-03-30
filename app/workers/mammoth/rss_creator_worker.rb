@@ -5,7 +5,7 @@ module Mammoth
   class RSSCreatorWorker
     include Sidekiq::Worker
 
-    sidekiq_options queue: 'default', backtrace: true, retry: 2, dead: true
+    sidekiq_options backtrace: true, retry: 2, dead: true
 
     def perform(params = {})
       is_callback   = params['is_callback'] == true
@@ -17,7 +17,7 @@ module Mammoth
           fetch_feed(url)
         end
       else
-        # schedular
+        # scheduler
         Mammoth::CommunityFeed.where.not(custom_url: nil).each do |feed|
           @cid     = feed.community_id
           @account = feed.account
