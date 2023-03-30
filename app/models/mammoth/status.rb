@@ -9,7 +9,7 @@ module Mammoth
     scope :filter_timeline_with_accounts,->(account_ids) {where(account_id: account_ids)}
     scope :filter_followed_accounts,->(account_ids) {where(account_id: account_ids, reply: false)}
     scope :filter_with_status_ids, ->(status_ids,current_account_id) { where(id: status_ids, reply: false).where.not(account_id: current_account_id) }
-    scope :filter_with_community_status_ids, ->(status_ids) { where.not(id: status_ids).where(reply: false) }
+    scope :filter_without_community_status_ids, ->(status_ids) { where.not(id: status_ids).where(reply: false) }
 
 
     scope :filter_is_only_for_followers, ->(account_ids) { where(is_only_for_followers: false).or(where(is_only_for_followers: true, account_id: account_ids)) }

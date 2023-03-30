@@ -100,7 +100,7 @@ module Mammoth::Api::V1
       #begin::community filter
       if @user_timeline_setting.selected_filters["communities_filter"]["selected_communities"].present?
         status_tag_ids = Mammoth::CommunityStatus.group(:community_id,:status_id).where(community_id: @user_timeline_setting.selected_filters["communities_filter"]["selected_communities"]).pluck(:status_id).map(&:to_i)
-        @statuses = @statuses.merge(Mammoth::Status.filter_with_community_status_ids(status_tag_ids))
+        @statuses = @statuses.merge(Mammoth::Status.filter_without_community_status_ids(status_tag_ids))
       end
       #end::community filter
 
