@@ -268,7 +268,6 @@ module Mammoth::Api::V1
       #begin:get following images
       followed_account_ids = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
       if followed_account_ids.any?
-
         Account.where(id: followed_account_ids).take(2).each do |following_account|
 					following_account_images << following_account.avatar.url
 				end
