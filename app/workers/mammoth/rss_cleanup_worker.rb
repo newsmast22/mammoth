@@ -2,7 +2,7 @@ module Mammoth
   class RSSCleanupWorker
     include Sidekiq::Worker
 
-    sidekiq_options queue: 'default', backtrace: true, retry: 2, dead: true
+    sidekiq_options backtrace: true, retry: 2, dead: true
 
     def perform
       Status.where(is_rss_content: true).each do |status|

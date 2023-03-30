@@ -5,7 +5,7 @@ module Mammoth
   class RSSCreatorWorker
     include Sidekiq::Worker
 
-    sidekiq_options queue: 'default', backtrace: true, retry: 2, dead: true
+    sidekiq_options backtrace: true, retry: 2, dead: true
 
     def perform(params = {})
       is_callback   = params['is_callback'] == true
