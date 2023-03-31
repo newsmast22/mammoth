@@ -14,6 +14,7 @@ Mammoth::Engine.routes.draw do
       resources :communities do 
         collection do 
           get  'communitiesWithCollection' => 'communities#communitiesWithCollection', as: 'communitiesWithCollection'
+          post  'update_is_country_filter_on' => 'communities#update_is_country_filter_on', as: 'update_is_country_filter_on'
         end
       end
 
