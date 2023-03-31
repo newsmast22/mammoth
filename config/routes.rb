@@ -21,6 +21,8 @@ Mammoth::Engine.routes.draw do
 
       resource :reblog_statuses, only: :create
 
+      resources :community_admin_settings
+      
       resources :community_statuses do
         collection do
           get  'get_community_statues' => 'community_statuses#get_community_statues', as: 'get_community_statues'
