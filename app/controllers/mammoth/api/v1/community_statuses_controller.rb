@@ -150,6 +150,7 @@ module Mammoth::Api::V1
 					community_name: community.name,
 					community_description: community.description,
 					community_url: community.image.url,
+					community_header_url: community.header.url,
 					community_slug: community.slug,
 					is_joined: user_communities_ids.include?(community.id), 
 					is_admin: is_community_admin
@@ -161,6 +162,7 @@ module Mammoth::Api::V1
 					community_name: community.name,
 					community_description: community.description,
 					community_url: community.image.url,
+					community_header_url: community.header.url,
 					community_slug: community.slug,
 					is_joined: user_communities_ids.include?(community.id),
 					is_admin: is_community_admin,
