@@ -132,6 +132,18 @@ module Mammoth::Api::V1
 				community_statues_ids= community_statuses.pluck(:status_id).map(&:to_i)
 				@statuses = Mammoth::Status.filter_with_community_status_ids(community_statues_ids)
 				@statuses = @statuses.filter_is_only_for_followers(account_followed_ids)
+
+				#begin::check is primary community country filter on/off
+				unless is_community_admin
+					primary_user_communities = Mammoth::UserCommunity.find_by(user_id: current_user.id,is_primary: true)
+					if primary_user_communities.community_id == community.id && community.is_country_filtering && community.is_country_filter_on
+						#condition: if (is_country_filter_on = true) fetch only same country user's primary-community statuses
+						accounts = Mammoth::Account.filter_timeline_with_countries(current_account.country)
+						@statuses = @statuses.filter_is_only_for_followers_profile_details(accounts.pluck(:id).map(&:to_i)) unless accounts.blank?
+					end
+				end
+				#end::check is primary community country filter on/off
+
 				render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, current_user: @current_user, adapter: :json, 
 				meta: { 
 					community_followed_user_counts: community_followed_user_counts,

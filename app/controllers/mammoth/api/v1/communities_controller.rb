@@ -2,7 +2,7 @@ module Mammoth::Api::V1
 	class CommunitiesController < Api::BaseController
 		before_action :require_user!
 		before_action -> { doorkeeper_authorize! :read , :write}
-		before_action :set_community, only: %i[show update destroy]
+		before_action :set_community, only: %i[show update destroy update_is_country_filter_on]
 
 		def index
 			data = []
@@ -115,6 +115,7 @@ module Mammoth::Api::V1
 					updated_at: @community.updated_at,
 					is_country_filtering: @community.is_country_filtering,
 					is_admin: is_admin,
+					is_country_filter_on: @community.is_country_filter_on,
 					fields: field_datas
 				}
 			else		
@@ -232,6 +233,11 @@ module Mammoth::Api::V1
 				end
 			end
 			render json: data
+		end
+
+		def update_is_country_filter_on
+			@community.update_attribute(:is_country_filter_on, params[:is_country_filter_on])
+      render json: {message: 'Successfully updated'}
 		end
 
 		private
