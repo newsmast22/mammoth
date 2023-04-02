@@ -15,13 +15,19 @@ module Mammoth::Api::V1
       .order("count(tag_id) desc").select('tag_id')
       .pluck(:tag_id).map(&:to_i)
       if tag_ids.any?
-        if params[:limit]
-          @tag = Mammoth::Tag.where(id: tag_ids).limit(params[:limit])
-        else
-          @tag = Mammoth::Tag.where(id: tag_ids)
-        end
+        @tag = Mammoth::Tag.where(id: tag_ids)
         @tag = @tag.filter_with_words(params[:words].downcase) if params[:words].present?
-        render json: @tag,each_serializer: Mammoth::TagSerializer
+
+        left_seggession_count = 0
+        if params[:limit].present?
+          left_seggession_count = @tag.size - params[:limit].to_i <= 0 ? 0 : @tag.size - params[:limit].to_i
+          @tag = @tag.limit(params[:limit])
+        end
+
+        render json: @tag,root: 'data', each_serializer: Mammoth::TagSerializer, adapter: :json, 
+        meta: { 
+          left_suggession_count: left_seggession_count
+        }
       else
         render json: {
           error: "Record not found"
@@ -46,20 +52,31 @@ module Mammoth::Api::V1
           .order("count(tag_id) desc").select('tag_id')
           .pluck(:tag_id).map(&:to_i)
           if tag_ids.any?
-            if params[:limit]
-              @tag = Mammoth::Tag.where(id: tag_ids).limit(params[:limit])
-            else
-              @tag = Mammoth::Tag.where(id: tag_ids)
-            end
+            @tag = Mammoth::Tag.where(id: tag_ids)
             @tag = @tag.filter_with_words(params[:words].downcase) if params[:words].present?
-            render json: @tag,each_serializer: Mammoth::TagSerializer
+
+            left_seggession_count = 0
+            if params[:limit].present?
+              left_seggession_count = @tag.size - params[:limit].to_i <= 0 ? 0 : @tag.size - params[:limit].to_i
+              @tag = @tag.limit(params[:limit])
+            end
+
+            render json: @tag,root: 'data', each_serializer: Mammoth::TagSerializer, adapter: :json, 
+            meta: { 
+              left_suggession_count: left_seggession_count
+            }
           else
             render json: {
               error: "Record not found"
              }
           end
 				else
-					render json: { data: []}
+					render json: { 
+            data: [],
+            meta: { 
+              left_suggession_count: left_seggession_count
+            }
+          }
 				end
       end
     end
