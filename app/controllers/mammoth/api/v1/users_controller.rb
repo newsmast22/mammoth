@@ -4,14 +4,21 @@ module Mammoth::Api::V1
     before_action :require_user!
 
     def suggestion
+      #condition: Intial start with limit
       @user  = Mammoth::User.find(current_user.id)
-      if params[:limit]
-        @users = Mammoth::User.joins(:user_communities).where.not(id: @user.id).where(user_communities: {community_id: @user.communities.ids}).distinct.limit(params[:limit])
-      else
-        @users = Mammoth::User.joins(:user_communities).where.not(id: @user.id).where(user_communities: {community_id: @user.communities.ids}).distinct
-      end
+
+      @users = Mammoth::User.joins(:user_communities).where.not(id: @user.id).where(user_communities: {community_id: @user.communities.ids}).distinct.order(created_at: :desc)
+
       @users = @users.filter_with_words(params[:words].downcase) if params[:words].present?
+
+      left_seggession_count = 0
+      if params[:limit].present?
+        left_seggession_count = @users.size - params[:limit].to_i <= 0 ? 0 : @users.size - params[:limit].to_i
+        @users = @users.limit(params[:limit])
+      end
+        
       account_followed = Follow.where(account_id: current_account).pluck(:target_account_id).map(&:to_i)
+
       data   = []
       @users.each do |user|
         data << {
@@ -25,17 +32,25 @@ module Mammoth::Api::V1
           bio: user.account.note
         }
       end
-      render json: {data: data}
+      render json: {
+        data: data,
+        meta: { 
+					left_suggession_count: left_seggession_count
+				}
+      }
     end
 
     def global_suggestion
       @user  = Mammoth::User.find(current_user.id)
-      if params[:limit]
-        @users = Mammoth::User.where.not(id: @user.id).where(role_id: nil).distinct.limit(params[:limit])
-      else
-        @users = Mammoth::User.where.not(id: @user.id).where(role_id: nil).distinct
-      end
+      @users = Mammoth::User.where.not(id: @user.id).where(role_id: nil).distinct
       @users = @users.filter_with_words(params[:words].downcase) if params[:words].present?
+
+      left_seggession_count = 0
+      if params[:limit].present?
+        left_seggession_count = @users.size - params[:limit].to_i <= 0 ? 0 : @users.size - params[:limit].to_i
+        @users = @users.limit(params[:limit])
+      end
+
       account_followed = Follow.where(account_id: current_account).pluck(:target_account_id).map(&:to_i)
       data   = []
       @users.each do |user|
@@ -50,7 +65,12 @@ module Mammoth::Api::V1
           bio: user.account.note
         }
       end
-      render json: {data: data}
+      render json: {
+        data: data,
+        meta: { 
+					left_suggession_count: left_seggession_count
+				}
+      }
     end
 
     def update
