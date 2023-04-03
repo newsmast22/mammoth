@@ -15,7 +15,7 @@ module Mammoth::Api::V1
       .order("count(tag_id) desc").select('tag_id')
       .pluck(:tag_id).map(&:to_i)
       if tag_ids.any?
-        @tag = Mammoth::Tag.find(tag_ids)
+        @tag = Mammoth::Tag.where(id: tag_ids)
         @tag = @tag.filter_with_words(params[:words].downcase) if params[:words].present?
 
         left_seggession_count = 0
@@ -49,7 +49,7 @@ module Mammoth::Api::V1
           .order("count(tag_id) desc").select('tag_id')
           .pluck(:tag_id).map(&:to_i)
           if tag_ids.any?
-            @tag = Mammoth::Tag.find(tag_ids)
+            @tag = Mammoth::Tag.where(id: tag_ids)
             @tag = @tag.filter_with_words(params[:words].downcase) if params[:words].present?
 
             left_seggession_count = 0
