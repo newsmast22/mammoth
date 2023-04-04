@@ -12,15 +12,17 @@ module Mammoth
       
       if is_callback
         if url = params['rss_feed_url']
-          @cid     = params['community_id']
-          @account = Account.find(params['account_id'])
+          @cid      = params['community_id']
+          @cfeed_id = params['feed_id']
+          @account  = Account.find(params['account_id'])
           fetch_feed(url)
         end
       else
         # scheduler
         Mammoth::CommunityFeed.where.not(custom_url: nil).each do |feed|
-          @cid     = feed.community_id
-          @account = feed.account
+          @cid      = feed.community_id
+          @account  = feed.account
+          @cfeed_id = feed.id
 
           fetch_feed(feed.custom_url)
         end
@@ -50,10 +52,11 @@ module Mammoth
         begin
           @status = Mammoth::PostStatusService.new.call(
             @account,
-            text:           title,
-            spoiler_text:   desc,
-            rss_link:       link,
-            is_rss_content: true,
+            text:              title,
+            spoiler_text:      desc,
+            rss_link:          link,
+            is_rss_content:    true,
+            community_feed_id: @cfeed_id
           )
         rescue
           puts 'RSS Feed Status creation failed!'

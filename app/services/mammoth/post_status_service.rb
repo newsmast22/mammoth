@@ -174,7 +174,7 @@ class Mammoth::PostStatusService < BaseService
       is_only_for_followers: @options[:is_only_for_followers],
       rss_link: @options[:rss_link],
       is_rss_content: @options[:is_rss_content],
-      #image: attach_image
+      community_feed_id: @options[:community_feed_id],
     }.compact
   end
 

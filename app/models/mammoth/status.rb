@@ -4,6 +4,7 @@ module Mammoth
     include Attachmentable
 
     has_and_belongs_to_many :communities, class_name: "Mammoth::Community"
+    belongs_to :community_feed, inverse_of: :statuses
     
     scope :filter_with_community_status_ids, ->(ids) { where(id: ids,reply: false) }
     scope :filter_timeline_with_accounts,->(account_ids) {where(account_id: account_ids)}

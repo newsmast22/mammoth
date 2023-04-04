@@ -21,6 +21,7 @@ class Mammoth::StatusSerializer < ActiveModel::Serializer
   belongs_to :reblog, serializer: Mammoth::StatusSerializer
   belongs_to :application, if: :show_application?
   belongs_to :account, serializer: Mammoth::AccountSerializer
+  belongs_to :community_feed, serializer: Mammoth::CommunityFeedSerializer
 
   has_many :ordered_media_attachments, key: :media_attachments, serializer: REST::MediaAttachmentSerializer
   has_many :ordered_mentions, key: :mentions

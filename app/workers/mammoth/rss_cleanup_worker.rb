@@ -6,7 +6,7 @@ module Mammoth
 
     def perform
       Status.where(is_rss_content: true).each do |status|
-        if over_24h?(status.created_at)
+        if over_24h?(status.created_at) && without_actions?(status)
           Mammoth::CommunityStatus.where(status: status).destroy_all
           status.destroy
         end
@@ -14,6 +14,13 @@ module Mammoth
     end
 
     private
+
+      def without_actions?(status)
+        reblog = Status.find_by(reblog_of_id: status.id)
+
+        # no likes                   no re-tweets     no comments
+        status.favourites.empty? and reblog.nil? and (status.reply == false)
+      end
 
       def over_24h?(date)
         current = Time.zone.now
