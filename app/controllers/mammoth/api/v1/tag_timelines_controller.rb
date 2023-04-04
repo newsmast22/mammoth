@@ -6,16 +6,23 @@ module Mammoth::Api::V1
 
     def show
       if params[:id].present?
-        @statuses = @tag.statuses.where(reply: false).order(created_at: :desc).take(10)
+        @statuses = @tag.statuses.where(reply: false)
         tag = Tag.find_normalized(params[:id]) || Tag.new(name: Tag.normalize(params[:id]), display_name: params[:id])
         tagFollow = TagFollow.where(tag_id: tag.id)
         unless @statuses.empty?
+          @statuses = @statuses.order(created_at: :desc).page(params[:page]).per(10)
           render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, adapter: :json, 
           meta: { 
             tag_name: tag.display_name,
             following: tagFollow.pluck(:account_id).map(&:to_i).include?(current_account.id),
             post_count: Mammoth::StatusTag.where(tag_id: tag.id).count,
             following_count: tagFollow.count,
+            pagination:
+              { 
+                total_pages: @statuses.total_pages,
+                total_objects: @statuses.total_count,
+                current_page: @statuses.current_page
+              } 
             }
         else
           render json: { data: [],
@@ -24,6 +31,12 @@ module Mammoth::Api::V1
               following: tagFollow.pluck(:account_id).map(&:to_i).include?(current_account.id),
               post_count: Mammoth::StatusTag.where(tag_id: tag.id).count,
               following_count: tagFollow.count,
+              pagination:
+                { 
+                  total_pages: 0,
+                  total_objects: 0,
+                  current_page: 0
+                } 
               }
             }
         end 
