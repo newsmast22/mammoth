@@ -110,6 +110,37 @@ module Mammoth::Api::V1
 			render json: {message: 'status with community successfully saved!'}
 		end
 
+		def get_community_details_profile
+			@user = Mammoth::User.find(current_user.id)
+			community = Mammoth::Community.find_by(slug: params[:id])
+			#begin::check is community-admin
+			is_community_admin = false
+			user_community_admin= Mammoth::CommunityAdmin.where(user_id: @user.id, community_id: community.id).last
+			if user_community_admin.present?
+				is_community_admin = true
+			end
+			#end::check is community-admin
+			@user_communities = @user.user_communities
+			user_communities_ids  = @user_communities.pluck(:community_id).map(&:to_i)
+
+			account_followed_ids = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
+
+			community_statuses = Mammoth::CommunityStatus.where(community_id: community.id)
+			community_followed_user_counts = Mammoth::UserCommunity.where(community_id: community.id).size
+				render json: { 
+				data: { 
+					community_followed_user_counts: community_followed_user_counts,
+					community_name: community.name,
+					community_description: community.description,
+					community_url: community.image.url,
+					community_header_url: community.header.url,
+					community_slug: community.slug,
+					is_joined: user_communities_ids.include?(community.id),
+					is_admin: is_community_admin,
+					}
+				}
+		end
+
 		def get_community_statues
 			@user = Mammoth::User.find(current_user.id)
 			community = Mammoth::Community.find_by(slug: params[:id])
@@ -143,30 +174,19 @@ module Mammoth::Api::V1
 					end
 				end
 				#end::check is primary community country filter on/off
-
+				@statuses = @statuses.order(created_at: :desc).page(params[:page]).per(10)
 				render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, current_user: @current_user, adapter: :json, 
-				meta: { 
-					community_followed_user_counts: community_followed_user_counts,
-					community_name: community.name,
-					community_description: community.description,
-					community_url: community.image.url,
-					community_header_url: community.header.url,
-					community_slug: community.slug,
-					is_joined: user_communities_ids.include?(community.id), 
-					is_admin: is_community_admin
-					}
+				meta: {
+					pagination:
+					{ 
+						total_pages: @statuses.total_pages,
+						total_objects: @statuses.total_count,
+						current_page: @statuses.current_page
+					} 
+				}
 			else
-				render json: { data: [],
-				meta: { 
-					community_followed_user_counts: community_followed_user_counts,
-					community_name: community.name,
-					community_description: community.description,
-					community_url: community.image.url,
-					community_header_url: community.header.url,
-					community_slug: community.slug,
-					is_joined: user_communities_ids.include?(community.id),
-					is_admin: is_community_admin,
-					}
+				render json: { 
+					data: []
 				}
 			end
 		end
