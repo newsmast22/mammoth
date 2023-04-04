@@ -29,6 +29,7 @@ Mammoth::Engine.routes.draw do
           get  'get_community_statues' => 'community_statuses#get_community_statues', as: 'get_community_statues'
           get  'get_my_community_statues' => 'community_statuses#get_my_community_statues', as: 'get_my_community_statues'
           get  'get_community_details_profile' => 'community_statuses#get_community_details_profile', as: 'get_community_details_profile'
+          get  'get_community_detail_statues' => 'community_statuses#get_community_detail_statues', as: 'get_community_detail_statues'
         end
         member do
           get :context
