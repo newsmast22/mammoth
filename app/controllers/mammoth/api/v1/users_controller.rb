@@ -409,15 +409,21 @@ module Mammoth::Api::V1
       #end::check community admin & communnity_slug
 
       account_data = single_serialize(account_info, Mammoth::CredentialAccountSerializer)
+      statuses = statuses.order(created_at: :desc).page(params[:page]).per(10)
       render json: statuses,root: 'statuses_data', each_serializer: Mammoth::StatusSerializer,adapter: :json,
       meta:{
         account_data: account_data.merge(:is_my_account => is_my_account, :is_followed => account_followed_ids.include?(account_id.to_i)),
         community_images_url: community_images,
         following_images_url: following_account_images,
         is_admin: is_admin,
-        community_slug: community_slug 
+        community_slug: community_slug,
+        pagination:
+          { 
+            total_pages: statuses.total_pages,
+            total_objects: statuses.total_count,
+            current_page: statuses.current_page
+          } 
       }
-
     end
 
     def single_serialize(collection, serializer, adapter = :json)
