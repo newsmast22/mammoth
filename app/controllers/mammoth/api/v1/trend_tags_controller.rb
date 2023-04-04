@@ -9,23 +9,20 @@ module Mammoth::Api::V1
     #End::Original code
 
     def index
-      tag_ids = Mammoth::StatusTag
-      .group("tag_id")
-      .having("count(tag_id) > 0 ")
-      .order("count(tag_id) desc").select('tag_id')
-      .pluck(:tag_id).map(&:to_i)
-      if tag_ids.any?
-        @tag = Mammoth::Tag.where(id:tag_ids)
+      @tag =Mammoth::Tag
+        .joins(:statuses_tags)
+        .select('tags.*, count(statuses_tags.tag_id) as tag_count')
+        .group('tags.id')
+        .order("count(statuses_tags.tag_id) desc")
+      if @tag.present?        
         @tag = @tag.filter_with_words(params[:words].downcase) if params[:words].present?
-
         left_seggession_count = 0
         if params[:limit].present?
-          left_seggession_count = @tag.size - params[:limit].to_i <= 0 ? 0 : @tag.size - params[:limit].to_i
-          @tag = @tag.limit(params[:limit])
+          left_seggession_count = (@tag.to_a.size- params[:limit].to_i) <= 0 ? 0 : @tag.to_a.size- params[:limit].to_i
+         @tag = @tag.limit(params[:limit])
         end
-
         render json: @tag,root: 'data', each_serializer: Mammoth::TagSerializer, adapter: :json, 
-        meta: { 
+        meta: {
           left_suggession_count: left_seggession_count
         }
       else
@@ -42,19 +39,18 @@ module Mammoth::Api::V1
         community_statuses = Mammoth::CommunityStatus.where(community_id: user_communities_ids)
 				unless community_statuses.empty?
 					community_statues_ids= community_statuses.pluck(:status_id).map(&:to_i)
-					tag_ids = Mammoth::StatusTag
-          .group("tag_id")
-          .where(status_id: community_statues_ids)
-          .having("count(tag_id) > 0 ")
-          .order("count(tag_id) desc").select('tag_id')
-          .pluck(:tag_id).map(&:to_i)
-          if tag_ids.any?
-            @tag = Mammoth::Tag.where(id:tag_ids)
+          @tag =Mammoth::Tag
+          .joins(:statuses_tags)
+          .where(statuses_tags: {status_id: community_statues_ids} )
+          .select('tags.*, count(statuses_tags.tag_id) as tag_count')
+          .group('tags.id')
+          .order("count(statuses_tags.tag_id) desc")
+          if @tag.present?
             @tag = @tag.filter_with_words(params[:words].downcase) if params[:words].present?
 
             left_seggession_count = 0
             if params[:limit].present?
-              left_seggession_count = @tag.size - params[:limit].to_i <= 0 ? 0 : @tag.size - params[:limit].to_i
+              left_seggession_count = @tag.to_a.size - params[:limit].to_i <= 0 ? 0 : @tag.to_a.size - params[:limit].to_i
               @tag = @tag.limit(params[:limit])
             end
 

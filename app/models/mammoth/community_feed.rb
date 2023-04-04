@@ -3,7 +3,7 @@ module Mammoth
     self.table_name = 'mammoth_community_feeds'
     belongs_to :community, class_name: "Mammoth::Community"
     belongs_to :account
-    has_many :statuses, inverse_of: :community_feed
+    has_many :statuses, class_name: "Mammoth::Status", inverse_of: :community_feed
 
     after_save :invoke_rss_worker
 
