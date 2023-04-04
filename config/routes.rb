@@ -63,7 +63,13 @@ Mammoth::Engine.routes.draw do
       end
       
       resources :primany_timelines
-      resources :following_timelines
+
+      resources :following_timelines do
+        collection do
+          get 'get_following_timelines' => 'following_timelines#get_following_timelines', as: "get_following_timelines"
+        end
+      end
+
       resources :tag_timelines
 
       resources :trend_tags do
