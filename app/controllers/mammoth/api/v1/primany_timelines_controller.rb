@@ -22,27 +22,21 @@ module Mammoth::Api::V1
         primary_community_statuses = Mammoth::CommunityStatus.where(community_id: user_primary_community.community_id).order(created_at: :desc).pluck(:status_id).map(&:to_i)
 
         #Begin::Filter
-        #fetch_filter_timeline_data(primary_community_statuses)
         fetch_primary_timeline_filter(primary_community_statuses)
         #End::Filter
 
         unless @statuses.empty?
-        # @statuses = @statuses.page(params[:page]).per(20)
-
-          render json: @statuses.order(created_at: :desc).take(10),root: 'data', 
-          each_serializer: Mammoth::StatusSerializer, adapter: :json
-
-          #render json: @statuses.order(created_at: :desc).take(1)
-
-          # render json: @statuses,root: 'data', 
-          # each_serializer: Mammoth::StatusSerializer, adapter: :json
-          # , 
-          # meta: { pagination:
-          #   { 
-          #     total_pages: @statuses.total_pages,
-          #     total_objects: @statuses.total_count,
-          #     current_page: @statuses.current_page
-          #   } }
+          @statuses = @statuses.page(params[:page]).per(10)
+          render json: @statuses,root: 'data', 
+          each_serializer: Mammoth::StatusSerializer, adapter: :json, 
+          meta: {
+            pagination:
+            { 
+              total_pages: @statuses.total_pages,
+              total_objects: @statuses.total_count,
+              current_page: @statuses.current_page
+            } 
+          }
         else
           render json: {
              error: "Record not found", 
