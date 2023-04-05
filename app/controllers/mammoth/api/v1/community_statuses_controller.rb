@@ -78,18 +78,22 @@ module Mammoth::Api::V1
 				is_only_for_followers: community_status_params[:is_only_for_followers]
 			)
 
-			# #begin::comment for reblog post
-			# unless @thread.nil?
-			# 	unless @thread.reblog_of_id.nil?
-			# 		@status.update_attribute(:in_reply_to_id, @thread.id)
-			# 	end
-			# end
-			# #end::comment for reblog post
-			
+			#begin::check is_community_admin or not
+			user = User.find(current_user.id)
+			role_name = ""
+			community_slug = ""
+			if user.role_id == -99 || user.role_id.nil?
+				role_name = "end-user"
+			else
+				role_name = UserRole.find(user.role_id).name
+			end
+			#end::check is_community_admin or not
 
 			if community_status_params[:community_id].nil?
-				@user_community = Mammoth::UserCommunity.find_by(user_id: current_user.id, is_primary: true).community
-				@community_id = @user_community.id
+				if role_name == "end-user"
+					@user_community = Mammoth::UserCommunity.find_by(user_id: current_user.id, is_primary: true).community 
+					@community_id = @user_community.id
+				end
 			else
 				@community_id = Mammoth::Community.find_by(slug: community_status_params[:community_id]).id
 			end

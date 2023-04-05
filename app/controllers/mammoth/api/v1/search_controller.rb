@@ -44,6 +44,10 @@ module Mammoth::Api::V1
       #end::community filter
 
       unless @statuses.empty?
+        #begin::muted account post
+        muted_accounts = Mute.where(account_id: current_account.id)
+        @statuses = @statuses.filter_mute_accounts(muted_accounts.pluck(:target_account_id).map(&:to_i)) unless muted_accounts.blank?
+        #end::muted account post
         @statuses = @statuses.order(created_at: :desc).take(10)
         render json: @statuses,root: 'data', 
           each_serializer: Mammoth::StatusSerializer, adapter: :json
@@ -70,6 +74,11 @@ module Mammoth::Api::V1
       #end::community filter
 
      unless @statuses.empty?
+      #begin::muted account post
+      muted_accounts = Mute.where(account_id: current_account.id)
+      @statuses = @statuses.filter_mute_accounts(muted_accounts.pluck(:target_account_id).map(&:to_i)) unless muted_accounts.blank?
+      #end::muted account post
+      
       @statuses = @statuses.order(created_at: :desc).take(10)
       render json: @statuses,root: 'data', 
       each_serializer: Mammoth::StatusSerializer, adapter: :json

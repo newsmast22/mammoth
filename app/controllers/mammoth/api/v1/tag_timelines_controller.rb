@@ -10,6 +10,10 @@ module Mammoth::Api::V1
         tag = Tag.find_normalized(params[:id]) || Tag.new(name: Tag.normalize(params[:id]), display_name: params[:id])
         tagFollow = TagFollow.where(tag_id: tag.id)
         unless @statuses.empty?
+          #begin::muted account post
+          muted_accounts = Mute.where(account_id: current_account.id)
+          @statuses = @statuses.filter_mute_accounts(muted_accounts.pluck(:target_account_id).map(&:to_i)) unless muted_accounts.blank?
+          #end::muted account post
           @statuses = @statuses.order(created_at: :desc).page(params[:page]).per(10)
           render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, adapter: :json, 
           meta: { 
@@ -70,6 +74,12 @@ module Mammoth::Api::V1
       if params[:id].present?
         @statuses = @tag.statuses.where(reply: false)
         unless @statuses.empty?
+
+          #begin::muted account post
+          muted_accounts = Mute.where(account_id: current_account.id)
+          @statuses = @statuses.filter_mute_accounts(muted_accounts.pluck(:target_account_id).map(&:to_i)) unless muted_accounts.blank?
+          #end::muted account post
+
           @statuses = @statuses.order(created_at: :desc).page(params[:page]).per(10)
           render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, adapter: :json, 
           meta: { 
@@ -102,7 +112,7 @@ module Mammoth::Api::V1
     private
 
     def load_tag
-      @tag = Tag.find_normalized(params[:id])
+      @tag = Mammoth::Tag.find_normalized(params[:id])
     end
   end
 end
