@@ -269,7 +269,17 @@ module Mammoth::Api::V1
 
     def get_profile_details_by_account
       account = Account.find(params[:id])
-      get_user_statuses_info(params[:id], account)
+      get_user_details_info_by_account(params[:id], account)
+    end
+
+    def get_profile_detail_info_by_account
+      account = Account.find(params[:id])
+      get_user_details_info(params[:id], account)
+    end
+
+    def get_profile_detail_statuses_by_account
+      account = Account.find(params[:id])
+      get_user_details_statuses(params[:id], account)
     end
 
     def show
@@ -401,7 +411,7 @@ module Mammoth::Api::V1
       )
     end
 
-    def get_user_statuses_info(account_id, account_info)
+    def get_user_details_info_by_account(account_id, account_info)
       community_images = []
       following_account_images = []
       is_my_account = current_account.id == account_info.id ? true : false
@@ -451,6 +461,75 @@ module Mammoth::Api::V1
         following_images_url: following_account_images,
         is_admin: is_admin,
         community_slug: community_slug,
+        pagination:
+          { 
+            total_pages: statuses.total_pages,
+            total_objects: statuses.total_count,
+            current_page: statuses.current_page
+          } 
+      }
+    end
+
+    def get_user_details_info(account_id, account_info)
+      community_images = []
+      following_account_images = []
+      is_my_account = current_account.id == account_info.id ? true : false
+      account_followed_ids = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
+
+      #begin::get collection images
+      @user  = Mammoth::User.find(current_user.id)
+			@user_communities= @user.user_communities
+			unless @user_communities.empty?
+        community_ids = @user_communities.pluck(:community_id).map(&:to_i)
+        communities = Mammoth::Community.where(id: community_ids).take(2)
+        communities.each do |community|
+					community_images << community.image.url
+				end
+      end
+      #end::get community images
+
+      #begin:get following images
+      followed_account_ids = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
+      if followed_account_ids.any?
+
+        Account.where(id: followed_account_ids).take(2).each do |following_account|
+					following_account_images << following_account.avatar.url
+				end
+      end
+      #end:get following images
+
+      #begin::check community admin & communnity_slug
+      is_admin = false
+      community_slug = ""
+      community_admin = Mammoth::CommunityAdmin.where(user_id: current_user.id).last
+      if community_admin.present?
+        is_admin = true
+        community_slug = community_admin.community.slug
+      end
+      #end::check community admin & communnity_slug
+
+      account_data = single_serialize(account_info, Mammoth::CredentialAccountSerializer)
+      render json: {
+        data:{
+          account_data: account_data.merge(:is_my_account => is_my_account, :is_followed => account_followed_ids.include?(account_id.to_i)),
+          community_images_url: community_images,
+          following_images_url: following_account_images,
+          is_admin: is_admin,
+          community_slug: community_slug
+        }
+      }
+    end
+
+    def get_user_details_statuses(account_id, account_info)
+
+      account_followed_ids = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
+      
+      statuses = Mammoth::Status.filter_is_only_for_followers_profile_details(account_id)
+      statuses = statuses.filter_is_only_for_followers(account_followed_ids)
+
+      statuses = statuses.order(created_at: :desc).page(params[:page]).per(10)
+      render json: statuses,root: 'statuses_data', each_serializer: Mammoth::StatusSerializer,adapter: :json,
+      meta:{
         pagination:
           { 
             total_pages: statuses.total_pages,

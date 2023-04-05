@@ -72,7 +72,12 @@ Mammoth::Engine.routes.draw do
         end
       end
 
-      resources :tag_timelines
+      resources :tag_timelines do
+        collection do
+          get 'get_tag_timeline_info' => 'tag_timelines#get_tag_timeline_info', as: "get_tag_timeline_info"
+          get 'get_tag_timline_statuses' => 'tag_timelines#get_tag_timline_statuses', as: "get_tag_timline_statuses"
+        end
+      end
 
       resources :trend_tags do
         collection do
@@ -94,6 +99,8 @@ Mammoth::Engine.routes.draw do
           get 'get_country_list' => "users#get_country_list", as: "get_country_list"
           get 'get_source_list' => "users#get_source_list", as: "get_source_list"
           get 'get_subtitles_list' => "users#get_subtitles_list", as: "get_subtitles_list"
+          get 'get_profile_detail_info_by_account' => "users#get_profile_detail_info_by_account", as: "get_profile_detail_info_by_account"
+          get 'get_profile_detail_statuses_by_account' => "users#get_profile_detail_statuses_by_account", as: "get_profile_detail_statuses_by_account"
         end
       end
       

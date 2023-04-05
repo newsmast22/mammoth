@@ -132,6 +132,7 @@ module Mammoth::Api::V1
 					community_followed_user_counts: community_followed_user_counts,
 					community_name: community.name,
 					community_description: community.description,
+					collection_name: community.collection.name,
 					community_url: community.image.url,
 					community_header_url: community.header.url,
 					community_slug: community.slug,
