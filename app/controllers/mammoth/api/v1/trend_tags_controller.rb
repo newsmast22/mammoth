@@ -4,10 +4,6 @@ module Mammoth::Api::V1
 		before_action -> { doorkeeper_authorize! :read}
     extend ActiveSupport::Concern
 
-    #Begin::Original code
-    #before_action :set_tags
-    #End::Original code
-
     def index
       @tag =Mammoth::Tag
         .joins(:statuses_tags)
@@ -73,27 +69,5 @@ module Mammoth::Api::V1
 				end
       end
     end
-
-    private
-
-    #Begin::Original code
-    # def enabled?
-    #   Setting.trends
-    # end
-  
-    # def set_tags
-    #   @tags = begin
-    #     if enabled?
-    #       tags_from_trends.limit(5)
-    #     else
-    #       []
-    #     end
-    #   end
-    # end
-
-    # def tags_from_trends
-    #   Trends.tags.query.allowed
-    # end
-    #End::Original code
   end
 end

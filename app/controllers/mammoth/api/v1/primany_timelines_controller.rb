@@ -96,6 +96,11 @@ module Mammoth::Api::V1
       end
       #end::community filter
 
+      #begin::muted account post
+      muted_accounts = Mute.where(account_id: current_account.id)
+      @statuses = @statuses.filter_mute_accounts(muted_accounts.pluck(:target_account_id).map(&:to_i)) unless muted_accounts.blank?
+      #end::muted account post
+
     end
 
     def create_userTimelineSetting

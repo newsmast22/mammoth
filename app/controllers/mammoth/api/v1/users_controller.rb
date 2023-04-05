@@ -527,6 +527,11 @@ module Mammoth::Api::V1
       statuses = Mammoth::Status.filter_is_only_for_followers_profile_details(account_id)
       statuses = statuses.filter_is_only_for_followers(account_followed_ids)
 
+      #begin::muted account post
+      muted_accounts = Mute.where(account_id: current_account.id)
+      statuses = statuses.filter_mute_accounts(muted_accounts.pluck(:target_account_id).map(&:to_i)) unless muted_accounts.blank?
+      #end::muted account post
+
       statuses = statuses.order(created_at: :desc).page(params[:page]).per(10)
       render json: statuses,root: 'statuses_data', each_serializer: Mammoth::StatusSerializer,adapter: :json,
       meta:{
