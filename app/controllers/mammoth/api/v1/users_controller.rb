@@ -3,6 +3,10 @@ module Mammoth::Api::V1
 		before_action -> { doorkeeper_authorize! :read , :write}
     before_action :require_user!
 
+    rescue_from ArgumentError do |e|
+      render json: { error: e.to_s }, status: 422
+    end
+
     def suggestion
       #condition: Intial start with limit
       @user  = Mammoth::User.find(current_user.id)
@@ -336,6 +340,24 @@ module Mammoth::Api::V1
       end
     end
 
+    def change_password
+      @user = current_user
+
+      if @user.valid_password?(password_params[:current_password])
+        if password_params[:new_password] ==  password_params[:new_password_confirmation]
+          @user.update!(password: password_params[:new_password])
+          log_action :change_password, @user
+          @user.update_sign_in!(new_sign_in: true)
+
+          sign_in @user
+
+          render json: {message: 'Your Password has been updated!'}
+        end
+      else
+        render json: {error: 'Invalid current password!'}, status: 422
+      end
+    end
+
     private
 
     def account_params
@@ -365,6 +387,18 @@ module Mammoth::Api::V1
         'setting_default_sensitive' => source_params.fetch(:sensitive, @account.user.setting_default_sensitive),
         'setting_default_language' => source_params.fetch(:language, @account.user.setting_default_language),
       }
+    end
+
+    def password_params
+      params.require(:user).permit(:current_password, :new_password, :new_password_confirmation)
+    end
+
+    def log_action(action, target)
+      Admin::ActionLog.create(
+        account: current_account,
+        action: :reset_password,
+        target: @user
+      )
     end
 
     def get_user_statuses_info(account_id, account_info)

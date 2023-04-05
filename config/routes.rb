@@ -82,6 +82,7 @@ Mammoth::Engine.routes.draw do
       
       resources :users, only: [] do
         collection do
+          put 'change_password'
           get 'suggestion'
           get 'global_suggestion'
           patch :update_credentials, to: 'users#update'
