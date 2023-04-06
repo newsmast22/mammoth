@@ -194,9 +194,9 @@ module Mammoth::Api::V1
 					meta: {
             pagination:
             { 
-              total_pages: @statuses.total_pages,
-              total_objects: @statuses.total_count,
-              current_page: @statuses.current_page
+              total_pages: 0,
+              total_objects: 0,
+              current_page: 0
             } 
           }
 				}
