@@ -196,13 +196,15 @@ module Mammoth::Api::V1
 			end
 			@community.save
 
-			unless community_params[:image_data].nil?
+			if community_params[:image_data] !=nil &&  community_params[:image_data] !=  "/images/original/missing.png"
 				image = Paperclip.io_adapters.for(community_params[:image_data])
 				@community.image = image
 				@community.save
+			else
+
 			end
 
-			unless community_params[:header_data].nil?
+			if community_params[:header_data] != nil && community_params[:header_data] != "/headers/original/missing.png"
 				header_image = Paperclip.io_adapters.for(community_params[:header_data])
 				@community.header = header_image
 				@community.save
