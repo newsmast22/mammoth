@@ -1,10 +1,19 @@
-%p
-  Dear
-  = @user.account.display_name + ','
+%tr
+  %td.email-logo{align: "center", valign: "middle"}
+    %img.otp-verification.center{alt: "Logo", src: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/otp-verification.png", alt: "Icon"}/
 
-%p
-  Your account verification OTP code is as below:
-  %br
-  %strong
-    = @user.otp_code
+%tr
+  %td.email-title{align: "center", valign: "middle"}
+    %img{src: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/right-arrow.png", alt: "Rigth Arrow"}
+    %span Verification OTP
 
+%tr.text
+  %td{align: "center", valign: "middle"}
+    %div
+      = "Dear, #{@user.account.display_name.presence || @user.account.username}"
+    
+    %div
+      Your accunt verification OTP code is as below:
+
+    #code
+      = @user.otp_code

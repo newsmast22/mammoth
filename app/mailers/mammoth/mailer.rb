@@ -6,7 +6,7 @@ module Mammoth
     def account_confirmation
       @user = params[:user]
       if @user.present?
-        @subject = "Newsmast: Verify your email address"
+        @subject = "Verify your email address with the following code"
         mail(to: @user.email, subject: @subject)
       end
     end
@@ -14,7 +14,7 @@ module Mammoth
     def reset_password_confirmation
       @user = params[:user]
       if @user.present?
-        @subject = "Newsmast: Reset your password"
+        @subject = "Reset your password"
         mail(to: @user.email, subject: @subject)
       end
     end

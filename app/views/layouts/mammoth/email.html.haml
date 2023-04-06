@@ -1,56 +1,206 @@
 !!!
-%html{:lang => 'en'}
+%html
   %head
-    %title
-      = @subject
-    %style{:type => 'text/css'}
-      :css
-        body
-          font-size: 125%
-          line-height: 1.5
-      
-        a, a:visited
-          color: #ED1C24
-          text-decoration: none
-          &:visited
-            color: #ED1C24
-          &:hover
-            color: #9a9b9d
-          &:active
-            color: #d1005d
+    %meta{content: "text/html; charset=UTF-8", "http-equiv" => "Content-Type"}/
+    %title Newsmast Email
+    :css
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: auto;
+        font-family: 'Source Sans Pro', sans-serif;
+      }
 
-        h1
-          font-family: 'Frutiger Next W01 Light', helvetica, arial, sans-serif
-          font-weight: normal
-          line-height: 1
-          font-size: 3em
-          letter-spacing: -0.04em
-          margin: 0.25em 0
+      .container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        max-width: 700px;
+        width: 100%;
+        margin: 0 auto;
+        padding: 20px;
+      }
 
-        h2, h3
-          font-family: 'Frutiger Next W01 Bold', helvetica, arial, sans-serif
-          font-weight: normal
-          line-height: 1.2
-          margin: 1em 0 0.25em 0
-          &.flush
-            margin: 0
+      .logo {
+        width: 140px;
+      }
 
-        p
-          overflow: hidden
-          padding: 0
-          &.clear
-            clear: both
+      .otp-verification {
+        width: 37.33px;
+        height: 42px;
+      }
 
-        strong, b
-          font-family: 'Frutiger Next W01 Bold'
+      .reset-password {
+        height: 42px; 
+      }
 
-        em, i
-          font-family: 'FrutigerNextW01-LightIt'
+      .center {
+        display: block;
+        margin: 0 auto;
+      }
 
+      .email-title {
+        vertical-align: super;
+      }
+
+      .text {
+        font-style: normal;
+        font-weight: 400;
+        font-size: 17px;
+        line-height: 21px;
+        color: #364663;
+      }
+
+      #code {
+        font-style: normal;
+        font-weight: 700;
+        font-size: 40px;
+        line-height: 50px;
+        letter-spacing: 0.08em;
+        font-variant: small-caps;
+        color: #d24a34;
+      }
+
+      .horizontal-line {
+        padding: 31px 0;
+      }
+
+      .email-logo {
+        padding-bottom: 31px;
+      }
+
+      .email-title {
+        padding-bottom: 24px;
+        font-style: normal;
+        font-weight: 700;
+        font-size: 22px;
+        line-height: 100%;
+        color: #000000;
+      }
+
+      .email-title img {
+        width: 22px;
+        vertical-align: text-bottom;
+      }
+
+      #code {
+        padding-top: 16px;
+      }
+
+      .stores {
+        padding-top: 31px;
+      }
+
+      .apple-store {
+        vertical-align: super;
+        margin-right: 26px;
+        width: 96.38px;
+        height: 19.62px;
+      }
+
+      .google-play-store {
+        vertical-align: super;
+        width: 80px;
+        height: 19.62px;
+      }
+
+      .insta {
+        margin-right: 28px;
+        width: 20px;
+      }
+      .youtube {
+        margin-right: 28px;
+        width: 21;
+      }
+
+      .linkedin {
+        width: 18px;
+      }
+
+      .socials {
+        padding-bottom: 19px;
+      }
+
+      .copyright {
+        padding-bottom: 17px;
+        font-style: normal;
+        font-weight: 400;
+        font-size: 13px;
+        line-height: 160%;
+        color: #000000 !important;
+      }
+
+      .terms {
+        font-style: normal;
+        font-weight: 400;
+        font-size: 11px;
+        line-height: 13px;
+        text-align: center;
+        text-decoration-line: underline;
+        color: #2c2d2f !important;
+      }
+
+      .note {
+        font-style: italic;
+        font-weight: 400;
+        font-size: 12px;
+        line-height: 15px;
+        text-align: center;
+        color: #364663;
+        width: 454px;
+      }
+
+      .down-arrow {
+        margin: 0 5px;
+        width: 8px;
+      }
+
+      .change-password {
+        margin: 30px 0;
+      }
+
+      .change-password a {
+        text-decoration: none;
+        border: 1px solid #9299A3;
+        font-weight: 400;
+        font-size: 17px;
+        line-height: 21px;
+        color: #2C2D2F;
+        padding: 10px 14px;
+      }
   %body
-    #header{:style => "margin: 10px"}
-      #logo
+    .container
+      %table{border: "0", cellpadding: "0", cellspacing: "0", width: "100%"}
+        %tr
+          %td{align: "center", valign: "middle"}
+            %img.logo.center{alt: "Newsmast Logo", src: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/nm-logo.png"}/
+        %tr
+          %td.horizontal-line{colspan: "100%"}
+            %hr/
         
-    #page{:style => "margin: 30px 40px 20px 62px;"}
-      #content
         = yield
+
+        %tr
+          %td.stores{align: "center", valign: "middle"}
+            %img.apple-store{src: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/app-store.png", alt: 'App Sote'}
+            %img.google-play-store{src: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/google-play-store.png", alt: 'Google Play Store'}
+        %tr
+          %td.horizontal-line{colspan: "100%"}
+            %hr/
+        %tr
+          %td.socials{align: "center", valign: "middle"}
+            %img.insta{src: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/instagram.png", alt: "Newmast Instagram"}
+            %img.youtube{src: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/youtube.png", alt: "Newmast Youtube"}
+            %img.linkedin{src: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/linkedin.png", alt: "Newmast Linkedin"}
+        %tr
+          %td.copyright{align: "center", valign: "middle"}
+            © Newsmast 2023. All rights reserved.
+            %a{href: "https://newsmastfoundation.org", style: "color: #000000 !important; text-decoration: none"} newsmastfoundation.org
+        %tr
+          %td.terms{align: "center", valign: "middle"}
+            %a{href: "#", style: "color: #2c2d2f !important"} Privacy policy
+            %img.down-arrow{src: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/down-arrow.png", alt: "Down Arrow"}
+            %a{href: "#", style: "color: #2c2d2f !important"} Terms of service
+            %img.down-arrow{src: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/down-arrow.png", alt: "Down Arrow"}
+            %a{href: "#", style: "color: #2c2d2f !important"} Unsubscribe
