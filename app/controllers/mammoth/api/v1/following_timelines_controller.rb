@@ -40,10 +40,30 @@ module Mammoth::Api::V1
             } 
           }
         else
-          render json: {error: "Record not found"}
+          render json: {
+            data: [],
+            meta: {
+              pagination:
+              { 
+                total_pages: 0,
+                total_objects: 0,
+                current_page: 0
+              } 
+            }
+          }
         end
       else
-        render json: {data: []}
+        render json: {
+          data: [],
+          meta: {
+            pagination:
+            { 
+              total_pages: 0,
+              total_objects: 0,
+              current_page: 0
+            } 
+        }
+      }
       end
     end
 

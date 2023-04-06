@@ -39,13 +39,29 @@ module Mammoth::Api::V1
           }
         else
           render json: {
-             error: "Record not found", 
-             primary_community_name:user_primary_community.community.name,
-             primary_community_slug: user_primary_community.community.slug 
+            data: [],
+            meta: {
+              pagination:
+              { 
+                total_pages: 0,
+                total_objects: 0,
+                current_page: 0
+              } 
             }
+          }
         end
       else
-        render json: {data: [] }
+        render json: {
+          data: [],
+          meta: {
+            pagination:
+            { 
+              total_pages: 0,
+              total_objects: 0,
+              current_page: 0
+            } 
+          }
+        }
       end
     end
 
@@ -79,6 +95,22 @@ module Mammoth::Api::V1
       #begin::source filter: contributor_role, voice, media
       accounts = Mammoth::Account.all if accounts.blank?
 
+      #begin::blocked account post
+      # blocked_accounts = Block.where(account_id: current_account.id).or(Block.where(target_account_id: current_account.id))
+      # unless blocked_accounts.blank?
+      #   blocked_account_ids = blocked_accounts.pluck(:target_account_id,:account_id)
+      #   #.delete(current_account.id)
+      #   puts "******************************** [blocked_account_ids] ********************************"
+      #   puts blocked_account_ids[0]
+      #   puts "******************************** Current account id"
+      #   puts current_account.id
+      #   puts "******************************** remove array"
+      #   blocked_account_ids[0].delete(current_account.id)
+      #   puts blocked_account_ids
+      # #@users = @users.filter_without_accounts(blocked_accounts.pluck(:target_account_id,:account_id).map(&:to_a)) unless blocked_accounts.blank?
+      # end
+      #end::blocked account post
+
       accounts = accounts.filter_timeline_with_contributor_role(@user_timeline_setting.selected_filters["source_filter"]["selected_contributor_role"]) if @user_timeline_setting.selected_filters["source_filter"]["selected_contributor_role"].present?
 
       accounts = accounts.filter_timeline_with_voice(@user_timeline_setting.selected_filters["source_filter"]["selected_voices"]) if @user_timeline_setting.selected_filters["source_filter"]["selected_voices"].present?
@@ -101,6 +133,7 @@ module Mammoth::Api::V1
       @statuses = @statuses.filter_mute_accounts(muted_accounts.pluck(:target_account_id).map(&:to_i)) unless muted_accounts.blank?
       #end::muted account post
 
+      
     end
 
     def create_userTimelineSetting

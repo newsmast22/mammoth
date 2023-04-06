@@ -46,8 +46,20 @@ module Mammoth::Api::V1
         end 
       else
         render json: {
-          error: "Record not found"
-         }
+          data: [],
+          meta: {
+            tag_name: "",
+            following: "",
+            post_count: 0,
+            following_count: 0,
+            pagination:
+            { 
+              total_pages: 0,
+              total_objects: 0,
+              current_page: 0
+            } 
+          }
+        }
       end      
     end
 
@@ -91,7 +103,8 @@ module Mammoth::Api::V1
               } 
             }
         else
-          render json: { data: [],
+          render json: { 
+            data: [],
             meta: { 
               pagination:
                 { 
@@ -104,8 +117,16 @@ module Mammoth::Api::V1
         end 
       else
         render json: {
-          error: "Record not found"
-         }
+          data: [],
+            meta: { 
+              pagination:
+                { 
+                  total_pages: 0,
+                  total_objects: 0,
+                  current_page: 0
+                } 
+              }
+            }
       end   
     end
 
