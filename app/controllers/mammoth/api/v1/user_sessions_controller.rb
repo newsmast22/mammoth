@@ -6,7 +6,7 @@ module Mammoth::Api::V1
     before_action :generate_otp, except: [:verify_otp, :verify_reset_password_otp, :update_password]
     before_action :find_by_email_phone, only: [:get_reset_password_otp, :verify_reset_password_otp, :reset_password]
     skip_before_action :require_authenticated_user!
-    
+
     require 'aws-sdk-sns'
     def register_with_email
       @user = User.create!(
@@ -31,24 +31,6 @@ module Mammoth::Api::V1
 
     def register_with_phone
       domain = ENV['LOCAL_DOMAIN'] || Rails.configuration.x.local_domain
-      
-      # @account = Account.where(username: params[:username]).first_or_initialize(username: params[:username])
-      # @account.save(validate: false)
-
-      # @user = User.where(username: user_params[:username])
-      #             .first_or_initialize(
-      #               created_by_application: doorkeeper_token.application, 
-      #               sign_up_ip: request.remote_ip, 
-      #               email: "#{user_params[:phone]}@#{domain}",
-      #               phone: user_params[:phone],
-      #               password: user_params[:password], 
-      #               password_confirmation: user_params[:password], 
-      #               account: @account, 
-      #               agreement: user_params[:agreement],
-      #               otp_code: @otp_code,
-      #               account_attributes: user_params.slice(:display_name, :username),
-      #               invite_request_attributes: { text: user_params[:reason] } 
-      # )
 
       @user = User.create!(
         created_by_application: doorkeeper_token.application, 
@@ -65,7 +47,7 @@ module Mammoth::Api::V1
       )
 
     @user.save(validate: false)
-    set_sns_publich(user_params[:phone],)
+    set_sns_publich(user_params[:phone])
 
       render json: {data: @user}
     rescue ActiveRecord::RecordInvalid => e
