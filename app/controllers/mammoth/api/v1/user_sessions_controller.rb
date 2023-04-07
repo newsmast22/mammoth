@@ -91,28 +91,52 @@ module Mammoth::Api::V1
     end
 
     def verify_otp
-      @user = User.find(params[:user_id])
-      if @user.otp_code == params[:confirmed_otp_code]
-        @user.confirmed_at = Time.now.utc
-        @user.otp_code = nil
-        @user.save(validate: false)
 
-        @app = doorkeeper_token.application
-        @access_token = Doorkeeper::AccessToken.create!(
-          application: @app,
-          resource_owner_id: @user.id,
-          scopes: @app.scopes,
-          expires_in: Doorkeeper.configuration.access_token_expires_in,
-          use_refresh_token: Doorkeeper.configuration.refresh_token_enabled?
-        )
-        response = Doorkeeper::OAuth::TokenResponse.new(@access_token)
-        render json: {message: 'account confirmed', access_token: JSON.parse(Oj.dump(response.body["access_token"]))}
-      else
-        render json: {error: 'wrong otp'}
+      if params[:user_id].present? 
+        verify_otp_code_for_signup()
+      end
+
+      unless params[:user_id].present?
+      verify_otp_code_for_update()
       end
     end
 
     private
+
+    def verify_otp_code_for_update
+      @user = User.find_by(otp_code: params[:confirmed_otp_code])
+        if @user.otp_code == params[:confirmed_otp_code]
+          @user.otp_code = nil
+          @user.save(validate: false)
+          render json: {message: 'update successed'}
+        else
+          render json: {error: 'wrong otp'}
+        end
+    end
+
+    def verify_otp_code_for_signup
+      @user = User.find(params[:user_id])
+        if @user.otp_code == params[:confirmed_otp_code]
+          @user.confirmed_at = Time.now.utc
+          @user.otp_code = nil
+          @user.save(validate: false)
+
+          @app = doorkeeper_token.application
+          @access_token = Doorkeeper::AccessToken.create!(
+            application: @app,
+            resource_owner_id: @user.id,
+            scopes: @app.scopes,
+            expires_in: Doorkeeper.configuration.access_token_expires_in,
+            use_refresh_token: Doorkeeper.configuration.refresh_token_enabled?
+          )
+          response = Doorkeeper::OAuth::TokenResponse.new(@access_token)
+          render json: {message: 'account confirmed', access_token: JSON.parse(Oj.dump(response.body["access_token"]))}
+        else
+          render json: {error: 'wrong otp'}
+        end
+    end
+
+    def 
 
     def find_by_email_phone
       if params[:email].present?
