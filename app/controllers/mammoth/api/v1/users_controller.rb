@@ -1,7 +1,10 @@
 module Mammoth::Api::V1
   class UsersController < Api::BaseController
 		before_action -> { doorkeeper_authorize! :read , :write}
+    before_action :generate_otp, only: [:change_email_phone]
     before_action :require_user!
+
+    require 'aws-sdk-sns'
 
     rescue_from ArgumentError do |e|
       render json: { error: e.to_s }, status: 422
@@ -14,6 +17,11 @@ module Mammoth::Api::V1
       @users = Mammoth::User.joins(:user_communities).where.not(id: @user.id).where(user_communities: {community_id: @user.communities.ids}).distinct.order(created_at: :desc)
 
       @users = @users.filter_with_words(params[:words].downcase) if params[:words].present?
+
+      #begin::check user blocked or not
+      #blocked_accounts = Block.where(account_id: current_account.id).or(Block.where(target_account_id: current_account.id))
+      #@users = @users.filter_without_accounts(blocked_accounts.pluck(:target_account_id,:account_id).map(&:to_a)) unless blocked_accounts.blank?
+      #end::check user blocked or not
 
       left_seggession_count = 0
       if params[:limit].present?
@@ -48,6 +56,11 @@ module Mammoth::Api::V1
       @user  = Mammoth::User.find(current_user.id)
       @users = Mammoth::User.where.not(id: @user.id).where(role_id: nil).distinct
       @users = @users.filter_with_words(params[:words].downcase) if params[:words].present?
+
+      #begin::check user blocked or not
+      #blocked_accounts = Block.where(account_id: current_account.id).or(Block.where(target_account_id: current_account.id))
+      #@users = @users.filter_without_accounts(blocked_accounts.pluck(:target_account_id,:account_id).map(&:to_a)) unless blocked_accounts.blank?
+      #end::check user blocked or not
 
       left_seggession_count = 0
       if params[:limit].present?
@@ -353,15 +366,67 @@ module Mammoth::Api::V1
     def change_password
       @user = current_user
 
-      if @user.valid_password?(password_params[:current_password])
-        if password_params[:new_password] ==  password_params[:new_password_confirmation]
-          @user.update!(password: password_params[:new_password])
+      if @user.valid_password?(user_credentail_params[:current_password])
+        if user_credentail_params[:new_password] ==  user_credentail_params[:new_password_confirmation]
+          @user.update!(password: user_credentail_params[:new_password])
           log_action :change_password, @user
           @user.update_sign_in!(new_sign_in: true)
 
           sign_in @user
 
           render json: {message: 'Your Password has been updated!'}
+        end
+      else
+        render json: {error: 'Invalid current password!'}, status: 422
+      end
+    end
+
+    def change_username
+      @account = current_account
+      @account.update_attribute(:username, user_credentail_params[:username])
+      render json: {message: 'update successed'}
+      rescue ActiveRecord::RecordInvalid => e
+        render json: ValidationErrorFormatter.new(e, 'account.username': :username, 'invite_request.text': :reason).as_json, status: :unprocessable_entity
+    end
+
+    def change_email_phone
+      @user = current_user
+      phone_no = ""
+
+      if user_credentail_params[:email].present?
+        @user.email = user_credentail_params[:email]
+        @user.otp_code = @otp_code
+      elsif user_credentail_params[:phone].present?
+
+        if (user_credentail_params[:phone].include?("+"))
+          phone_no = user_credentail_params[:phone]
+        else
+          phone_no = "+"+user_credentail_params[:phone]
+        end
+
+        domain = ENV['LOCAL_DOMAIN'] || Rails.configuration.x.local_domain
+        @user.email = "#{phone_no}@#{domain}"
+        @user.phone = phone_no
+        @user.otp_code = @otp_code
+      end
+
+      if @user.save
+        Mammoth::Mailer.with(user: @user).account_confirmation.deliver_now if user_credentail_params[:email].present?
+        set_sns_publich(phone_no) if phone_no.present?
+        render json: {message: 'Successfully updated'}
+      else
+      render json: {error: @user.errors }, status: 422
+      end
+
+    end
+
+    def deactive_account
+      @user = current_user
+
+      if @user.valid_password?(user_credentail_params[:current_password])
+        if user_credentail_params[:current_password] ==  user_credentail_params[:new_password_confirmation]
+          Doorkeeper::AccessToken.where(resource_owner_id: @user.id).destroy_all
+          render json: {message: 'deactivate successed'}
         end
       else
         render json: {error: 'Invalid current password!'}, status: 422
@@ -399,8 +464,8 @@ module Mammoth::Api::V1
       }
     end
 
-    def password_params
-      params.require(:user).permit(:current_password, :new_password, :new_password_confirmation)
+    def user_credentail_params
+      params.require(:user).permit(:current_password, :new_password, :new_password_confirmation,:username,:phone,:email)
     end
 
     def log_action(action, target)
@@ -602,6 +667,34 @@ module Mammoth::Api::V1
       when "Email"
         object.value
       end
+    end
+
+    def generate_otp
+      @otp_code = (1000..9999).to_a.sample
+    end
+
+    def set_sns_publich(phone)
+      @client = Aws::SNS::Client.new(
+        region: ENV['SMS_REGION'],
+        access_key_id: ENV['SMS_ACCESS_KEY_ID'],
+        secret_access_key: ENV['SMS_SECRET_ACCESS_KEY']
+      )
+      @client.set_sms_attributes({
+        attributes: { # required
+          "DefaultSenderID" => "Newsmast",
+          "DefaultSMSType" => "Transactional"
+        },
+      })
+      @client.publish({
+        phone_number: phone,
+        message: "#{@otp_code} is your Newsmast verification code.", # required
+        message_attributes: {
+          "String" => {
+            data_type: "String", # required
+            string_value: "String",
+          },
+        }
+      })
     end
 
   end

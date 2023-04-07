@@ -88,6 +88,9 @@ Mammoth::Engine.routes.draw do
       resources :users, only: [] do
         collection do
           put 'change_password'
+          put 'change_username'
+          put 'change_email_phone'
+          put 'deactive_account'
           get 'suggestion'
           get 'global_suggestion'
           patch :update_credentials, to: 'users#update'
