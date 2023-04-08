@@ -104,7 +104,8 @@ module Mammoth::Api::V1
     private
 
     def verify_otp_code_for_update
-      @user = User.find_by(otp_code: params[:confirmed_otp_code])
+      @user = User.where(otp_code: params[:confirmed_otp_code]).last
+      if @user.present?
         if @user.otp_code == params[:confirmed_otp_code]
           @user.otp_code = nil
           @user.save(validate: false)
@@ -112,6 +113,9 @@ module Mammoth::Api::V1
         else
           render json: {error: 'wrong otp'}
         end
+      else
+        render json: {error: 'wrong otp'}, status: 422
+      end   
     end
 
     def verify_otp_code_for_signup
