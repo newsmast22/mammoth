@@ -136,8 +136,6 @@ module Mammoth::Api::V1
         end
     end
 
-    def 
-
     def find_by_email_phone
       if params[:email].present?
         @user = User.find_by(email: params[:email])
