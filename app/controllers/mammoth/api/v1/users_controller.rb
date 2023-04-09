@@ -16,12 +16,16 @@ module Mammoth::Api::V1
 
       @users = Mammoth::User.joins(:user_communities).where.not(id: @user.id).where(user_communities: {community_id: @user.communities.ids}).distinct.order(created_at: :desc)
 
-      @users = @users.filter_with_words(params[:words].downcase) if params[:words].present?
+      #begin::blocked account post
+      blocked_accounts = Block.where(account_id: current_account.id).or(Block.where(target_account_id: current_account.id))
+      unless blocked_accounts.blank?
+        combined_block_account_ids = blocked_accounts.pluck(:account_id,:target_account_id).flatten
+        combined_block_account_ids.delete(current_account.id)
+        @users = @users.filter_blocked_accounts(combined_block_account_ids)
+      end
+      #end::blocked account post
 
-      #begin::check user blocked or not
-      #blocked_accounts = Block.where(account_id: current_account.id).or(Block.where(target_account_id: current_account.id))
-      #@users = @users.filter_without_accounts(blocked_accounts.pluck(:target_account_id,:account_id).map(&:to_a)) unless blocked_accounts.blank?
-      #end::check user blocked or not
+      @users = @users.filter_with_words(params[:words].downcase) if params[:words].present?
 
       left_seggession_count = 0
       if params[:limit].present?
@@ -55,12 +59,17 @@ module Mammoth::Api::V1
     def global_suggestion
       @user  = Mammoth::User.find(current_user.id)
       @users = Mammoth::User.where.not(id: @user.id).where(role_id: nil).distinct
-      @users = @users.filter_with_words(params[:words].downcase) if params[:words].present?
+      
+      #begin::blocked account post
+      blocked_accounts = Block.where(account_id: current_account.id).or(Block.where(target_account_id: current_account.id))
+      unless blocked_accounts.blank?
+        combined_block_account_ids = blocked_accounts.pluck(:account_id,:target_account_id).flatten
+        combined_block_account_ids.delete(current_account.id)
+        @users = @users.filter_blocked_accounts(combined_block_account_ids)
+      end
+      #end::blocked account post
 
-      #begin::check user blocked or not
-      #blocked_accounts = Block.where(account_id: current_account.id).or(Block.where(target_account_id: current_account.id))
-      #@users = @users.filter_without_accounts(blocked_accounts.pluck(:target_account_id,:account_id).map(&:to_a)) unless blocked_accounts.blank?
-      #end::check user blocked or not
+      @users = @users.filter_with_words(params[:words].downcase) if params[:words].present?
 
       left_seggession_count = 0
       if params[:limit].present?

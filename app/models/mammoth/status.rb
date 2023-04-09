@@ -22,5 +22,25 @@ module Mammoth
 
     scope :filter_with_words, ->(words) {where("LOWER(statuses.text) like '%#{words}%' OR LOWER(statuses.spoiler_text) like '%#{words}%'")}
 
+    def reblog_posts(limit, combined_block_account_ids, depth = nil)
+     reblog_ids(limit,combined_block_account_ids, depth)
+    end
+
+    def reblog_ids(limit,combined_block_account_ids, depth)
+      # use limit + 1 and depth + 1 because 'self' is included
+      depth += 1 if depth.present?
+      limit += 1 if limit.present?
+
+      unblocked_status_ids = Status.find_by_sql([<<-SQL.squish, id: combined_block_account_ids])
+
+        SELECT statuses.id from statuses where id IN (
+          SELECT reblog_of_id FROM statuses WHERE reblog_of_id IS NOT NULL 
+          AND account_id NOT IN (:id)
+          ) 
+        AND account_id NOT IN (:id)
+      SQL
+      unblocked_status_ids.pluck(:id) - [id]
+    end
+
   end
 end

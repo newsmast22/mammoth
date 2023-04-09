@@ -106,9 +106,21 @@ module Mammoth::Api::V1
     def verify_otp_code_for_update
       @user = User.where(otp_code: params[:confirmed_otp_code]).last
       if @user.present?
+        is_email_flag = false
         if @user.otp_code == params[:confirmed_otp_code]
           @user.otp_code = nil
+
+          unless @user.unconfirmed_email.nil?
+            @user.email = @user.unconfirmed_email
+            @user.skip_reconfirmation!
+            is_email_flag = true
+          end
           @user.save(validate: false)
+
+          if is_email_flag
+            @user.update_attribute(:unconfirmed_email, nil)
+          end
+
           render json: {message: 'update successed'}
         else
           render json: {error: 'wrong otp'}

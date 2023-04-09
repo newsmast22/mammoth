@@ -75,6 +75,22 @@ module Mammoth::Api::V1
       account_followed_ids.push(current_account.id)
 
       @statuses = Mammoth::Status.filter_with_community_status_ids(primary_community_statues_ids)
+
+      #begin::muted account post
+      muted_accounts = Mute.where(account_id: current_account.id)
+      @statuses = @statuses.filter_mute_accounts(muted_accounts.pluck(:target_account_id).map(&:to_i)) unless muted_accounts.blank?
+      #end::muted account post
+
+      #begin::blocked account post
+      blocked_accounts = Block.where(account_id: current_account.id).or(Block.where(target_account_id: current_account.id))
+      unless blocked_accounts.blank?
+        combined_block_account_ids = blocked_accounts.pluck(:account_id,:target_account_id).flatten
+        combined_block_account_ids.delete(current_account.id)
+        unblocked_status_ids = Mammoth::Status.new.reblog_posts(4_096, combined_block_account_ids, nil)
+        @statuses = @statuses.filter_with_community_status_ids(unblocked_status_ids)
+      end
+      #end::blocked account post
+
       @statuses = @statuses.filter_is_only_for_followers(account_followed_ids)
       return @statuses if @user_timeline_setting.nil? || @user_timeline_setting.selected_filters["is_filter_turn_on"] == false 
 
@@ -95,21 +111,6 @@ module Mammoth::Api::V1
       #begin::source filter: contributor_role, voice, media
       accounts = Mammoth::Account.all if accounts.blank?
 
-      #begin::blocked account post
-      # blocked_accounts = Block.where(account_id: current_account.id).or(Block.where(target_account_id: current_account.id))
-      # unless blocked_accounts.blank?
-      #   blocked_account_ids = blocked_accounts.pluck(:target_account_id,:account_id)
-      #   #.delete(current_account.id)
-      #   puts "******************************** [blocked_account_ids] ********************************"
-      #   puts blocked_account_ids[0]
-      #   puts "******************************** Current account id"
-      #   puts current_account.id
-      #   puts "******************************** remove array"
-      #   blocked_account_ids[0].delete(current_account.id)
-      #   puts blocked_account_ids
-      # #@users = @users.filter_without_accounts(blocked_accounts.pluck(:target_account_id,:account_id).map(&:to_a)) unless blocked_accounts.blank?
-      # end
-      #end::blocked account post
 
       accounts = accounts.filter_timeline_with_contributor_role(@user_timeline_setting.selected_filters["source_filter"]["selected_contributor_role"]) if @user_timeline_setting.selected_filters["source_filter"]["selected_contributor_role"].present?
 
@@ -127,13 +128,6 @@ module Mammoth::Api::V1
         @statuses = @statuses.merge(Mammoth::Status.filter_without_community_status_ids(status_tag_ids))
       end
       #end::community filter
-
-      #begin::muted account post
-      muted_accounts = Mute.where(account_id: current_account.id)
-      @statuses = @statuses.filter_mute_accounts(muted_accounts.pluck(:target_account_id).map(&:to_i)) unless muted_accounts.blank?
-      #end::muted account post
-
-      
     end
 
     def create_userTimelineSetting

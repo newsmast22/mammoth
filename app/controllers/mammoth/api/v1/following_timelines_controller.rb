@@ -72,6 +72,21 @@ module Mammoth::Api::V1
     def fetch_following_filter_timeline(filtered_followed_statuses)
       @statuses = filtered_followed_statuses
 
+      #begin::muted account post
+      muted_accounts = Mute.where(account_id: current_account.id)
+      @statuses = @statuses.filter_mute_accounts(muted_accounts.pluck(:target_account_id).map(&:to_i)) unless muted_accounts.blank?
+      #end::muted account post
+
+      #begin::blocked account post
+      blocked_accounts = Block.where(account_id: current_account.id).or(Block.where(target_account_id: current_account.id))
+      unless blocked_accounts.blank?
+        combined_block_account_ids = blocked_accounts.pluck(:account_id,:target_account_id).flatten
+        combined_block_account_ids.delete(current_account.id)
+        unblocked_status_ids = Mammoth::Status.new.reblog_posts(4_096, combined_block_account_ids, nil)
+        @statuses = @statuses.filter_with_community_status_ids(unblocked_status_ids)
+      end
+      #end::blocked account post
+
       @user_timeline_setting = Mammoth::UserTimelineSetting.find_by(user_id: current_user.id)
       
       return @statuses if @user_timeline_setting.nil? || @user_timeline_setting.selected_filters["is_filter_turn_on"] == false 
