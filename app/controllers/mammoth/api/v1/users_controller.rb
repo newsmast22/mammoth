@@ -526,6 +526,21 @@ module Mammoth::Api::V1
       end
       #end::check community admin & communnity_slug
 
+      #begin::muted account post
+      muted_accounts = Mute.where(account_id: current_account.id)
+      statuses = statuses.filter_mute_accounts(muted_accounts.pluck(:target_account_id).map(&:to_i)) unless muted_accounts.blank?
+      #end::muted account post
+
+      #begin::blocked account post
+      blocked_accounts = Block.where(account_id: current_account.id).or(Block.where(target_account_id: current_account.id))
+      unless blocked_accounts.blank?
+        combined_block_account_ids = blocked_accounts.pluck(:account_id,:target_account_id).flatten
+        combined_block_account_ids.delete(current_account.id)
+        unblocked_status_ids = Mammoth::Status.new.reblog_posts(4_096, combined_block_account_ids, nil)
+        statuses = statuses.filter_with_community_status_ids(unblocked_status_ids)
+      end
+      #end::blocked account post
+
       account_data = single_serialize(account_info, Mammoth::CredentialAccountSerializer)
       statuses = statuses.order(created_at: :desc).page(params[:page]).per(10)
       render json: statuses,root: 'statuses_data', each_serializer: Mammoth::StatusSerializer,adapter: :json,
@@ -565,7 +580,6 @@ module Mammoth::Api::V1
       #begin:get following images
       followed_account_ids = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
       if followed_account_ids.any?
-
         Account.where(id: followed_account_ids).take(2).each do |following_account|
 					following_account_images << following_account.avatar.url
 				end
@@ -599,6 +613,7 @@ module Mammoth::Api::V1
       account_followed_ids = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
       
       statuses = Mammoth::Status.filter_is_only_for_followers_profile_details(account_id)
+
       statuses = statuses.filter_is_only_for_followers(account_followed_ids)
 
       #begin::muted account post
@@ -606,7 +621,22 @@ module Mammoth::Api::V1
       statuses = statuses.filter_mute_accounts(muted_accounts.pluck(:target_account_id).map(&:to_i)) unless muted_accounts.blank?
       #end::muted account post
 
+      #begin::blocked account post
+      blocked_accounts = Block.where(account_id: current_account.id).or(Block.where(target_account_id: current_account.id))
+      unless blocked_accounts.blank?
+        combined_block_account_ids = blocked_accounts.pluck(:account_id,:target_account_id).flatten
+        combined_block_account_ids.delete(current_account.id)
+        blocked_statuses = statuses.blocked_account_status_ids(combined_block_account_ids)
+        blocked_reblog_statuses =  statuses.blocked_reblog_status_ids(blocked_statuses.pluck(:id).map(&:to_i))
+        blocked_statuses_ids = get_integer_array_from_list(blocked_statuses)
+        blocked_reblog_statuses_ids = get_integer_array_from_list(blocked_reblog_statuses)
+        combine_blocked_status_ids = blocked_statuses_ids + blocked_reblog_statuses_ids
+        statuses = statuses.filter_blocked_statuses(combine_blocked_status_ids)
+      end
+      #end::blocked account post
+
       statuses = statuses.order(created_at: :desc).page(params[:page]).per(10)
+
       render json: statuses,root: 'statuses_data', each_serializer: Mammoth::StatusSerializer,adapter: :json,
       meta:{
         pagination:
@@ -704,6 +734,14 @@ module Mammoth::Api::V1
           },
         }
       })
+    end
+
+    def get_integer_array_from_list(obj_list)
+      if obj_list.blank?
+       return []
+      else
+        return obj_list.pluck(:id).map(&:to_i)
+      end
     end
 
   end
