@@ -181,14 +181,18 @@ module Mammoth::Api::V1
 				#end::check is primary community country filter on/off
 	
 				#begin::blocked account post
-				blocked_accounts = Block.where(account_id: current_account.id).or(Block.where(target_account_id: current_account.id))
-				unless blocked_accounts.blank?
-					combined_block_account_ids = blocked_accounts.pluck(:account_id,:target_account_id).flatten
-					combined_block_account_ids.delete(current_account.id)
-					unblocked_status_ids = Mammoth::Status.new.reblog_posts(4_096, combined_block_account_ids, nil)
-					@statuses = @statuses.filter_with_community_status_ids(unblocked_status_ids)
-				end
-				#end::blocked account post
+        blocked_accounts = Block.where(account_id: current_account.id).or(Block.where(target_account_id: current_account.id))
+        unless blocked_accounts.blank?
+          combined_block_account_ids = blocked_accounts.pluck(:account_id,:target_account_id).flatten
+          combined_block_account_ids.delete(current_account.id)
+          blocked_statuses = @statuses.blocked_account_status_ids(combined_block_account_ids)
+          blocked_reblog_statuses =  @statuses.blocked_reblog_status_ids(blocked_statuses.pluck(:id).map(&:to_i))
+          blocked_statuses_ids = get_integer_array_from_list(blocked_statuses)
+          blocked_reblog_statuses_ids = get_integer_array_from_list(blocked_reblog_statuses)
+          combine_blocked_status_ids = blocked_statuses_ids + blocked_reblog_statuses_ids
+          @statuses = @statuses.filter_blocked_statuses(combine_blocked_status_ids)
+        end
+        #end::blocked account post
 
 				@statuses = @statuses.page(params[:page]).per(10)
 				render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, current_user: @current_user, adapter: :json, 
@@ -249,14 +253,18 @@ module Mammoth::Api::V1
 				#end::check is primary community country filter on/off
 	
 				#begin::blocked account post
-				blocked_accounts = Block.where(account_id: current_account.id).or(Block.where(target_account_id: current_account.id))
-				unless blocked_accounts.blank?
-					combined_block_account_ids = blocked_accounts.pluck(:account_id,:target_account_id).flatten
-					combined_block_account_ids.delete(current_account.id)
-					unblocked_status_ids = Mammoth::Status.new.reblog_posts(4_096, combined_block_account_ids, nil)
-					@statuses = @statuses.filter_with_community_status_ids(unblocked_status_ids)
-				end
-				#end::blocked account post
+        blocked_accounts = Block.where(account_id: current_account.id).or(Block.where(target_account_id: current_account.id))
+        unless blocked_accounts.blank?
+          combined_block_account_ids = blocked_accounts.pluck(:account_id,:target_account_id).flatten
+          combined_block_account_ids.delete(current_account.id)
+          blocked_statuses = @statuses.blocked_account_status_ids(combined_block_account_ids)
+          blocked_reblog_statuses =  @statuses.blocked_reblog_status_ids(blocked_statuses.pluck(:id).map(&:to_i))
+          blocked_statuses_ids = get_integer_array_from_list(blocked_statuses)
+          blocked_reblog_statuses_ids = get_integer_array_from_list(blocked_reblog_statuses)
+          combine_blocked_status_ids = blocked_statuses_ids + blocked_reblog_statuses_ids
+          @statuses = @statuses.filter_blocked_statuses(combine_blocked_status_ids)
+        end
+        #end::blocked account post
 
 				render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, current_user: @current_user, adapter: :json, 
 				meta: { 
@@ -307,6 +315,14 @@ module Mammoth::Api::V1
 
     private
 
+		def get_integer_array_from_list(obj_list)
+      if obj_list.blank?
+       return []
+      else
+        return obj_list.pluck(:id).map(&:to_i)
+      end
+    end
+		
 		def set_status
 			@status = Status.find(params[:id])
 		end

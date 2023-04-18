@@ -82,8 +82,15 @@ module Mammoth::Api::V1
       unless blocked_accounts.blank?
         combined_block_account_ids = blocked_accounts.pluck(:account_id,:target_account_id).flatten
         combined_block_account_ids.delete(current_account.id)
-        unblocked_status_ids = Mammoth::Status.new.reblog_posts(4_096, combined_block_account_ids, nil)
-        @statuses = @statuses.filter_with_community_status_ids(unblocked_status_ids)
+        blocked_statuses = @statuses.blocked_account_status_ids(combined_block_account_ids)
+
+        blocked_reblog_statuses =  @statuses.blocked_reblog_status_ids(blocked_statuses.pluck(:id).map(&:to_i))
+
+        blocked_statuses_ids = get_integer_array_from_list(blocked_statuses)
+        blocked_reblog_statuses_ids = get_integer_array_from_list(blocked_reblog_statuses)
+        combine_blocked_status_ids = blocked_statuses_ids + blocked_reblog_statuses_ids
+        @statuses = @statuses.filter_blocked_statuses(combine_blocked_status_ids)
+        puts @statuses.inspect
       end
       #end::blocked account post
 
@@ -123,11 +130,6 @@ module Mammoth::Api::V1
         @statuses = @statuses.merge(Mammoth::Status.filter_without_community_status_ids(status_tag_ids))
       end
       #end::community filter
-
-      #begin::muted account post
-      muted_accounts = Mute.where(account_id: current_account.id)
-      @statuses = @statuses.filter_mute_accounts(muted_accounts.pluck(:target_account_id).map(&:to_i)) unless muted_accounts.blank?
-      #end::muted account post
     end
 
     def create_userTimelineSetting
@@ -152,6 +154,14 @@ module Mammoth::Api::V1
           }
         }
       )
+    end
+
+    def get_integer_array_from_list(obj_list)
+      if obj_list.blank?
+       return []
+      else
+        return obj_list.pluck(:id).map(&:to_i)
+      end
     end
 
   end

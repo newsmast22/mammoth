@@ -19,6 +19,12 @@ module Mammoth
     scope :filter_is_only_for_followers_community_statuses, ->(status_ids,account_ids) { where(id: status_ids, reply: false,is_only_for_followers: false).or(where(is_only_for_followers: true, account_id: account_ids,reply: false)) }
     scope :filter_is_only_for_followers_profile_details, ->(account_id) {where(account_id: account_id, reply: false)}
     scope :filter_mute_accounts,->(account_ids) {where.not(account_id: account_ids, reply: false)}
+    scope :filter_without_status_account_ids, ->(status_ids,account_ids) { where.not(id: status_ids, account_id:account_ids ).where(reply: false) }
+    scope :filter_blocked_statuses,->(blocked_status_ids) {where.not(id: blocked_status_ids, reply: false)}
+
+    scope :blocked_account_status_ids, -> (blocked_account_ids) {where(account_id: blocked_account_ids, reply: false)}
+    scope :blocked_reblog_status_ids, -> (blocked_status_ids) {where(reblog_of_id: blocked_status_ids, reply: false)}
+
 
     scope :filter_with_words, ->(words) {where("LOWER(statuses.text) like '%#{words}%' OR LOWER(statuses.spoiler_text) like '%#{words}%'")}
 
@@ -31,13 +37,12 @@ module Mammoth
       depth += 1 if depth.present?
       limit += 1 if limit.present?
 
-      unblocked_status_ids = Status.find_by_sql([<<-SQL.squish, id: combined_block_account_ids])
+      unblocked_status_ids = Mammoth::Status.find_by_sql([<<-SQL.squish, id: combined_block_account_ids])
 
         SELECT statuses.id from statuses where id IN (
-          SELECT reblog_of_id FROM statuses WHERE reblog_of_id IS NOT NULL 
-          AND account_id NOT IN (:id)
+          SELECT reblog_of_id FROM statuses WHERE reblog_of_id IS NOT NULL
           ) 
-        AND account_id NOT IN (:id)
+        AND account_id IN (:id)
       SQL
       unblocked_status_ids.pluck(:id) - [id]
     end
