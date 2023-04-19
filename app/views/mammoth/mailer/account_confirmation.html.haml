@@ -13,7 +13,7 @@
       = "Dear, #{@user.account.display_name.presence || @user.account.username}"
     
     %div
-      Your accunt verification OTP code is as below:
+      Your account verification OTP code is as below:
 
     #code
       = @user.otp_code
