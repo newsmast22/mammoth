@@ -194,6 +194,18 @@ module Mammoth::Api::V1
         end
         #end::blocked account post
 
+				#begin::deactivated account post
+				deactivated_accounts = Account.joins(:user).where('users.is_active = ?', false)
+				unless deactivated_accounts.blank?
+					deactivated_statuses = @statuses.blocked_account_status_ids(deactivated_accounts.pluck(:id).map(&:to_i))
+					deactivated_reblog_statuses =  @statuses.blocked_reblog_status_ids(deactivated_statuses.pluck(:id).map(&:to_i))
+					deactivated_statuses_ids = get_integer_array_from_list(deactivated_statuses)
+					deactivated_reblog_statuses_ids = get_integer_array_from_list(deactivated_reblog_statuses)
+					combine_deactivated_status_ids = deactivated_statuses_ids + deactivated_reblog_statuses_ids
+					@statuses = @statuses.filter_blocked_statuses(combine_deactivated_status_ids)
+				end
+				#end::deactivated account post
+
 				@statuses = @statuses.page(params[:page]).per(10)
 				render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, current_user: @current_user, adapter: :json, 
 				meta: {
@@ -265,6 +277,18 @@ module Mammoth::Api::V1
           @statuses = @statuses.filter_blocked_statuses(combine_blocked_status_ids)
         end
         #end::blocked account post
+
+				#begin::deactivated account post
+				deactivated_accounts = Account.joins(:user).where('users.is_active = ?', false)
+				unless deactivated_accounts.blank?
+					deactivated_statuses = @statuses.blocked_account_status_ids(deactivated_accounts.pluck(:id).map(&:to_i))
+					deactivated_reblog_statuses =  @statuses.blocked_reblog_status_ids(deactivated_statuses.pluck(:id).map(&:to_i))
+					deactivated_statuses_ids = get_integer_array_from_list(deactivated_statuses)
+					deactivated_reblog_statuses_ids = get_integer_array_from_list(deactivated_reblog_statuses)
+					combine_deactivated_status_ids = deactivated_statuses_ids + deactivated_reblog_statuses_ids
+					@statuses = @statuses.filter_blocked_statuses(combine_deactivated_status_ids)
+				end
+				#end::deactivated account post
 
 				render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, current_user: @current_user, adapter: :json, 
 				meta: { 
