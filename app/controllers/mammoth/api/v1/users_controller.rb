@@ -25,6 +25,13 @@ module Mammoth::Api::V1
       end
       #end::blocked account post
 
+      #begin::deactivated account post
+				deactivated_accounts = Account.joins(:user).where('users.is_active = ?', false)
+				unless deactivated_accounts.blank?
+          @users = @users.filter_blocked_accounts(deactivated_accounts.pluck(:id).map(&:to_i))
+				end
+			#end::deactivated account post
+
       @users = @users.filter_with_words(params[:words].downcase) if params[:words].present?
 
       left_seggession_count = 0
@@ -68,6 +75,13 @@ module Mammoth::Api::V1
         @users = @users.filter_blocked_accounts(combined_block_account_ids)
       end
       #end::blocked account post
+
+      #begin::deactivated account post
+				deactivated_accounts = Account.joins(:user).where('users.is_active = ?', false)
+				unless deactivated_accounts.blank?
+          @users = @users.filter_blocked_accounts(deactivated_accounts.pluck(:id).map(&:to_i))
+				end
+			#end::deactivated account post
 
       @users = @users.filter_with_words(params[:words].downcase) if params[:words].present?
 
@@ -435,6 +449,8 @@ module Mammoth::Api::V1
       if @user.valid_password?(user_credentail_params[:current_password])
         if user_credentail_params[:current_password] ==  user_credentail_params[:new_password_confirmation]
           Doorkeeper::AccessToken.where(resource_owner_id: @user.id).destroy_all
+          @user = current_user
+          @user.update!(is_active: false)
           render json: {message: 'deactivate successed'}
         end
       else

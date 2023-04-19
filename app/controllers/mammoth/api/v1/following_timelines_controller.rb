@@ -83,16 +83,25 @@ module Mammoth::Api::V1
         combined_block_account_ids = blocked_accounts.pluck(:account_id,:target_account_id).flatten
         combined_block_account_ids.delete(current_account.id)
         blocked_statuses = @statuses.blocked_account_status_ids(combined_block_account_ids)
-
         blocked_reblog_statuses =  @statuses.blocked_reblog_status_ids(blocked_statuses.pluck(:id).map(&:to_i))
-
         blocked_statuses_ids = get_integer_array_from_list(blocked_statuses)
         blocked_reblog_statuses_ids = get_integer_array_from_list(blocked_reblog_statuses)
         combine_blocked_status_ids = blocked_statuses_ids + blocked_reblog_statuses_ids
         @statuses = @statuses.filter_blocked_statuses(combine_blocked_status_ids)
-        puts @statuses.inspect
       end
       #end::blocked account post
+
+      #begin::deactivated account post
+      deactivated_accounts = Account.joins(:user).where('users.is_active = ?', false)
+      unless deactivated_accounts.blank?
+        deactivated_statuses = @statuses.blocked_account_status_ids(deactivated_accounts.pluck(:id).map(&:to_i))
+        deactivated_reblog_statuses =  @statuses.blocked_reblog_status_ids(deactivated_statuses.pluck(:id).map(&:to_i))
+        deactivated_statuses_ids = get_integer_array_from_list(deactivated_statuses)
+        deactivated_reblog_statuses_ids = get_integer_array_from_list(deactivated_reblog_statuses)
+        combine_deactivated_status_ids = deactivated_statuses_ids + deactivated_reblog_statuses_ids
+        @statuses = @statuses.filter_blocked_statuses(combine_deactivated_status_ids)
+      end
+      #end::deactivated account post
 
       @user_timeline_setting = Mammoth::UserTimelineSetting.find_by(user_id: current_user.id)
       
