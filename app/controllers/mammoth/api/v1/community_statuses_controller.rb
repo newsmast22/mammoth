@@ -162,7 +162,6 @@ module Mammoth::Api::V1
 			account_followed_ids = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
 
 			community_statuses = Mammoth::CommunityStatus.where(community_id: community.id)
-			community_followed_user_counts = Mammoth::UserCommunity.where(community_id: community.id).size
 			unless community_statuses.empty?
 				account_followed_ids.push(current_account.id)
 				community_statues_ids= community_statuses.pluck(:status_id).map(&:to_i)
@@ -230,6 +229,114 @@ module Mammoth::Api::V1
 			end
 		end
 		
+		def get_recommended_community_detail_statuses
+			@user = Mammoth::User.find(current_user.id)
+			community = Mammoth::Community.find_by(slug: params[:id])
+
+			community_admins = User.joins("INNER JOIN mammoth_communities_admins ON mammoth_communities_admins.user_id = users.id AND users.is_active = TRUE ").where("mammoth_communities_admins.community_id = #{community.id}")
+
+			unless community_admins.blank?
+
+				community_admin_followed_account_ids = Follow.where(account_id: community_admins.pluck(:account_id).map(&:to_i)).pluck(:target_account_id).map(&:to_i)
+
+				puts "target account id"
+				puts community_admin_followed_account_ids
+
+				@user = Mammoth::User.find(current_user.id)
+				community = Mammoth::Community.find_by(slug: params[:id])
+				#begin::check is community-admin
+				is_community_admin = false
+				user_community_admin= Mammoth::CommunityAdmin.where(user_id: @user.id, community_id: community.id).last
+				if user_community_admin.present?
+					is_community_admin = true
+				end
+				#end::check is community-admin
+				@user_communities = @user.user_communities
+				user_communities_ids  = @user_communities.pluck(:community_id).map(&:to_i)
+	
+				account_followed_ids = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
+	
+				community_statuses = Mammoth::CommunityStatus.where(community_id: community.id)
+				unless community_statuses.empty? || !community_admin_followed_account_ids.any?
+					account_followed_ids.push(current_account.id)
+					community_statues_ids= community_statuses.pluck(:status_id).map(&:to_i)
+					@statuses = Mammoth::Status.blocked_account_status_ids(community_admin_followed_account_ids)
+					@statuses = @statuses.filter_with_community_status_ids(community_statues_ids)
+					@statuses = @statuses.filter_is_only_for_followers(account_followed_ids)
+	
+					#begin::check is primary community country filter on/off [only for end-user]
+					unless is_community_admin
+						primary_user_communities = Mammoth::UserCommunity.find_by(user_id: current_user.id,is_primary: true)
+						if primary_user_communities.community_id == community.id && community.is_country_filtering && community.is_country_filter_on
+							#condition: if (is_country_filter_on = true) fetch only same country user's primary-community statuses
+							accounts = Mammoth::Account.filter_timeline_with_countries(current_account.country)
+							@statuses = @statuses.filter_is_only_for_followers_profile_details(accounts.pluck(:id).map(&:to_i)) unless accounts.blank?
+						end
+					end
+					#end::check is primary community country filter on/off
+		
+					#begin::blocked account post
+					blocked_accounts = Block.where(account_id: current_account.id).or(Block.where(target_account_id: current_account.id))
+					unless blocked_accounts.blank?
+						combined_block_account_ids = blocked_accounts.pluck(:account_id,:target_account_id).flatten
+						combined_block_account_ids.delete(current_account.id)
+						blocked_statuses = @statuses.blocked_account_status_ids(combined_block_account_ids)
+						blocked_reblog_statuses =  @statuses.blocked_reblog_status_ids(blocked_statuses.pluck(:id).map(&:to_i))
+						blocked_statuses_ids = get_integer_array_from_list(blocked_statuses)
+						blocked_reblog_statuses_ids = get_integer_array_from_list(blocked_reblog_statuses)
+						combine_blocked_status_ids = blocked_statuses_ids + blocked_reblog_statuses_ids
+						@statuses = @statuses.filter_blocked_statuses(combine_blocked_status_ids)
+					end
+					#end::blocked account post
+	
+					#begin::deactivated account post
+					deactivated_accounts = Account.joins(:user).where('users.is_active = ?', false)
+					unless deactivated_accounts.blank?
+						deactivated_statuses = @statuses.blocked_account_status_ids(deactivated_accounts.pluck(:id).map(&:to_i))
+						deactivated_reblog_statuses =  @statuses.blocked_reblog_status_ids(deactivated_statuses.pluck(:id).map(&:to_i))
+						deactivated_statuses_ids = get_integer_array_from_list(deactivated_statuses)
+						deactivated_reblog_statuses_ids = get_integer_array_from_list(deactivated_reblog_statuses)
+						combine_deactivated_status_ids = deactivated_statuses_ids + deactivated_reblog_statuses_ids
+						@statuses = @statuses.filter_blocked_statuses(combine_deactivated_status_ids)
+					end
+					#end::deactivated account post
+
+				@statuses = @statuses.page(params[:page]).per(10)
+				render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, current_user: @current_user, adapter: :json, 
+				meta: {
+					pagination:
+					{ 
+						total_pages: @statuses.total_pages,
+						total_objects: @statuses.total_count,
+						current_page: @statuses.current_page
+					} 
+				}
+				else
+					render json: { data: [],
+						meta: {
+							pagination:
+							{ 
+								total_pages: 0,
+								total_objects: 0,
+								current_page: 0
+							} 
+						}
+					}	
+				end	
+			else
+				render json: { data: [],
+					meta: {
+            pagination:
+            { 
+              total_pages: 0,
+              total_objects: 0,
+              current_page: 0
+            } 
+          }
+				}
+			end
+		end
+
 		def get_community_statues
 			@user = Mammoth::User.find(current_user.id)
 			community = Mammoth::Community.find_by(slug: params[:id])
