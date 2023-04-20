@@ -47,7 +47,7 @@ module Mammoth::Api::V1
           @statuses = @statuses.filter_mute_accounts(muted_accounts.pluck(:target_account_id).map(&:to_i)) unless muted_accounts.blank?
           #end::muted account post
           @statuses = @statuses.order(created_at: :desc).page(params[:page]).per(10)
-          render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, adapter: :json, 
+          render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer,current_user: current_user, adapter: :json, 
           meta: { 
             tag_name: tag.display_name,
             following: tagFollow.pluck(:account_id).map(&:to_i).include?(current_account.id),
@@ -151,7 +151,7 @@ module Mammoth::Api::V1
           #end::deactivated account post
 
           @statuses = @statuses.order(created_at: :desc).page(params[:page]).per(10)
-          render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, adapter: :json, 
+          render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer,current_user: current_user, adapter: :json, 
           meta: { 
             pagination:
               { 

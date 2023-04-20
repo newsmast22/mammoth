@@ -28,7 +28,7 @@ module Mammoth::Api::V1
         unless @statuses.empty?
           @statuses = @statuses.page(params[:page]).per(10)
           render json: @statuses,root: 'data', 
-          each_serializer: Mammoth::StatusSerializer, adapter: :json, 
+          each_serializer: Mammoth::StatusSerializer, current_user: current_user, adapter: :json, 
           meta: {
             pagination:
             { 

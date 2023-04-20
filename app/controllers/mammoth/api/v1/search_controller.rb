@@ -81,7 +81,7 @@ module Mammoth::Api::V1
         #end::muted account post
         @statuses = @statuses.order(created_at: :desc).take(10)
         render json: @statuses,root: 'data', 
-          each_serializer: Mammoth::StatusSerializer, adapter: :json
+          each_serializer: Mammoth::StatusSerializer,current_user: current_user, adapter: :json
       else
         render json: {error: "Record not found"}
       end
@@ -143,7 +143,7 @@ module Mammoth::Api::V1
       
       @statuses = @statuses.order(created_at: :desc).take(10)
       render json: @statuses,root: 'data', 
-      each_serializer: Mammoth::StatusSerializer, adapter: :json
+      each_serializer: Mammoth::StatusSerializer,current_user: current_user, adapter: :json
       else
        render json: {error: "Record not found"}
      end
