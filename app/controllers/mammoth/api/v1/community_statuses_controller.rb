@@ -206,7 +206,7 @@ module Mammoth::Api::V1
 				#end::deactivated account post
 
 				@statuses = @statuses.page(params[:page]).per(10)
-				render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, current_user: @current_user, adapter: :json, 
+				render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, current_user: current_user, adapter: :json, 
 				meta: {
 					pagination:
 					{ 
@@ -302,7 +302,7 @@ module Mammoth::Api::V1
 					#end::deactivated account post
 
 				@statuses = @statuses.page(params[:page]).per(10)
-				render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, current_user: @current_user, adapter: :json, 
+				render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, current_user: current_user, adapter: :json, 
 				meta: {
 					pagination:
 					{ 
@@ -397,7 +397,7 @@ module Mammoth::Api::V1
 				end
 				#end::deactivated account post
 
-				render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, current_user: @current_user, adapter: :json, 
+				render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, current_user: current_user, adapter: :json, 
 				meta: { 
 					community_followed_user_counts: community_followed_user_counts,
 					community_name: community.name,
