@@ -558,7 +558,7 @@ module Mammoth::Api::V1
       #end::blocked account post
 
       account_data = single_serialize(account_info, Mammoth::CredentialAccountSerializer)
-      statuses = statuses.order(created_at: :desc).page(params[:page]).per(10)
+      statuses = statuses.order(created_at: :desc).page(params[:page]).per(5)
       render json: statuses,root: 'statuses_data', each_serializer: Mammoth::StatusSerializer,adapter: :json,
       meta:{
         account_data: account_data.merge(:is_my_account => is_my_account, :is_followed => account_followed_ids.include?(account_id.to_i)),
@@ -651,7 +651,7 @@ module Mammoth::Api::V1
       end
       #end::blocked account post
 
-      statuses = statuses.order(created_at: :desc).page(params[:page]).per(10)
+      statuses = statuses.order(created_at: :desc).page(params[:page]).per(5)
 
       render json: statuses,root: 'statuses_data', each_serializer: Mammoth::StatusSerializer,adapter: :json,
       meta:{
