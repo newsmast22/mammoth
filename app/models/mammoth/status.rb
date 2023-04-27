@@ -20,10 +20,14 @@ module Mammoth
     scope :filter_is_only_for_followers_profile_details, ->(account_id) {where(account_id: account_id, reply: false)}
     scope :filter_mute_accounts,->(account_ids) {where.not(account_id: account_ids, reply: false)}
     scope :filter_without_status_account_ids, ->(status_ids,account_ids) { where.not(id: status_ids, account_id:account_ids ).where(reply: false) }
-    scope :filter_blocked_statuses,->(blocked_status_ids) {where.not(id: blocked_status_ids, reply: false)}
+    scope :filter_blocked_statuses,->(blocked_status_ids) {where.not(id: blocked_status_ids)}
 
     scope :blocked_account_status_ids, -> (blocked_account_ids) {where(account_id: blocked_account_ids, reply: false)}
     scope :blocked_reblog_status_ids, -> (blocked_status_ids) {where(reblog_of_id: blocked_status_ids, reply: false)}
+
+    scope :fetch_all_blocked_status_ids, -> (blocked_status_ids) {
+      where(id: blocked_status_ids).or(where(reblog_of_id:blocked_status_ids ))
+    }
 
 
     scope :filter_with_words, ->(words) {where("LOWER(statuses.text) like '%#{words}%' OR LOWER(statuses.spoiler_text) like '%#{words}%'")}

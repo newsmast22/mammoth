@@ -11,7 +11,7 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
              :email,:phone
              
 
-  has_one :moved_to_account, key: :moved, serializer: REST::AccountSerializer, if: :moved_and_not_nested?
+  has_one :moved_to_account, key: :moved, serializer: Mammoth::AccountSerializer, if: :moved_and_not_nested?
 
   has_many :emojis, serializer: REST::CustomEmojiSerializer
 
