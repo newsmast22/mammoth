@@ -13,6 +13,7 @@ module Mammoth::Api::V1
         @communities.each do |community|
           data << {
             id: community.id.to_s,
+            user_id: @user.id.to_s,
             is_primary: community.id == @user_communities.community_id ? true : false,
             name: community.name,
             slug: community.slug,
@@ -91,6 +92,30 @@ module Mammoth::Api::V1
         @joined_user_community.destroy
         render json: {message: 'User with community successfully unjoied!'}
       end
+    end
+
+    def join_all_community
+      collection = Mammoth::Collection.find_by(slug: params[:collection_id])
+      communities = collection.communities
+      unless communities.blank?
+        communities.each do |community|
+          Mammoth::UserCommunity.where(community_id: community.id, user_id: current_user.id).first_or_create
+        end
+        render json: {message: 'User with community successfully joined!'}
+      else
+        render json: { error: 'no communities found' }
+      end 
+    end
+
+    def unjoin_all_community
+      collection = Mammoth::Collection.find_by(slug: params[:collection_id])
+      communities = collection.communities
+      unless communities.blank?
+        Mammoth::UserCommunity.where(user_id: current_user.id, community_id: collection.communities.pluck(:id).map(&:to_i)).destroy_all
+        render json: {message: 'User with community successfully joined!'}
+      else
+        render json: { error: 'no communities found' }
+      end 
     end
 
     private

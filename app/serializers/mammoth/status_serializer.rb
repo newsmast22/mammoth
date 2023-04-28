@@ -6,7 +6,7 @@ class Mammoth::StatusSerializer < ActiveModel::Serializer
   attributes :id,:community_id,:community_name,:community_slug,:created_at, :in_reply_to_id, :in_reply_to_account_id,
              :sensitive, :spoiler_text, :visibility, :language, :is_only_for_followers,
              :uri, :url, :replies_count, :reblogs_count,:is_rss_content,
-             :favourites_count, :edited_at,:image_url
+             :favourites_count, :edited_at,:image_url,:rss_link
 
   attribute :favourited, if: :current_user?
   attribute :reblogged, if: :current_user?
@@ -74,6 +74,10 @@ class Mammoth::StatusSerializer < ActiveModel::Serializer
 
   def is_rss_content
     object.is_rss_content
+  end
+
+  def rss_link 
+    object.rss_link
   end
 
   def id
