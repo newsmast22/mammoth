@@ -276,13 +276,6 @@ module Mammoth::Api::V1
 							is_joined_all: communities.size == community_joined_count ? true : false,
 							communities: community_data
 						}
-
-					# data << {
-					# 	collection_id: collection.id,
-					# 	collection_name: collection.name,
-					# 	collection_slug: collection.slug,
-					# 	communities: collection.communities.order(:name),
-					# }
 				end
 			end
 			render json: data
