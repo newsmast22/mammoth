@@ -45,27 +45,23 @@ module Mammoth::Api::V1
         fetch_following_filter_timeline(filtered_followed_statuses)
         #End::Filter
         unless @statuses.empty?
+          statuses_counts = @statuses.size
           @statuses = @statuses.order(created_at: :desc).limit(5)
           render json: @statuses, root: 'data', 
-                                  each_serializer: Mammoth::StatusSerializer, current_user: current_user, adapter: :json
-          # , 
-          # meta: {
-          #   pagination:
-          #   { 
-          #     total_pages: @statuses.total_pages,
-          #     total_objects: @statuses.total_count,
-          #     current_page: @statuses.current_page
-          #   } 
-          # }
+                                  each_serializer: Mammoth::StatusSerializer, current_user: current_user, adapter: :json, 
+                                  meta: {
+                                    pagination:
+                                    { 
+                                      total_objects: statuses_counts,
+                                    } 
+                                  }
         else
           render json: {
             data: [],
             meta: {
               pagination:
               { 
-                total_pages: 0,
                 total_objects: 0,
-                current_page: 0
               } 
             }
           }
@@ -76,9 +72,7 @@ module Mammoth::Api::V1
           meta: {
             pagination:
             { 
-              total_pages: 0,
               total_objects: 0,
-              current_page: 0
             } 
         }
       }

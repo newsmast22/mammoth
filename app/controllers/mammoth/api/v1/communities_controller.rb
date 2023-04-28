@@ -221,17 +221,68 @@ module Mammoth::Api::V1
 			
 		end
 
-		def communitiesWithCollection 
+		def get_communities_with_collections 
 			data = []
-			collections  =Mammoth::Collection.all.order(:name)
+
+			if params[:collection_slugs].present?
+				collections  = Mammoth::Collection.where(slug: params[:collection_slugs]).order(:name)
+			else
+				collections  = Mammoth::Collection.all.order(:name)
+			end
+
+			user = Mammoth::User.find(current_user.id)
+			user_communities_ids = user&.user_communities.pluck(:community_id).map(&:to_i) || []
 			collections.each do |collection|
 				unless collection.communities.blank?
+					communities = collection.communities.order(:name)
+					community_data = []
+					community_joined_count = 0
+
+					communities.each do |community|
+
+						if user_communities_ids.include?(community.id)
+							community_joined_count += 1
+						end
+													
+						community_data << {
+							id: community.id,
+							name: community.name,
+							slug: community.slug,
+							is_joined: user_communities_ids.include?(community.id),
+							image_file_name: community.image_file_name,
+							image_content_type: community.image_content_type,
+							image_file_size: community.image_file_size,
+							image_updated_at: community.image_updated_at,
+							description: community.description,
+							collection_id: community.collection_id,
+							created_at: community.created_at,
+							updated_at: community.updated_at,
+							is_country_filtering: community.is_country_filtering,
+							fields: community.fields,
+							header_file_name: community.header_file_name,
+							header_content_type: community.image_file_name,
+							header_file_size: community.header_file_size,
+							header_updated_at: community.header_updated_at,
+							is_country_filter_on: community.is_country_filter_on,
+							community_image_url: community.image.url,
+							community_header_url: community.header.url
+						}
+					end
+
 					data << {
-						collection_id: collection.id,
-						collection_name: collection.name,
-						collection_slug: collection.slug,
-						communities: collection.communities.order(:name),
-					}
+							collection_id: collection.id,
+							collection_name: collection.name,
+							collection_slug: collection.slug,
+							is_joined_all: communities.size == community_joined_count ? true : false,
+							communities: community_data
+						}
+
+					# data << {
+					# 	collection_id: collection.id,
+					# 	collection_name: collection.name,
+					# 	collection_slug: collection.slug,
+					# 	communities: collection.communities.order(:name),
+					# }
 				end
 			end
 			render json: data
