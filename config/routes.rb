@@ -13,7 +13,7 @@ Mammoth::Engine.routes.draw do
 
       resources :communities do 
         collection do 
-          get 'get_communities_with_collections' => 'communities#get_communities_with_collections', as: 'get_communities_with_collections'
+          post 'get_communities_with_collections' => 'communities#get_communities_with_collections', as: 'get_communities_with_collections'
           post 'update_is_country_filter_on' => 'communities#update_is_country_filter_on', as: 'update_is_country_filter_on'
         end
       end
@@ -39,7 +39,7 @@ Mammoth::Engine.routes.draw do
 
       resources :user_communities do
         collection do
-          post  'join_unjoin_community' => 'user_communities#join_unjoin_community', as: 'join_unjoin_community'
+          post 'join_unjoin_community' => 'user_communities#join_unjoin_community', as: 'join_unjoin_community'
           post 'join_all_community' => 'user_communities#join_all_community', as: 'join_all_community'
           post 'unjoin_all_community' => 'user_communities#unjoin_all_community', as: 'unjoin_all_community'
         end
