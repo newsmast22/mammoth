@@ -19,26 +19,44 @@ module Mammoth::Api::V1
 
       followed_account_ids = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
       followed_tag_ids = TagFollow.where(account_id: current_account.id).pluck(:tag_id).map(&:to_i)
-      status_tag_ids = Mammoth::StatusTag.group(:tag_id,:status_id).where(tag_id:followed_tag_ids).pluck(:status_id).map(&:to_i)
       
-      filtered_followed_statuses = Mammoth::Status.filter_with_status_ids(status_tag_ids,current_account.id).or( Mammoth::Status.filter_followed_accounts(followed_account_ids))
+      # status_tag_ids = Mammoth::StatusTag.group(:tag_id,:status_id).where(tag_id:followed_tag_ids).pluck(:status_id).map(&:to_i)
+      # filtered_followed_statuses = Mammoth::Status.filter_with_status_ids(status_tag_ids,current_account.id).or( Mammoth::Status.filter_followed_accounts(followed_account_ids))
 
+      query_string = "AND statuses.id < :pagy_id" if params[:pagy_id].present?
+      filtered_followed_statuses = Mammoth::Status.joins('
+                                                    LEFT JOIN statuses_tags ON statuses_tags.status_id = statuses.id 
+                                                    LEFT JOIN tags ON tags.id = statuses_tags.tag_id'
+                                                  )
+                                                  .where("
+                                                    (
+                                                      (tags.id IN (:tag_ids) AND account_id != :account_id)
+                                                      OR 
+                                                      account_id IN (:account_ids)
+                                                    )
+                                                      AND reply = FALSE #{query_string}
+                                                    ", 
+                                                    tag_ids: followed_tag_ids, account_id: current_account.id, account_ids: followed_account_ids, pagy_id: params[:pagy_id]
+                                                  )
+
+      
       unless filtered_followed_statuses.blank?
         #Begin::Filter
         fetch_following_filter_timeline(filtered_followed_statuses)
         #End::Filter
         unless @statuses.empty?
-          @statuses = @statuses.order(created_at: :desc).page(params[:page]).per(5)
-          render json: @statuses,root: 'data', 
-          each_serializer: Mammoth::StatusSerializer, current_user: current_user, adapter: :json, 
-          meta: {
-            pagination:
-            { 
-              total_pages: @statuses.total_pages,
-              total_objects: @statuses.total_count,
-              current_page: @statuses.current_page
-            } 
-          }
+          @statuses = @statuses.order(created_at: :desc).limit(5)
+          render json: @statuses, root: 'data', 
+                                  each_serializer: Mammoth::StatusSerializer, current_user: current_user, adapter: :json
+          # , 
+          # meta: {
+          #   pagination:
+          #   { 
+          #     total_pages: @statuses.total_pages,
+          #     total_objects: @statuses.total_count,
+          #     current_page: @statuses.current_page
+          #   } 
+          # }
         else
           render json: {
             data: [],
