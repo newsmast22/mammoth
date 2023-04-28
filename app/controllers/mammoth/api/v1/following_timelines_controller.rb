@@ -23,7 +23,7 @@ module Mammoth::Api::V1
       # status_tag_ids = Mammoth::StatusTag.group(:tag_id,:status_id).where(tag_id:followed_tag_ids).pluck(:status_id).map(&:to_i)
       # filtered_followed_statuses = Mammoth::Status.filter_with_status_ids(status_tag_ids,current_account.id).or( Mammoth::Status.filter_followed_accounts(followed_account_ids))
 
-      query_string = "AND statuses.id < :pagy_id" if params[:pagy_id].present?
+      query_string = "AND statuses.id < :max_id" if params[:max_id].present?
       filtered_followed_statuses = Mammoth::Status.joins('
                                                     LEFT JOIN statuses_tags ON statuses_tags.status_id = statuses.id 
                                                     LEFT JOIN tags ON tags.id = statuses_tags.tag_id'
@@ -36,7 +36,7 @@ module Mammoth::Api::V1
                                                     )
                                                       AND reply = FALSE #{query_string}
                                                     ", 
-                                                    tag_ids: followed_tag_ids, account_id: current_account.id, account_ids: followed_account_ids, pagy_id: params[:pagy_id]
+                                                    tag_ids: followed_tag_ids, account_id: current_account.id, account_ids: followed_account_ids, max_id: params[:max_id]
                                                   )
 
       
@@ -45,14 +45,15 @@ module Mammoth::Api::V1
         fetch_following_filter_timeline(filtered_followed_statuses)
         #End::Filter
         unless @statuses.empty?
-          statuses_counts = @statuses.size
+          before_limit_statuses = @statuses
           @statuses = @statuses.order(created_at: :desc).limit(5)
           render json: @statuses, root: 'data', 
                                   each_serializer: Mammoth::StatusSerializer, current_user: current_user, adapter: :json, 
                                   meta: {
                                     pagination:
                                     { 
-                                      total_objects: statuses_counts,
+                                      total_objects: before_limit_statuses.size,
+                                      has_more_objects: 5 <= before_limit_statuses.size ? true : false
                                     } 
                                   }
         else
@@ -62,6 +63,7 @@ module Mammoth::Api::V1
               pagination:
               { 
                 total_objects: 0,
+                has_more_objects: false
               } 
             }
           }
@@ -73,6 +75,7 @@ module Mammoth::Api::V1
             pagination:
             { 
               total_objects: 0,
+              has_more_objects: false
             } 
         }
       }
