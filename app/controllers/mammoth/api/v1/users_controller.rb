@@ -507,7 +507,14 @@ module Mammoth::Api::V1
       is_my_account = current_account.id == account_info.id ? true : false
       account_followed_ids = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
       
-      statuses = Mammoth::Status.filter_is_only_for_followers_profile_details(account_id)
+      #statuses = Mammoth::Status.filter_is_only_for_followers_profile_details(account_id)
+
+      query_string = "AND statuses.id < :max_id" if params[:max_id].present?
+      statuses = Mammoth::Status.where("
+                statuses.reply = :reply AND statuses.account_id = :account_id #{query_string}",
+                reply: false, account_id: account_id, max_id: params[:max_id]
+                )
+
       statuses = statuses.filter_is_only_for_followers(account_followed_ids)
 
       #begin::get collection images
@@ -562,8 +569,12 @@ module Mammoth::Api::V1
       #end::blocked account post
 
       account_data = single_serialize(account_info, Mammoth::CredentialAccountSerializer)
-      statuses = statuses.order(created_at: :desc).page(params[:page]).per(5)
-      render json: statuses,root: 'statuses_data', each_serializer: Mammoth::StatusSerializer,adapter: :json,
+      puts "status_originalhhh"
+      puts statuses.ids
+      #statuses = statuses.order(created_at: :desc).page(params[:page]).per(5)
+      before_limit_statuses = statuses
+      statuses = statuses.order(created_at: :desc).limit(5)
+      render json: statuses,root: 'statuses_data', each_serializer: Mammoth::StatusSerializer,current_user: current_user,adapter: :json,
       meta:{
         account_data: account_data.merge(:is_my_account => is_my_account, :is_followed => account_followed_ids.include?(account_id.to_i)),
         community_images_url: community_images,
@@ -572,9 +583,11 @@ module Mammoth::Api::V1
         community_slug: community_slug,
         pagination:
           { 
-            total_pages: statuses.total_pages,
-            total_objects: statuses.total_count,
-            current_page: statuses.current_page
+            # total_pages: statuses.total_pages,
+            # total_objects: statuses.total_count,
+            # current_page: statuses.current_page
+            total_objects: before_limit_statuses.size,
+            has_more_objects: 5 <= before_limit_statuses.size ? true : false
           } 
       }
     end
@@ -632,7 +645,13 @@ module Mammoth::Api::V1
 
       account_followed_ids = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
       
-      statuses = Mammoth::Status.filter_is_only_for_followers_profile_details(account_id)
+      #statuses = Mammoth::Status.filter_is_only_for_followers_profile_details(account_id)
+
+      query_string = "AND statuses.id < :max_id" if params[:max_id].present?
+      statuses = Mammoth::Status.where("
+                statuses.reply = :reply AND statuses.account_id = :account_id #{query_string}",
+                reply: false, account_id: account_id, max_id: params[:max_id]
+                )
 
       statuses = statuses.filter_is_only_for_followers(account_followed_ids)
 
@@ -655,15 +674,20 @@ module Mammoth::Api::V1
       end
       #end::blocked account post
 
-      statuses = statuses.order(created_at: :desc).page(params[:page]).per(5)
+      #statuses = statuses.order(created_at: :desc).page(params[:page]).per(5)
+      before_limit_statuses = statuses
+
+      statuses = statuses.order(created_at: :desc).limit(5)
 
       render json: statuses,root: 'statuses_data', each_serializer: Mammoth::StatusSerializer,adapter: :json,
       meta:{
         pagination:
           { 
-            total_pages: statuses.total_pages,
-            total_objects: statuses.total_count,
-            current_page: statuses.current_page
+            # total_pages: statuses.total_pages,
+            # total_objects: statuses.total_count,
+            # current_page: statuses.current_page
+            total_objects: before_limit_statuses.size,
+            has_more_objects: 5 <= before_limit_statuses.size ? true : false
           } 
       }
     end

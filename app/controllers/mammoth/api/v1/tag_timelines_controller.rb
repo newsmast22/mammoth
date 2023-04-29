@@ -6,7 +6,14 @@ module Mammoth::Api::V1
 
     def show
       if params[:id].present?
-        @statuses = @tag.statuses.where(reply: false)
+        query_string = "AND statuses.id < :max_id" if params[:max_id].present?
+
+        @statuses = @tag.statuses.where("
+                    statuses.reply = :reply #{query_string}",
+                    reply: false,max_id: params[:max_id])
+
+        #@statuses = @tag.statuses.where(reply: false)
+
         
         #begin::muted account post
         muted_accounts = Mute.where(account_id: current_account.id)
@@ -46,7 +53,23 @@ module Mammoth::Api::V1
           muted_accounts = Mute.where(account_id: current_account.id)
           @statuses = @statuses.filter_mute_accounts(muted_accounts.pluck(:target_account_id).map(&:to_i)) unless muted_accounts.blank?
           #end::muted account post
-          @statuses = @statuses.order(created_at: :desc).page(params[:page]).per(5)
+          # @statuses = @statuses.order(created_at: :desc).page(params[:page]).per(5)
+          # render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer,current_user: current_user, adapter: :json, 
+          # meta: { 
+          #   tag_name: tag.display_name,
+          #   following: tagFollow.pluck(:account_id).map(&:to_i).include?(current_account.id),
+          #   post_count: Mammoth::StatusTag.where(tag_id: tag.id).count,
+          #   following_count: tagFollow.count,
+          #   pagination:
+          #     { 
+          #       total_pages: @statuses.total_pages,
+          #       total_objects: @statuses.total_count,
+          #       current_page: @statuses.current_page
+          #     } 
+          #   }
+
+          before_limit_statuses = @statuses
+          @statuses = @statuses.order(created_at: :desc).limit(5)
           render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer,current_user: current_user, adapter: :json, 
           meta: { 
             tag_name: tag.display_name,
@@ -55,9 +78,8 @@ module Mammoth::Api::V1
             following_count: tagFollow.count,
             pagination:
               { 
-                total_pages: @statuses.total_pages,
-                total_objects: @statuses.total_count,
-                current_page: @statuses.current_page
+                total_objects: before_limit_statuses.size,
+                has_more_objects: 5 <= before_limit_statuses.size ? true : false
               } 
             }
         else
@@ -69,9 +91,8 @@ module Mammoth::Api::V1
               following_count: tagFollow.count,
               pagination:
                 { 
-                  total_pages: 0,
                   total_objects: 0,
-                  current_page: 0
+                  has_more_objects: false
                 } 
               }
             }
@@ -86,9 +107,8 @@ module Mammoth::Api::V1
             following_count: 0,
             pagination:
             { 
-              total_pages: 0,
               total_objects: 0,
-              current_page: 0
+              has_more_objects: false
             } 
           }
         }
@@ -116,7 +136,12 @@ module Mammoth::Api::V1
 
     def get_tag_timline_statuses
       if params[:id].present?
-        @statuses = @tag.statuses.where(reply: false)
+        #@statuses = @tag.statuses.where(reply: false)
+        query_string = "AND statuses.id < :max_id" if params[:max_id].present?
+
+        @statuses = @tag.statuses.where("
+                    statuses.reply = :reply #{query_string}",
+                    reply: false,max_id: params[:max_id])
         unless @statuses.empty?
 
           #begin::muted account post
@@ -150,14 +175,25 @@ module Mammoth::Api::V1
           end
           #end::deactivated account post
 
-          @statuses = @statuses.order(created_at: :desc).page(params[:page]).per(5)
+          # @statuses = @statuses.order(created_at: :desc).page(params[:page]).per(5)
+          # render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer,current_user: current_user, adapter: :json, 
+          # meta: { 
+          #   pagination:
+          #     { 
+          #       total_pages: @statuses.total_pages,
+          #       total_objects: @statuses.total_count,
+          #       current_page: @statuses.current_page
+          #     } 
+          #   }
+
+          before_limit_statuses = @statuses
+          @statuses = @statuses.order(created_at: :desc).limit(5)
           render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer,current_user: current_user, adapter: :json, 
           meta: { 
             pagination:
               { 
-                total_pages: @statuses.total_pages,
-                total_objects: @statuses.total_count,
-                current_page: @statuses.current_page
+                total_objects: before_limit_statuses.size,
+                has_more_objects: 5 <= before_limit_statuses.size ? true : false
               } 
             }
         else
@@ -166,9 +202,8 @@ module Mammoth::Api::V1
             meta: { 
               pagination:
                 { 
-                  total_pages: 0,
                   total_objects: 0,
-                  current_page: 0
+                  has_more_objects: false
                 } 
               }
             }
@@ -179,9 +214,8 @@ module Mammoth::Api::V1
             meta: { 
               pagination:
                 { 
-                  total_pages: 0,
                   total_objects: 0,
-                  current_page: 0
+                  has_more_objects: false
                 } 
               }
             }

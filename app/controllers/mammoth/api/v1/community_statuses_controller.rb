@@ -165,7 +165,13 @@ module Mammoth::Api::V1
 			unless community_statuses.empty?
 				account_followed_ids.push(current_account.id)
 				community_statues_ids= community_statuses.pluck(:status_id).map(&:to_i)
-				@statuses = Mammoth::Status.filter_with_community_status_ids(community_statues_ids)
+				#@statuses = Mammoth::Status.filter_with_community_status_ids(community_statues_ids)
+
+				query_string = "AND statuses.id < :max_id" if params[:max_id].present?
+				@statuses = Mammoth::Status.where("
+								statuses.id IN (:community_statues_ids) AND statuses.reply = :reply #{query_string}",
+								community_statues_ids: community_statues_ids, reply: false,max_id: params[:max_id] )
+
 				@statuses = @statuses.filter_is_only_for_followers(account_followed_ids)
 
 				#begin::check is primary community country filter on/off
@@ -209,15 +215,21 @@ module Mammoth::Api::V1
 					@statuses = @statuses.filter_blocked_statuses(combine_deactivated_status_ids)
 				end
 				#end::deactivated account post
+	
+				#@statuses = @statuses.page(params[:page]).per(5)
 
-				@statuses = @statuses.page(params[:page]).per(5)
+				before_limit_statuses = @statuses
+				@statuses = @statuses.limit(5)
+
 				render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, current_user: current_user, adapter: :json, 
 				meta: {
 					pagination:
 					{ 
-						total_pages: @statuses.total_pages,
-						total_objects: @statuses.total_count,
-						current_page: @statuses.current_page
+						# total_pages: @statuses.total_pages,
+						# total_objects: @statuses.total_count,
+						# current_page: @statuses.current_page
+						total_objects: before_limit_statuses.size,
+            has_more_objects: 5 <= before_limit_statuses.size ? true : false
 					} 
 				}
 			else
@@ -225,9 +237,8 @@ module Mammoth::Api::V1
 					meta: {
             pagination:
             { 
-              total_pages: 0,
-              total_objects: 0,
-              current_page: 0
+							total_objects: 0,
+							has_more_objects: false
             } 
           }
 				}
@@ -262,7 +273,13 @@ module Mammoth::Api::V1
 				unless community_statuses.empty? || !community_admin_followed_account_ids.any?
 					account_followed_ids.push(current_account.id)
 					community_statues_ids= community_statuses.pluck(:status_id).map(&:to_i)
-					@statuses = Mammoth::Status.blocked_account_status_ids(community_admin_followed_account_ids)
+					#@statuses = Mammoth::Status.blocked_account_status_ids(community_admin_followed_account_ids)
+
+					query_string = "AND statuses.id < :max_id" if params[:max_id].present?
+					@statuses = Mammoth::Status.where("
+								statuses.account_id IN (:account_ids) AND statuses.reply = :reply #{query_string}",
+								account_ids: community_admin_followed_account_ids, reply: false,max_id: params[:max_id] )
+
 					@statuses = @statuses.filter_with_community_status_ids(community_statues_ids)
 					@statuses = @statuses.filter_is_only_for_followers(account_followed_ids)
 	
@@ -308,14 +325,21 @@ module Mammoth::Api::V1
 					end
 					#end::deactivated account post
 
-				@statuses = @statuses.page(params[:page]).per(5)
+					puts "recommeddddddd"
+					puts @statuses.ids
+				before_limit_statuses = @statuses
+				@statuses = @statuses.limit(5)
+
+				#@statuses = @statuses.page(params[:page]).per(5)
 				render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, current_user: current_user, adapter: :json, 
 				meta: {
 					pagination:
 					{ 
-						total_pages: @statuses.total_pages,
-						total_objects: @statuses.total_count,
-						current_page: @statuses.current_page
+						# total_pages: @statuses.total_pages,
+						# total_objects: @statuses.total_count,
+						# current_page: @statuses.current_page
+						total_objects: before_limit_statuses.size,
+            has_more_objects: 5 <= before_limit_statuses.size ? true : false
 					} 
 				}
 				else
@@ -323,9 +347,8 @@ module Mammoth::Api::V1
 						meta: {
 							pagination:
 							{ 
-								total_pages: 0,
 								total_objects: 0,
-								current_page: 0
+            		has_more_objects: false
 							} 
 						}
 					}	
@@ -335,9 +358,8 @@ module Mammoth::Api::V1
 					meta: {
             pagination:
             { 
-              total_pages: 0,
               total_objects: 0,
-              current_page: 0
+            		has_more_objects: false
             } 
           }
 				}
