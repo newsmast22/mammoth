@@ -569,8 +569,6 @@ module Mammoth::Api::V1
       #end::blocked account post
 
       account_data = single_serialize(account_info, Mammoth::CredentialAccountSerializer)
-      puts "status_originalhhh"
-      puts statuses.ids
       #statuses = statuses.order(created_at: :desc).page(params[:page]).per(5)
       before_limit_statuses = statuses
       statuses = statuses.order(created_at: :desc).limit(5)

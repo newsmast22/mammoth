@@ -325,8 +325,6 @@ module Mammoth::Api::V1
 					end
 					#end::deactivated account post
 
-					puts "recommeddddddd"
-					puts @statuses.ids
 				before_limit_statuses = @statuses
 				@statuses = @statuses.limit(5)
 

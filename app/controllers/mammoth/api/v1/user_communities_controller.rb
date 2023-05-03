@@ -118,6 +118,23 @@ module Mammoth::Api::V1
       end 
     end
 
+    def change_primary_community
+      if params[:slug].present?
+        Mammoth::UserCommunity.find_by(is_primary: true, user_id: current_user.id)
+                              .update(is_primary: false)
+
+        community = Mammoth::Community.find_by(slug: params[:slug])
+
+        Mammoth::UserCommunity.find_by(community_id: community.id, user_id: current_user.id)
+                              .update(is_primary: true)
+                              
+        render json: {message: 'User with community successfully saved!'}
+      else
+        render json: { error: 'no communities found' }
+      end
+
+    end
+
     private
 
     def user_community_params

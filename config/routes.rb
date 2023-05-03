@@ -42,6 +42,7 @@ Mammoth::Engine.routes.draw do
           post 'join_unjoin_community' => 'user_communities#join_unjoin_community', as: 'join_unjoin_community'
           post 'join_all_community' => 'user_communities#join_all_community', as: 'join_all_community'
           post 'unjoin_all_community' => 'user_communities#unjoin_all_community', as: 'unjoin_all_community'
+          put 'change_primary_community' => 'user_communities#change_primary_community', as: 'change_primary_community'
         end
       end
 
