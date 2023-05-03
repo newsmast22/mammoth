@@ -14,7 +14,7 @@ module Mammoth::Api::V1
           data << {
             id: community.id.to_s,
             user_id: @user.id.to_s,
-            is_primary: community.id == @user_communities.community_id ? true : false,
+            is_primary: community.id == (@user_communities&.community_id || 0) ? true : false,
             name: community.name,
             slug: community.slug,
             image_file_name: community.image_file_name,
