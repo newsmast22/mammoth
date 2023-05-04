@@ -125,6 +125,7 @@ Mammoth::Engine.routes.draw do
       resources :user_timeline_settings
 
       resources :following_accounts, only: :index
+      resources :follower_accounts, only: :index
 
     end
   end

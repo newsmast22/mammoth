@@ -256,6 +256,7 @@ module Mammoth::Api::V1
 
 			user = Mammoth::User.find(current_user.id)
 			user_communities_ids = user&.user_communities.pluck(:community_id).map(&:to_i) || []
+			user_primary_community_id = user&.user_communities.where(is_primary: true).last.community_id || 0
 			collections.each do |collection|
 				unless collection.communities.blank?
 					# communities = collection.communities.order(position: :ASC)
@@ -269,13 +270,18 @@ module Mammoth::Api::V1
 
 					community_data = []
 					community_joined_count = 0
+					is_included_primary_community = false
 
 					communities.each do |community|
 
 						if user_communities_ids.include?(community.id)
 							community_joined_count += 1
 						end
-													
+
+						if user_primary_community_id == community.id
+							is_included_primary_community = true
+						end
+																		
 						community_data << {
 							id: community.id,
 							position: community.position,
@@ -305,6 +311,7 @@ module Mammoth::Api::V1
 
 					data << {
 							collection_id: collection.id,
+							is_included_primary_community: is_included_primary_community,
 							position: collection.position,
 							collection_name: collection.name,
 							collection_slug: collection.slug,
