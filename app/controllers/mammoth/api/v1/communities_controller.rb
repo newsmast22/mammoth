@@ -13,12 +13,13 @@ module Mammoth::Api::V1
 				user_communities_ids = user&.user_communities.pluck(:community_id).map(&:to_i) || []
 				#End::check user have selected community 
 
-				@communities = Mammoth::Community.all
+				@communities = Mammoth::Community.all.order(position: :ASC)
 
 				if user_communities_ids.any?
 					@communities.each do |community|
 						data << {
 							id: community.id,
+							position: community.position,
 							name: community.name,
 							slug: community.slug,
 							is_joined: user_communities_ids.include?(community.id), 
@@ -38,6 +39,7 @@ module Mammoth::Api::V1
 					@communities.each do |community|
 						data << {
 							id: community.id,
+							position: community.position,
 							name: community.name,
 							slug: community.slug,
 							image_file_name: community.image_file_name,
@@ -59,10 +61,11 @@ module Mammoth::Api::V1
 				primary_community =  @user_communities.where(is_primary: true).last
 				@collection  = Mammoth::Collection.where(slug: params[:collection_id]).last
 				unless @collection.nil?
-					@communities = @collection.communities.where.not(id: primary_community.community_id)
+					@communities = @collection.communities.where.not(id: primary_community.community_id).order(position: :ASC)
 					@communities.each do |community|
 						data << {
 							id: community.id,
+							position: community.position,
 							name: community.name,
 							slug: community.slug,
 							is_joined: user_communities_ids.include?(community.id), 
@@ -105,6 +108,7 @@ module Mammoth::Api::V1
 				is_admin = Mammoth::CommunityAdmin.where(community_id:@community.id,user_id: current_user.id).exists?
 				data = {
 					id: @community.id,
+					position: @community.position,
 					name: @community.name,
 					slug: @community.slug,
 					image_url: @community.image.url,
@@ -225,16 +229,16 @@ module Mammoth::Api::V1
 			data = []
 
 			if params[:collection_slugs].present?
-				collections  = Mammoth::Collection.where(slug: params[:collection_slugs]).order(:name)
+				collections  = Mammoth::Collection.where(slug: params[:collection_slugs]).order(position: :ASC)
 			else
-				collections  = Mammoth::Collection.all.order(:name)
+				collections  = Mammoth::Collection.all.order(position: :ASC)
 			end
 
 			user = Mammoth::User.find(current_user.id)
 			user_communities_ids = user&.user_communities.pluck(:community_id).map(&:to_i) || []
 			collections.each do |collection|
 				unless collection.communities.blank?
-					communities = collection.communities.order(:name)
+					communities = collection.communities.order(position: :ASC)
 					community_data = []
 					community_joined_count = 0
 
@@ -246,6 +250,7 @@ module Mammoth::Api::V1
 													
 						community_data << {
 							id: community.id,
+							position: community.position,
 							name: community.name,
 							slug: community.slug,
 							is_joined: user_communities_ids.include?(community.id),
@@ -271,6 +276,7 @@ module Mammoth::Api::V1
 
 					data << {
 							collection_id: collection.id,
+							position: collection.position,
 							collection_name: collection.name,
 							collection_slug: collection.slug,
 							is_joined_all: communities.size == community_joined_count ? true : false,

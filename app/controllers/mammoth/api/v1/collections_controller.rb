@@ -5,11 +5,12 @@ module Mammoth::Api::V1
 		before_action :set_collection, only: %i[show update destroy]
 
     def index
-			@collections = Mammoth::Collection.all
+			@collections = Mammoth::Collection.all.order(position: :ASC)
 			data = []
 			@collections.each do |collection|
         data << {
         id: collection.id,
+				position: collection.position,
         name: collection.name,
         slug: collection.slug,
         image_file_name: collection.image_file_name,
@@ -31,10 +32,11 @@ module Mammoth::Api::V1
 			data = []
 			unless @user_communities.empty?
 				ids = @user_communities.pluck(:community_id).map(&:to_i)
-				collections = Mammoth::Collection.joins(:communities).where(communities: { id: ids }).distinct
+				collections = Mammoth::Collection.joins(:communities).where(communities: { id: ids }).distinct.order(position: :ASC)
 				collections.each do |collection|
 					data << {
 						id: collection.id,
+						position: collection.position,
 						name: collection.name,
 						slug: collection.slug,
 						image_file_name: collection.image_file_name,
