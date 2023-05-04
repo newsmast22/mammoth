@@ -13,7 +13,14 @@ module Mammoth::Api::V1
 				user_communities_ids = user&.user_communities.pluck(:community_id).map(&:to_i) || []
 				#End::check user have selected community 
 
-				@communities = Mammoth::Community.all.order(position: :ASC)
+      	@communities= Mammoth::Community.joins("
+																							LEFT JOIN mammoth_communities_users ON mammoth_communities_users.community_id = mammoth_communities.id"
+																							)
+																							.select("mammoth_communities.*,COUNT(mammoth_communities_users.id) as follower_counts"
+																							)
+																							.order("mammoth_communities.position ASC")
+																							.group("mammoth_communities.id")
+
 
 				if user_communities_ids.any?
 					@communities.each do |community|
@@ -22,6 +29,7 @@ module Mammoth::Api::V1
 							position: community.position,
 							name: community.name,
 							slug: community.slug,
+							followers: community.follower_counts,
 							is_joined: user_communities_ids.include?(community.id), 
 							image_file_name: community.image_file_name,
 							image_content_type: community.image_content_type,
@@ -42,6 +50,8 @@ module Mammoth::Api::V1
 							position: community.position,
 							name: community.name,
 							slug: community.slug,
+							followers: community.follower_counts,
+							is_joined: false, 
 							image_file_name: community.image_file_name,
 							image_content_type: community.image_content_type,
 							image_file_size: community.image_file_size,
@@ -61,13 +71,24 @@ module Mammoth::Api::V1
 				primary_community =  @user_communities.where(is_primary: true).last
 				@collection  = Mammoth::Collection.where(slug: params[:collection_id]).last
 				unless @collection.nil?
-					@communities = @collection.communities.where.not(id: primary_community.community_id).order(position: :ASC)
+
+					@communities= @collection.communities.joins("
+												LEFT JOIN mammoth_communities_users ON mammoth_communities_users.community_id = mammoth_communities.id"
+												)
+												.where("mammoth_communities.id != :primary_community_id", primary_community_id: primary_community.community_id)
+												.select("mammoth_communities.*,COUNT(mammoth_communities_users.id) as follower_counts"
+												)
+												.order("mammoth_communities.position ASC")
+												.group("mammoth_communities.id")
+
+
 					@communities.each do |community|
 						data << {
 							id: community.id,
 							position: community.position,
 							name: community.name,
 							slug: community.slug,
+							followers: community.follower_counts,
 							is_joined: user_communities_ids.include?(community.id), 
 							image_file_name: community.image_file_name,
 							image_content_type: community.image_content_type,
@@ -75,13 +96,12 @@ module Mammoth::Api::V1
 							image_updated_at: community.image_updated_at,
 							description: community.description,
 							image_url: community.image.url,
-							followers: Mammoth::UserCommunity.where(community_id: community.id).size,
 							collection_id: community.collection_id,
 							created_at: community.created_at,
 							updated_at: community.updated_at
 						}
 					end
-					render json: {data: data  ,
+					render json: {data: data,
 					collection_data:{
 						collection_image_url: @collection.image.url,
 						collection_name: @collection.name
@@ -238,7 +258,15 @@ module Mammoth::Api::V1
 			user_communities_ids = user&.user_communities.pluck(:community_id).map(&:to_i) || []
 			collections.each do |collection|
 				unless collection.communities.blank?
-					communities = collection.communities.order(position: :ASC)
+					# communities = collection.communities.order(position: :ASC)
+					communities = collection.communities.joins("
+						LEFT JOIN mammoth_communities_users ON mammoth_communities_users.community_id = mammoth_communities.id"
+						)
+						.select("mammoth_communities.*,COUNT(mammoth_communities_users.id) as follower_counts"
+						)
+						.order("mammoth_communities.position ASC")
+						.group("mammoth_communities.id")
+
 					community_data = []
 					community_joined_count = 0
 
@@ -253,6 +281,7 @@ module Mammoth::Api::V1
 							position: community.position,
 							name: community.name,
 							slug: community.slug,
+							followers: community.follower_counts,
 							is_joined: user_communities_ids.include?(community.id),
 							image_file_name: community.image_file_name,
 							image_content_type: community.image_content_type,

@@ -1,5 +1,7 @@
 module Mammoth
   class Community < ApplicationRecord
+    self.table_name = 'mammoth_communities'
+
     include Attachmentable
 
     has_and_belongs_to_many :statuses, class_name: "Mammoth::Status"
