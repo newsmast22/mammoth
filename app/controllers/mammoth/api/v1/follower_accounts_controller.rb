@@ -1,12 +1,14 @@
+# frozen_string_literal: true
 module Mammoth::Api::V1
-  class FollowingAccountsController < Api::BaseController
+
+  class FollowerAccountsController < Api::BaseController
     before_action -> { authorize_if_got_token! :read, :'read:accounts' }
     before_action :set_account
     after_action :insert_pagination_headers
 
     def index
       @accounts = load_accounts
-      render json: @accounts, current_user: current_user,each_serializer: Mammoth::AccountSerializer
+      render json: @accounts, current_user: current_user, each_serializer: Mammoth::AccountSerializer
     end
 
     private
@@ -24,15 +26,15 @@ module Mammoth::Api::V1
     end
 
     def hide_results?
-      @account.suspended? || (@account.hides_following? && current_account&.id != @account.id) || (current_account && @account.blocking?(current_account))
+      @account.suspended? || (@account.hides_followers? && current_account&.id != @account.id) || (current_account && @account.blocking?(current_account))
     end
 
     def default_accounts
-      Account.includes(:passive_relationships, :account_stat).references(:passive_relationships)
+      Account.includes(:active_relationships, :account_stat).references(:active_relationships)
     end
 
     def paginated_follows
-      Follow.where(account: @account).paginate_by_max_id(
+      Follow.where(target_account: @account).paginate_by_max_id(
         limit_param(DEFAULT_ACCOUNTS_LIMIT),
         params[:max_id],
         params[:since_id]
@@ -45,22 +47,22 @@ module Mammoth::Api::V1
 
     def next_path
       # if records_continue?
-      #   api_v1_account_following_index_url pagination_params(max_id: pagination_max_id)
+      #   api_v1_account_followers_url pagination_params(max_id: pagination_max_id)
       # end
     end
 
     def prev_path
       # unless @accounts.empty?
-      #   api_v1_account_following_index_url pagination_params(since_id: pagination_since_id)
+      #   api_v1_account_followers_url pagination_params(since_id: pagination_since_id)
       # end
     end
 
     def pagination_max_id
-      @accounts.last.passive_relationships.first.id
+      @accounts.last.active_relationships.first.id
     end
 
     def pagination_since_id
-      @accounts.first.passive_relationships.first.id
+      @accounts.first.active_relationships.first.id
     end
 
     def records_continue?
@@ -71,4 +73,5 @@ module Mammoth::Api::V1
       params.slice(:limit).permit(:limit).merge(core_params)
     end
   end
-end
+  
+end  
