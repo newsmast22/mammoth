@@ -476,6 +476,17 @@ module Mammoth::Api::V1
 			end
 		end
 
+		def link_preview
+			unless params[:url].nil?
+				data = LinkThumbnailer.generate("#{params[:url]}")
+				render json: data
+			else
+				render json: {
+					error: "Url must be present"
+				 }
+			end
+		end
+
     private
 
 		def get_integer_array_from_list(obj_list)
