@@ -9,47 +9,62 @@ module Mammoth::Api::V1
 
     require 'aws-sdk-sns'
     def register_with_email
-      @user = User.create!(
-        created_by_application: doorkeeper_token.application, 
-        sign_up_ip: request.remote_ip, 
-        email: user_params[:email], 
-        password: user_params[:password], 
-        agreement: user_params[:agreement],
-        locale: user_params[:locale],
-        otp_code: @otp_code,
-        password_confirmation: user_params[:password], 
-        account_attributes: user_params.slice(:display_name, :username),
-        invite_request_attributes: { text: user_params[:reason] }
-      )
-      Mammoth::Mailer.with(user: @user).account_confirmation.deliver_now
-
-      render json: {data: @user}
-
+      wait_list = Mammoth::WaitList.where(invitation_code: user_params[:invitation_code],
+                                          is_invitation_code_used: true).last
+      if wait_list.present?
+        @user = User.create!( 
+          created_by_application: doorkeeper_token.application, 
+          sign_up_ip: request.remote_ip, 
+          email: user_params[:email], 
+          password: user_params[:password], 
+          agreement: user_params[:agreement],
+          locale: user_params[:locale],
+          otp_code: @otp_code,
+          password_confirmation: user_params[:password], 
+          account_attributes: user_params.slice(:display_name, :username),
+          invite_request_attributes: { text: user_params[:reason] },
+          wait_list_id: wait_list.id
+        )
+        Mammoth::Mailer.with(user: @user).account_confirmation.deliver_now
+  
+        render json: {data: @user}
+      else
+        render json: {error: 'Register invitation code verification failed.'}, status: 422
+      end
     rescue ActiveRecord::RecordInvalid => e
       render json: ValidationErrorFormatter.new(e, 'account.username': :username, 'invite_request.text': :reason).as_json, status: :unprocessable_entity
     end
 
     def register_with_phone
+      wait_list = Mammoth::WaitList.where(invitation_code: user_params[:invitation_code],
+                                          is_invitation_code_used: true).last
+
       domain = ENV['LOCAL_DOMAIN'] || Rails.configuration.x.local_domain
 
-      @user = User.create!(
-        created_by_application: doorkeeper_token.application, 
-        sign_up_ip: request.remote_ip, 
-        email: "#{user_params[:phone]}@#{domain}", 
-        password: user_params[:password], 
-        agreement: user_params[:agreement],
-        locale: user_params[:locale],
-        otp_code: @otp_code,
-        phone: user_params[:phone],
-        password_confirmation: user_params[:password], 
-        account_attributes: user_params.slice(:display_name, :username),
-        invite_request_attributes: { text: user_params[:reason] }
-      )
-
-    @user.save(validate: false)
-    set_sns_publich(user_params[:phone])
-
-      render json: {data: @user}
+      if wait_list.present?
+        @user = User.create!(
+          created_by_application: doorkeeper_token.application, 
+          sign_up_ip: request.remote_ip, 
+          email: "#{user_params[:phone]}@#{domain}", 
+          password: user_params[:password], 
+          agreement: user_params[:agreement],
+          locale: user_params[:locale],
+          otp_code: @otp_code,
+          phone: user_params[:phone],
+          password_confirmation: user_params[:password], 
+          account_attributes: user_params.slice(:display_name, :username),
+          invite_request_attributes: { text: user_params[:reason] },
+          wait_list_id: wait_list.id
+        )
+  
+        @user.save(validate: false)
+        set_sns_publich(user_params[:phone])
+  
+        render json: {data: @user}
+      else
+        render json: {error: 'Register invitation code verification failed.'}, status: 422
+      end
+      
     rescue ActiveRecord::RecordInvalid => e
         render json: ValidationErrorFormatter.new(e, 'account.username': :username, 'invite_request.text': :reason).as_json, status: :unprocessable_entity
     end
@@ -196,7 +211,7 @@ module Mammoth::Api::V1
     end
 
     def user_params
-      params.permit(:display_name, :username, :email, :password, :agreement, :locale, :reason,:phone)
+      params.permit(:display_name, :username, :email, :password, :agreement, :locale, :reason,:phone,:invitation_code)
     end
 
   end
