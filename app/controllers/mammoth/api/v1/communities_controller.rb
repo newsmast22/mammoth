@@ -256,7 +256,14 @@ module Mammoth::Api::V1
 
 			user = Mammoth::User.find(current_user.id)
 			user_communities_ids = user&.user_communities.pluck(:community_id).map(&:to_i) || []
-			user_primary_community_id = user&.user_communities.where(is_primary: true).last.community_id || 0
+			user_primary_community = user&.user_communities.where(is_primary: true).last
+			
+			if user_primary_community.present?
+				user_primary_community_id = user_primary_community.community_id
+			else
+				user_primary_community_id = 0
+			end
+			
 			collections.each do |collection|
 				unless collection.communities.blank?
 					# communities = collection.communities.order(position: :ASC)
