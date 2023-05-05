@@ -171,7 +171,8 @@ module Mammoth::Api::V1
 
 		def update
 			collection = Mammoth::Collection.find_by(slug: community_params[:collection_id])
-			@community.name = community_params[:name]
+			#***** @community.name = community_params[:name]
+			@community.position = community_params[:name]
 			@community.description = community_params[:description]
 			@community.is_country_filtering = community_params[:is_country_filtering]
 			@community.collection_id = collection.id

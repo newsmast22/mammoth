@@ -76,7 +76,8 @@ module Mammoth::Api::V1
 		end
 
     def update
-			@collection.name = collection_params[:name]
+			#@collection.name = collection_params[:name]
+			@collection.position = collection_params[:name]
 			@collection.save
 			unless collection_params[:image_data].nil?
 				image = Paperclip.io_adapters.for(collection_params[:image_data])
