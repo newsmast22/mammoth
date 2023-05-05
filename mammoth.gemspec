@@ -38,5 +38,5 @@ Gem::Specification.new do |spec|
   spec.add_dependency "byebug"
   spec.add_dependency "feedjira"
   spec.add_dependency 'httparty'
-  # spec.add_dependency 'link_thumbnailer'
+  spec.add_dependency 'link_thumbnailer'
 end
