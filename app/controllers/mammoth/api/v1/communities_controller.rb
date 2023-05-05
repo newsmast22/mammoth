@@ -30,6 +30,9 @@ module Mammoth::Api::V1
 							name: community.name,
 							slug: community.slug,
 							followers: community.follower_counts,
+							is_country_filtering: community.is_country_filtering,
+							is_country_filter_on: community.is_country_filter_on,
+							header_url: community.header.url,
 							is_joined: user_communities_ids.include?(community.id), 
 							image_file_name: community.image_file_name,
 							image_content_type: community.image_content_type,
@@ -51,6 +54,9 @@ module Mammoth::Api::V1
 							name: community.name,
 							slug: community.slug,
 							followers: community.follower_counts,
+							is_country_filtering: community.is_country_filtering,
+							is_country_filter_on: community.is_country_filter_on,
+							header_url: community.header.url,
 							is_joined: false, 
 							image_file_name: community.image_file_name,
 							image_content_type: community.image_content_type,
@@ -89,6 +95,9 @@ module Mammoth::Api::V1
 							name: community.name,
 							slug: community.slug,
 							followers: community.follower_counts,
+							is_country_filtering: community.is_country_filtering,
+							is_country_filter_on: community.is_country_filter_on,
+							header_url: community.header.url,
 							is_joined: user_communities_ids.include?(community.id), 
 							image_file_name: community.image_file_name,
 							image_content_type: community.image_content_type,
@@ -171,8 +180,8 @@ module Mammoth::Api::V1
 
 		def update
 			collection = Mammoth::Collection.find_by(slug: community_params[:collection_id])
-			#***** @community.name = community_params[:name]
-			@community.position = community_params[:name]
+			@community.name = community_params[:name]	
+			@community.position = community_params[:position] if community_params[:position].present?
 			@community.description = community_params[:description]
 			@community.is_country_filtering = community_params[:is_country_filtering]
 			@community.collection_id = collection.id
@@ -429,6 +438,7 @@ module Mammoth::Api::V1
 				:header_data,
 				:description, 
 				:collection_id,
+				:position,
 				:is_country_filtering,
 				fields: [:name, :value],
         fields_attributes: [:name, :value],
