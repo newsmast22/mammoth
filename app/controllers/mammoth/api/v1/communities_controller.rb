@@ -18,7 +18,7 @@ module Mammoth::Api::V1
 																							)
 																							.select("mammoth_communities.*,COUNT(mammoth_communities_users.id) as follower_counts"
 																							)
-																							.order("mammoth_communities.position ASC")
+																							.order("mammoth_communities.position ASC,mammoth_communities.name ASC")
 																							.group("mammoth_communities.id")
 
 
@@ -84,7 +84,7 @@ module Mammoth::Api::V1
 												.where("mammoth_communities.id != :primary_community_id", primary_community_id: primary_community.community_id)
 												.select("mammoth_communities.*,COUNT(mammoth_communities_users.id) as follower_counts"
 												)
-												.order("mammoth_communities.position ASC")
+												.order("mammoth_communities.position ASC,mammoth_communities.name ASC")
 												.group("mammoth_communities.id")
 
 
@@ -282,7 +282,7 @@ module Mammoth::Api::V1
 						)
 						.select("mammoth_communities.*,COUNT(mammoth_communities_users.id) as follower_counts"
 						)
-						.order("mammoth_communities.position ASC")
+						.order("mammoth_communities.position ASC,mammoth_communities.name ASC")
 						.group("mammoth_communities.id")
 
 					community_data = []
