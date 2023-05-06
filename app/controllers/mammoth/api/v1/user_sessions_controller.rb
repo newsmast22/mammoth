@@ -10,7 +10,7 @@ module Mammoth::Api::V1
     require 'aws-sdk-sns'
     def register_with_email
       Rails.logger.info "Register with email API params: #{user_params.inspect}"
-      wait_list = Mammoth::WaitList.where(invitation_code: user_params[:invitation_code],
+      wait_list = Mammoth::WaitList.where(invitation_code: user_params[:invitation_code].downcase,
                                           is_invitation_code_used: true).last
       if wait_list.present?
         @user = User.create!( 
@@ -37,7 +37,7 @@ module Mammoth::Api::V1
     end
 
     def register_with_phone
-      wait_list = Mammoth::WaitList.where(invitation_code: user_params[:invitation_code],
+      wait_list = Mammoth::WaitList.where(invitation_code: user_params[:invitation_code].downcase,
                                           is_invitation_code_used: true).last
 
       domain = ENV['LOCAL_DOMAIN'] || Rails.configuration.x.local_domain
