@@ -252,7 +252,41 @@ module Mammoth::Api::V1
 		end
 
 		def destroy
-			
+			community = Mammoth::Community.find_by(slug: params[:id])
+			# get statuses_ids from CommunityStatus
+			communities_statuses_ids = Mammoth::CommunityStatus.where(community_id: community.id).pluck(:status_id).map(&:to_i)
+			if communities_statuses_ids.any?
+
+				# get created statuses' account_ids from statuses
+				created_status_owner_ids = Status.where(id: communities_statuses_ids).pluck(:account_id).map(&:to_i)
+
+				# to delete status count from AccountStat
+				created_status_owner_ids.each do |account_id|
+					account_stat = AccountStat.find_by(account_id: account_id)
+					status_count = account_stat.statuses_count - 1
+					account_stat.update_attribute(:statuses_count, status_count)
+				end
+
+				# to delete status count from StatusStat (reblog_count, fav_count, reply_count)
+				communities_statuses_ids.each do |status_id|
+					StatusStat.where(status_id: status_id).destroy_all
+				end
+
+				# to delete status_tag join table => only status_ids
+				# communities_statuses_ids.each do |status_id|
+				# 	Mammoth::StatusTag.where(status_id: status_id).destroy_all
+				# end
+
+				Mammoth::CommunityStatus.where(community_id: community.id).destroy_all
+				Mammoth::UserCommunity.where(community_id: community.id).destroy_all
+
+				Status.where(id: communities_statuses_ids).destroy_all
+				Mammoth::Community.find_by(slug: params[:id]).destroy
+				render json: {message: "Deleted successfully."}
+			else
+				render json: {error: "No record."}
+			end
+
 		end
 
 		def get_communities_with_collections 
