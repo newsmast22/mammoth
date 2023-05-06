@@ -278,12 +278,45 @@ module Mammoth::Api::V1
 				# end
 
 				Mammoth::CommunityStatus.where(community_id: community.id).destroy_all
-				Mammoth::UserCommunity.where(community_id: community.id).destroy_all
+
+				user_communities = Mammoth::UserCommunity.where(community_id: community.id)
+				user_communities.each do |user_community|
+					if user_community.is_primary == true
+						user_community.delete
+
+						change_user_communities = Mammoth::UserCommunity.where.not(community_id: community.id).where(user_id:user_community.user_id).last
+						
+						if change_user_communities.present?
+							change_user_communities.update_attribute(:is_primary, true)
+						else
+							change_primary_community = Mammoth::Community.where.not(slug: params[:id]).last
+							if change_user_communities.present?
+								Mammoth::UserCommunity.create!(
+									user_id: user_community.user_id,
+									community_id: change_primary_community.id,
+									is_primary: true
+								)
+							end
+						end
+					else
+						user_community.destroy
+					end
+				end
 
 				Status.where(id: communities_statuses_ids).destroy_all
-				Mammoth::Community.find_by(slug: params[:id]).destroy
+
+				Mammoth::CommunityAdmin.where(community_id: community.id).destroy_all
+
+				Mammoth::Community.where(slug: params[:id]).destroy_all
+
 				render json: {message: "Deleted successfully."}
 			else
+				community = Mammoth::Community.where(slug: params[:id]).last
+
+				if community.present?
+					community.destroy
+				end
+
 				render json: {error: "No record."}
 			end
 
