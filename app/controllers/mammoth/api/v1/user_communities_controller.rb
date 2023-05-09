@@ -63,7 +63,7 @@ module Mammoth::Api::V1
               selected_countries: [],
               is_location_filter_turn_on: false
             },
-            is_filter_turn_on: true,
+            is_filter_turn_on: false,
             source_filter: {
               selected_media: [],
               selected_voices: [],
@@ -76,6 +76,32 @@ module Mammoth::Api::V1
         )
       end
       #End:Create UserTimeLineSetting
+
+      #Begin::Create UserCommunitySetting
+      userCommunitySetting = Mammoth::UserCommunitySetting.where(user_id: current_user.id)
+      if userCommunitySetting.blank?
+        userCommunitySetting.destroy_all
+        Mammoth::UserCommunitySetting.create!(
+          user_id: current_user.id,
+          selected_filters: {
+            default_country: current_user.account.country,
+            location_filter: {
+              selected_countries: [],
+              is_location_filter_turn_on: false
+            },
+            is_filter_turn_on: false,
+            source_filter: {
+              selected_media: [],
+              selected_voices: [],
+              selected_contributor_role: []
+            },
+            communities_filter: {
+              selected_communities: []
+            }
+          }
+        )
+      end
+      #End:Create UserCommunitySetting
 	    render json: {message: 'User with community successfully saved!'}
 		end
 

@@ -176,7 +176,7 @@ module Mammoth::Api::V1
             selected_countries: [],
             is_location_filter_turn_on: false
           },
-          is_filter_turn_on: true,
+          is_filter_turn_on: false,
           source_filter: {
             selected_media: [],
             selected_voices: [],
