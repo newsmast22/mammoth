@@ -75,7 +75,8 @@ module Mammoth::Api::V1
 				poll: community_status_params[:poll],
 				idempotency: request.headers['Idempotency-Key'],
 				with_rate_limit: true,
-				is_only_for_followers: community_status_params[:is_only_for_followers]
+				is_only_for_followers: community_status_params[:is_only_for_followers],
+				is_preview_card: community_status_params[:is_preview_card]
 			)
 
 			#begin::check is_community_admin or not
@@ -520,6 +521,7 @@ module Mammoth::Api::V1
 				:language,
 				:scheduled_at,
 				:is_only_for_followers,
+				:is_preview_card,
 				media_ids: [],
 				poll: [
 					:multiple,
