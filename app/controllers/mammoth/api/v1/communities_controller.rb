@@ -373,6 +373,7 @@ module Mammoth::Api::V1
 							slug: community.slug,
 							followers: community.follower_counts,
 							is_joined: user_communities_ids.include?(community.id),
+							is_primary: user_primary_community_id == community.id,
 							image_file_name: community.image_file_name,
 							image_content_type: community.image_content_type,
 							image_file_size: community.image_file_size,

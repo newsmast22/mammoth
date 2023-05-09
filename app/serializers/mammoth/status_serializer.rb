@@ -132,8 +132,10 @@ class Mammoth::StatusSerializer < ActiveModel::Serializer
   end
 
   def content
-    object.text
+   # object.text
+    status_content_format(object)
   end
+
 
   def url
     ActivityPub::TagManager.instance.url_for(object)
