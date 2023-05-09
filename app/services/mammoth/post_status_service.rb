@@ -21,6 +21,7 @@ class Mammoth::PostStatusService < BaseService
   # @option [String] :idempotency Optional idempotency key
   # @option [Boolean] :with_rate_limit
   # @option [Boolean] :is_only_for_followers
+  # @option [Boolean] :is_preview_card
   # @return [Status]
   def call(account, options = {})
     @account     = account
@@ -172,6 +173,7 @@ class Mammoth::PostStatusService < BaseService
       application: @options[:application],
       rate_limit: @options[:with_rate_limit],
       is_only_for_followers: @options[:is_only_for_followers],
+      is_preview_card: @options[:is_preview_card],
       rss_link: @options[:rss_link],
       is_rss_content: @options[:is_rss_content],
       community_feed_id: @options[:community_feed_id],
