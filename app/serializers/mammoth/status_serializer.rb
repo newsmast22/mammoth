@@ -7,7 +7,7 @@ class Mammoth::StatusSerializer < ActiveModel::Serializer
   attributes :id,:community_id,:community_name,:community_slug,:created_at, :in_reply_to_id, :in_reply_to_account_id,
              :sensitive, :spoiler_text, :visibility, :language, :is_only_for_followers,
              :uri, :url, :replies_count, :reblogs_count,:is_rss_content,:rss_host_url,
-             :favourites_count, :edited_at,:image_url,:rss_link,:is_preview_card
+             :favourites_count, :edited_at,:image_url,:rss_link,:is_meta_preview
 
   attribute :favourited, if: :current_user?
   attribute :reblogged, if: :current_user?
@@ -86,6 +86,10 @@ class Mammoth::StatusSerializer < ActiveModel::Serializer
       uri = URI.parse(object.rss_link)
       uri.host
     end
+  end
+
+  def is_meta_preview
+    object.is_meta_preview
   end
 
   def id
