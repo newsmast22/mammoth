@@ -148,6 +148,14 @@ module Mammoth::Api::V1
 		end
 
 		def get_community_detail_statues
+
+			#Begin::Create UserCommunitySetting
+      userCommunitySetting = Mammoth::UserCommunitySetting.where(user_id: current_user.id).last
+      if userCommunitySetting.nil?
+        create_userCommunitySetting()
+      end
+      #End:Create UserCommunitySetting
+
 			@user = Mammoth::User.find(current_user.id)
 			community = Mammoth::Community.find_by(slug: params[:id])
 			#begin::check is community-admin
@@ -218,6 +226,43 @@ module Mammoth::Api::V1
 				#end::deactivated account post
 	
 				#@statuses = @statuses.page(params[:page]).per(5)
+
+				@user_community_setting = Mammoth::UserCommunitySetting.find_by(user_id: current_user.id)
+      
+				return @statuses if @user_community_setting.nil? || @user_community_setting.selected_filters["is_filter_turn_on"] == false 
+
+				#begin::country filter
+				is_country_filter = false
+				
+				# filter: country_filter_on && selected_country exists
+				if @user_community_setting.selected_filters["location_filter"]["selected_countries"].any? && @user_community_setting.selected_filters["location_filter"]["is_location_filter_turn_on"] == true
+					accounts = Mammoth::Account.filter_timeline_with_countries(@user_community_setting.selected_filters["location_filter"]["selected_countries"]) 
+					is_country_filter = true
+				end
+
+				if is_country_filter == true && accounts.blank? == true
+					return @statuses = []
+				end
+				#end::country filter
+				
+				#begin:: source filter: contributor_role, voice, media
+				accounts = Mammoth::Account.all if accounts.blank?
+
+				accounts = accounts.filter_timeline_with_contributor_role(@user_community_setting.selected_filters["source_filter"]["selected_contributor_role"]) if @user_community_setting.selected_filters["source_filter"]["selected_contributor_role"].present?
+
+				accounts = accounts.filter_timeline_with_voice(@user_community_setting.selected_filters["source_filter"]["selected_voices"]) if @user_community_setting.selected_filters["source_filter"]["selected_voices"].present?
+
+				accounts = accounts.filter_timeline_with_media(@user_community_setting.selected_filters["source_filter"]["selected_media"]) if @user_community_setting.selected_filters["source_filter"]["selected_media"].present?
+				#end:: source filter: contributor_role, voice, media
+
+				@statuses = @statuses.filter_timeline_with_accounts(accounts.pluck(:id).map(&:to_i))
+
+				# #begin::community filter
+				# if @user_community_setting.selected_filters["communities_filter"]["selected_communities"].present?
+				# 	status_tag_ids = Mammoth::CommunityStatus.group(:community_id,:status_id).where(community_id: @user_community_setting.selected_filters["communities_filter"]["selected_communities"]).pluck(:status_id).map(&:to_i)
+				# 	@statuses = @statuses.merge(Mammoth::Status.filter_without_community_status_ids(status_tag_ids))
+				# end
+				# #end::community filter
 
 				before_limit_statuses = @statuses
 				@statuses = @statuses.limit(5)
@@ -326,20 +371,57 @@ module Mammoth::Api::V1
 					end
 					#end::deactivated account post
 
-				before_limit_statuses = @statuses
-				@statuses = @statuses.limit(5)
+					@user_community_setting = Mammoth::UserCommunitySetting.find_by(user_id: current_user.id)
+      
+					return @statuses if @user_community_setting.nil? || @user_community_setting.selected_filters["is_filter_turn_on"] == false 
 
-				#@statuses = @statuses.page(params[:page]).per(5)
-				render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, current_user: current_user, adapter: :json, 
-				meta: {
-					pagination:
-					{ 
-						# total_pages: @statuses.total_pages,
-						# total_objects: @statuses.total_count,
-						# current_page: @statuses.current_page
-						total_objects: before_limit_statuses.size,
-            has_more_objects: 5 <= before_limit_statuses.size ? true : false
-					} 
+					#begin::country filter
+					is_country_filter = false
+					
+					# filter: country_filter_on && selected_country exists
+					if @user_community_setting.selected_filters["location_filter"]["selected_countries"].any? && @user_community_setting.selected_filters["location_filter"]["is_location_filter_turn_on"] == true
+						accounts = Mammoth::Account.filter_timeline_with_countries(@user_community_setting.selected_filters["location_filter"]["selected_countries"]) 
+						is_country_filter = true
+					end
+
+					if is_country_filter == true && accounts.blank? == true
+						return @statuses = []
+					end
+					#end::country filter
+					
+					#begin:: source filter: contributor_role, voice, media
+					accounts = Mammoth::Account.all if accounts.blank?
+
+					accounts = accounts.filter_timeline_with_contributor_role(@user_community_setting.selected_filters["source_filter"]["selected_contributor_role"]) if @user_community_setting.selected_filters["source_filter"]["selected_contributor_role"].present?
+
+					accounts = accounts.filter_timeline_with_voice(@user_community_setting.selected_filters["source_filter"]["selected_voices"]) if @user_community_setting.selected_filters["source_filter"]["selected_voices"].present?
+
+					accounts = accounts.filter_timeline_with_media(@user_community_setting.selected_filters["source_filter"]["selected_media"]) if @user_community_setting.selected_filters["source_filter"]["selected_media"].present?
+					#end:: source filter: contributor_role, voice, media
+
+					@statuses = @statuses.filter_timeline_with_accounts(accounts.pluck(:id).map(&:to_i))
+
+					# #begin::community filter
+					# if @user_community_setting.selected_filters["communities_filter"]["selected_communities"].present?
+					# 	status_tag_ids = Mammoth::CommunityStatus.group(:community_id,:status_id).where(community_id: @user_community_setting.selected_filters["communities_filter"]["selected_communities"]).pluck(:status_id).map(&:to_i)
+					# 	@statuses = @statuses.merge(Mammoth::Status.filter_without_community_status_ids(status_tag_ids))
+					# end
+					# #end::community filter
+
+					before_limit_statuses = @statuses
+					@statuses = @statuses.limit(5)
+
+					#@statuses = @statuses.page(params[:page]).per(5)
+					render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, current_user: current_user, adapter: :json, 
+					meta: {
+						pagination:
+						{ 
+							# total_pages: @statuses.total_pages,
+							# total_objects: @statuses.total_count,
+							# current_page: @statuses.current_page
+							total_objects: before_limit_statuses.size,
+							has_more_objects: 5 <= before_limit_statuses.size ? true : false
+						} 
 				}
 				else
 					render json: { data: [],
@@ -430,6 +512,43 @@ module Mammoth::Api::V1
 				end
 				#end::deactivated account post
 
+				@user_community_setting = Mammoth::UserCommunitySetting.find_by(user_id: current_user.id)
+      
+				return @statuses if @user_community_setting.nil? || @user_community_setting.selected_filters["is_filter_turn_on"] == false 
+
+				#begin::country filter
+				is_country_filter = false
+				
+				# filter: country_filter_on && selected_country exists
+				if @user_community_setting.selected_filters["location_filter"]["selected_countries"].any? && @user_community_setting.selected_filters["location_filter"]["is_location_filter_turn_on"] == true
+					accounts = Mammoth::Account.filter_timeline_with_countries(@user_community_setting.selected_filters["location_filter"]["selected_countries"]) 
+					is_country_filter = true
+				end
+
+				if is_country_filter == true && accounts.blank? == true
+					return @statuses = []
+				end
+				#end::country filter
+				
+				#begin:: source filter: contributor_role, voice, media
+				accounts = Mammoth::Account.all if accounts.blank?
+
+				accounts = accounts.filter_timeline_with_contributor_role(@user_community_setting.selected_filters["source_filter"]["selected_contributor_role"]) if @user_community_setting.selected_filters["source_filter"]["selected_contributor_role"].present?
+
+				accounts = accounts.filter_timeline_with_voice(@user_community_setting.selected_filters["source_filter"]["selected_voices"]) if @user_community_setting.selected_filters["source_filter"]["selected_voices"].present?
+
+				accounts = accounts.filter_timeline_with_media(@user_community_setting.selected_filters["source_filter"]["selected_media"]) if @user_community_setting.selected_filters["source_filter"]["selected_media"].present?
+				#end:: source filter: contributor_role, voice, media
+
+				@statuses = @statuses.filter_timeline_with_accounts(accounts.pluck(:id).map(&:to_i))
+
+				# #begin::community filter
+				# if @user_community_setting.selected_filters["communities_filter"]["selected_communities"].present?
+				# 	status_tag_ids = Mammoth::CommunityStatus.group(:community_id,:status_id).where(community_id: @user_community_setting.selected_filters["communities_filter"]["selected_communities"]).pluck(:status_id).map(&:to_i)
+				# 	@statuses = @statuses.merge(Mammoth::Status.filter_without_community_status_ids(status_tag_ids))
+				# end
+				# #end::community filter
+
 				render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, current_user: current_user, adapter: :json, 
 				meta: { 
 					community_followed_user_counts: community_followed_user_counts,
@@ -489,6 +608,30 @@ module Mammoth::Api::V1
 		end
 
     private
+
+		def create_userCommunitySetting
+      userCommunitySetting = Mammoth::UserCommunitySetting.where(user_id: current_user.id)
+      userCommunitySetting.destroy_all
+      Mammoth::UserCommunitySetting.create!(
+        user_id: current_user.id,
+        selected_filters: {
+          default_country: current_user.account.country,
+          location_filter: {
+            selected_countries: [],
+            is_location_filter_turn_on: false
+          },
+          is_filter_turn_on: false,
+          source_filter: {
+            selected_media: [],
+            selected_voices: [],
+            selected_contributor_role: []
+          },
+          communities_filter: {
+            selected_communities: []
+          }
+        }
+      )
+    end
 
 		def get_integer_array_from_list(obj_list)
       if obj_list.blank?
