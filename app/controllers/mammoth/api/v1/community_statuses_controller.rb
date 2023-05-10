@@ -76,7 +76,7 @@ module Mammoth::Api::V1
 				idempotency: request.headers['Idempotency-Key'],
 				with_rate_limit: true,
 				is_only_for_followers: community_status_params[:is_only_for_followers],
-				is_preview_card: community_status_params[:is_preview_card]
+				is_meta_preview: community_status_params[:is_meta_preview]
 			)
 
 			#begin::check is_community_admin or not
@@ -292,6 +292,14 @@ module Mammoth::Api::V1
 		end
 		
 		def get_recommended_community_detail_statuses
+
+			#Begin::Create UserCommunitySetting
+      userCommunitySetting = Mammoth::UserCommunitySetting.where(user_id: current_user.id).last
+      if userCommunitySetting.nil?
+        create_userCommunitySetting()
+      end
+      #End:Create UserCommunitySetting
+			
 			@user = Mammoth::User.find(current_user.id)
 			community = Mammoth::Community.find_by(slug: params[:id])
 
@@ -664,7 +672,7 @@ module Mammoth::Api::V1
 				:language,
 				:scheduled_at,
 				:is_only_for_followers,
-				:is_preview_card,
+				:is_meta_preview,
 				media_ids: [],
 				poll: [
 					:multiple,
