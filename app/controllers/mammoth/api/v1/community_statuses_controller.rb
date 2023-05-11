@@ -59,127 +59,182 @@ module Mammoth::Api::V1
       render json: @status, serializer: Mammoth::StatusSerializer
     end
 
+		# def create
+
+		# 	selected_communities = []
+		# 	if community_status_params[:community_ids].any?
+		# 		communities = Mammoth::Community.where(slug: community_status_params[:community_ids])
+
+		# 		communities.each do |community|
+		# 			selected_communities << community.id
+		# 		end
+
+		# 	else
+		# 		#begin::check is_community_admin or not
+		# 		user = User.find(current_user.id)
+		# 		role_name = ""
+		# 		community_slug = ""
+		# 		if user.role_id == -99 || user.role_id.nil?
+		# 			role_name = "end-user"
+		# 		else
+		# 			role_name = UserRole.find(user.role_id).name
+		# 		end
+		# 		#end::check is_community_admin or not
+
+		# 		if role_name == "end-user"
+		# 			@user_community = Mammoth::UserCommunity.find_by(user_id: current_user.id, is_primary: true).community 
+		# 			#community_id = @user_community.id
+		# 			selected_communities << @user_community.id
+		# 		end
+
+		# 	end
+			
+		# 	selected_communities.each do |community_id|
+
+		# 		@status = Mammoth::PostStatusService.new.call(
+		# 			current_user.account,
+		# 			text: community_status_params[:status],
+		# 			thread: @thread,
+		# 			media_ids: community_status_params[:media_ids],
+		# 			sensitive: community_status_params[:sensitive],
+		# 			spoiler_text: community_status_params[:spoiler_text],
+		# 			visibility: community_status_params[:visibility],
+		# 			language: community_status_params[:language],
+		# 			scheduled_at: community_status_params[:scheduled_at],
+		# 			application: doorkeeper_token.application,
+		# 			poll: community_status_params[:poll],
+		# 			idempotency: request.headers['Idempotency-Key'],
+		# 			with_rate_limit: true,
+		# 			is_only_for_followers: community_status_params[:is_only_for_followers],
+		# 			is_meta_preview: community_status_params[:is_meta_preview]
+		# 		)
+		# 		#begin::reply post get community_id from original post
+		# 		unless @thread.nil?
+		# 			community_id = Mammoth::CommunityStatus.find_by(status_id: @thread.id).community_id
+		# 		end
+		# 		#end::reply post get community_id from original post 
+
+
+		# 		@community_status = Mammoth::CommunityStatus.new()
+		# 		@community_status.status_id = @status.id
+		# 		@community_status.community_id = community_id
+		# 		@community_status.save
+		# 		unless community_status_params[:image_data].nil?
+		# 			image = Paperclip.io_adapters.for(community_status_params[:image_data])
+		# 			@community_status.image = image
+		# 			@community_status.save
+		# 		end
+		# 	end
+
+		# 	render json: {message: 'status with community successfully saved!'}
+
+		# 	# @status = Mammoth::PostStatusService.new.call(
+		# 	# 	current_user.account,
+		# 	# 	text: community_status_params[:status],
+		# 	# 	thread: @thread,
+		# 	# 	media_ids: community_status_params[:media_ids],
+		# 	# 	sensitive: community_status_params[:sensitive],
+		# 	# 	spoiler_text: community_status_params[:spoiler_text],
+		# 	# 	visibility: community_status_params[:visibility],
+		# 	# 	language: community_status_params[:language],
+		# 	# 	scheduled_at: community_status_params[:scheduled_at],
+		# 	# 	application: doorkeeper_token.application,
+		# 	# 	poll: community_status_params[:poll],
+		# 	# 	idempotency: request.headers['Idempotency-Key'],
+		# 	# 	with_rate_limit: true,
+		# 	# 	is_only_for_followers: community_status_params[:is_only_for_followers],
+		# 	# 	is_meta_preview: community_status_params[:is_meta_preview]
+		# 	# )
+
+		# 	# #begin::check is_community_admin or not
+		# 	# user = User.find(current_user.id)
+		# 	# role_name = ""
+		# 	# community_slug = ""
+		# 	# if user.role_id == -99 || user.role_id.nil?
+		# 	# 	role_name = "end-user"
+		# 	# else
+		# 	# 	role_name = UserRole.find(user.role_id).name
+		# 	# end
+		# 	# #end::check is_community_admin or not
+
+		# 	# if community_status_params[:community_id].nil?
+		# 	# 	if role_name == "end-user"
+		# 	# 		@user_community = Mammoth::UserCommunity.find_by(user_id: current_user.id, is_primary: true).community 
+		# 	# 		@community_id = @user_community.id
+		# 	# 	end
+		# 	# else
+		# 	# 	@community_id = Mammoth::Community.find_by(slug: community_status_params[:community_id]).id
+		# 	# end
+
+		# 	# unless @thread.nil?
+		# 	# 	@community_id = Mammoth::CommunityStatus.find_by(status_id: @thread.id).community_id
+		# 	# end
+ 
+		# 	# @community_status = Mammoth::CommunityStatus.new()
+		# 	# @community_status.status_id = @status.id
+		# 	# @community_status.community_id = @community_id
+		# 	# @community_status.save
+		# 	# unless community_status_params[:image_data].nil?
+		# 	# 	image = Paperclip.io_adapters.for(community_status_params[:image_data])
+		# 	# 	@community_status.image = image
+		# 	# 	@community_status.save
+		# 	# end
+		# 	# render json: {message: 'status with community successfully saved!'}
+		# end
+
 		def create
+			@status = Mammoth::PostStatusService.new.call(
+				current_user.account,
+				text: community_status_params[:status],
+				thread: @thread,
+				media_ids: community_status_params[:media_ids],
+				sensitive: community_status_params[:sensitive],
+				spoiler_text: community_status_params[:spoiler_text],
+				visibility: community_status_params[:visibility],
+				language: community_status_params[:language],
+				scheduled_at: community_status_params[:scheduled_at],
+				application: doorkeeper_token.application,
+				poll: community_status_params[:poll],
+				idempotency: request.headers['Idempotency-Key'],
+				with_rate_limit: true,
+				is_only_for_followers: community_status_params[:is_only_for_followers],
+				is_meta_preview: community_status_params[:is_meta_preview]
+			)
 
-			selected_communities = []
-			if community_status_params[:community_ids].any?
-				communities = Mammoth::Community.where(slug: community_status_params[:community_ids])
-
-				communities.each do |community|
-					selected_communities << community.id
-				end
-
+			#begin::check is_community_admin or not
+			user = User.find(current_user.id)
+			role_name = ""
+			community_slug = ""
+			if user.role_id == -99 || user.role_id.nil?
+				role_name = "end-user"
 			else
-				#begin::check is_community_admin or not
-				user = User.find(current_user.id)
-				role_name = ""
-				community_slug = ""
-				if user.role_id == -99 || user.role_id.nil?
-					role_name = "end-user"
-				else
-					role_name = UserRole.find(user.role_id).name
-				end
-				#end::check is_community_admin or not
+				role_name = UserRole.find(user.role_id).name
+			end
+			#end::check is_community_admin or not
 
+			if community_status_params[:community_id].nil?
 				if role_name == "end-user"
 					@user_community = Mammoth::UserCommunity.find_by(user_id: current_user.id, is_primary: true).community 
-					#community_id = @user_community.id
-					selected_communities << @user_community.id
+					@community_id = @user_community.id
 				end
-
-			end
-			
-			selected_communities.each do |community_id|
-
-				@status = Mammoth::PostStatusService.new.call(
-					current_user.account,
-					text: community_status_params[:status],
-					thread: @thread,
-					media_ids: community_status_params[:media_ids],
-					sensitive: community_status_params[:sensitive],
-					spoiler_text: community_status_params[:spoiler_text],
-					visibility: community_status_params[:visibility],
-					language: community_status_params[:language],
-					scheduled_at: community_status_params[:scheduled_at],
-					application: doorkeeper_token.application,
-					poll: community_status_params[:poll],
-					idempotency: request.headers['Idempotency-Key'],
-					with_rate_limit: true,
-					is_only_for_followers: community_status_params[:is_only_for_followers],
-					is_meta_preview: community_status_params[:is_meta_preview]
-				)
-				#begin::reply post get community_id from original post
-				unless @thread.nil?
-					community_id = Mammoth::CommunityStatus.find_by(status_id: @thread.id).community_id
-				end
-				#end::reply post get community_id from original post 
-
-
-				@community_status = Mammoth::CommunityStatus.new()
-				@community_status.status_id = @status.id
-				@community_status.community_id = community_id
-				@community_status.save
-				unless community_status_params[:image_data].nil?
-					image = Paperclip.io_adapters.for(community_status_params[:image_data])
-					@community_status.image = image
-					@community_status.save
-				end
+			else
+				@community_id = Mammoth::Community.find_by(slug: community_status_params[:community_id]).id
 			end
 
-			render json: {message: 'status with community successfully saved!'}
-
-			# @status = Mammoth::PostStatusService.new.call(
-			# 	current_user.account,
-			# 	text: community_status_params[:status],
-			# 	thread: @thread,
-			# 	media_ids: community_status_params[:media_ids],
-			# 	sensitive: community_status_params[:sensitive],
-			# 	spoiler_text: community_status_params[:spoiler_text],
-			# 	visibility: community_status_params[:visibility],
-			# 	language: community_status_params[:language],
-			# 	scheduled_at: community_status_params[:scheduled_at],
-			# 	application: doorkeeper_token.application,
-			# 	poll: community_status_params[:poll],
-			# 	idempotency: request.headers['Idempotency-Key'],
-			# 	with_rate_limit: true,
-			# 	is_only_for_followers: community_status_params[:is_only_for_followers],
-			# 	is_meta_preview: community_status_params[:is_meta_preview]
-			# )
-
-			# #begin::check is_community_admin or not
-			# user = User.find(current_user.id)
-			# role_name = ""
-			# community_slug = ""
-			# if user.role_id == -99 || user.role_id.nil?
-			# 	role_name = "end-user"
-			# else
-			# 	role_name = UserRole.find(user.role_id).name
-			# end
-			# #end::check is_community_admin or not
-
-			# if community_status_params[:community_id].nil?
-			# 	if role_name == "end-user"
-			# 		@user_community = Mammoth::UserCommunity.find_by(user_id: current_user.id, is_primary: true).community 
-			# 		@community_id = @user_community.id
-			# 	end
-			# else
-			# 	@community_id = Mammoth::Community.find_by(slug: community_status_params[:community_id]).id
-			# end
-
-			# unless @thread.nil?
-			# 	@community_id = Mammoth::CommunityStatus.find_by(status_id: @thread.id).community_id
-			# end
+			unless @thread.nil?
+				@community_id = Mammoth::CommunityStatus.find_by(status_id: @thread.id).community_id
+			end
  
-			# @community_status = Mammoth::CommunityStatus.new()
-			# @community_status.status_id = @status.id
-			# @community_status.community_id = @community_id
-			# @community_status.save
-			# unless community_status_params[:image_data].nil?
-			# 	image = Paperclip.io_adapters.for(community_status_params[:image_data])
-			# 	@community_status.image = image
-			# 	@community_status.save
-			# end
-			# render json: {message: 'status with community successfully saved!'}
+			@community_status = Mammoth::CommunityStatus.new()
+			@community_status.status_id = @status.id
+			@community_status.community_id = @community_id
+			@community_status.save
+			unless community_status_params[:image_data].nil?
+				image = Paperclip.io_adapters.for(community_status_params[:image_data])
+				@community_status.image = image
+				@community_status.save
+			end
+			render json: {message: 'status with community successfully saved!'}
 		end
 
 		def get_community_details_profile
