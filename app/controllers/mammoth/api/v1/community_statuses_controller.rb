@@ -273,7 +273,8 @@ module Mammoth::Api::V1
 
 			#Begin::Create UserCommunitySetting
       userCommunitySetting = Mammoth::UserCommunitySetting.where(user_id: current_user.id).last
-      if userCommunitySetting.nil?
+			
+      unless userCommunitySetting.present?
         create_userCommunitySetting()
       end
       #End:Create UserCommunitySetting
@@ -351,7 +352,22 @@ module Mammoth::Api::V1
 
 				@user_community_setting = Mammoth::UserCommunitySetting.find_by(user_id: current_user.id)
       
-				return @statuses if @user_community_setting.nil? || @user_community_setting.selected_filters["is_filter_turn_on"] == false 
+				if @user_community_setting.nil? || @user_community_setting.selected_filters["is_filter_turn_on"] == false 
+					before_limit_statuses = @statuses
+					@statuses = @statuses.limit(5)
+					return render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, current_user: current_user, adapter: :json, 
+					meta: {
+						pagination:
+						{ 
+							# total_pages: @statuses.total_pages,
+							# total_objects: @statuses.total_count,
+							# current_page: @statuses.current_page
+							total_objects: before_limit_statuses.size,
+							has_more_objects: 5 <= before_limit_statuses.size ? true : false
+						} 
+					}
+
+				end
 
 				#begin::country filter
 				is_country_filter = false
@@ -363,7 +379,15 @@ module Mammoth::Api::V1
 				end
 
 				if is_country_filter == true && accounts.blank? == true
-					return @statuses = []
+					return render json: { data: [],
+						meta: {
+							pagination:
+							{ 
+								total_objects: 0,
+								has_more_objects: false
+							} 
+						}
+					}
 				end
 				#end::country filter
 				
@@ -417,7 +441,7 @@ module Mammoth::Api::V1
 
 			#Begin::Create UserCommunitySetting
       userCommunitySetting = Mammoth::UserCommunitySetting.where(user_id: current_user.id).last
-      if userCommunitySetting.nil?
+      unless userCommunitySetting.present?
         create_userCommunitySetting()
       end
       #End:Create UserCommunitySetting
@@ -503,7 +527,23 @@ module Mammoth::Api::V1
 
 					@user_community_setting = Mammoth::UserCommunitySetting.find_by(user_id: current_user.id)
       
-					return @statuses if @user_community_setting.nil? || @user_community_setting.selected_filters["is_filter_turn_on"] == false 
+					if @user_community_setting.nil? || @user_community_setting.selected_filters["is_filter_turn_on"] == false 
+						before_limit_statuses = @statuses
+						@statuses = @statuses.limit(5)
+
+					#@statuses = @statuses.page(params[:page]).per(5)
+						return render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, current_user: current_user, adapter: :json, 
+						meta: {
+							pagination:
+							{ 
+								# total_pages: @statuses.total_pages,
+								# total_objects: @statuses.total_count,
+								# current_page: @statuses.current_page
+								total_objects: before_limit_statuses.size,
+								has_more_objects: 5 <= before_limit_statuses.size ? true : false
+							} 
+						}
+					end
 
 					#begin::country filter
 					is_country_filter = false
@@ -515,7 +555,15 @@ module Mammoth::Api::V1
 					end
 
 					if is_country_filter == true && accounts.blank? == true
-						return @statuses = []
+						return render json: { data: [],
+							meta: {
+								pagination:
+								{ 
+									total_objects: 0,
+									has_more_objects: false
+								} 
+							}
+						}	
 					end
 					#end::country filter
 					
@@ -581,7 +629,7 @@ module Mammoth::Api::V1
 			
 			#Begin::Create UserCommunitySetting
       userCommunitySetting = Mammoth::UserCommunitySetting.where(user_id: current_user.id).last
-      if userCommunitySetting.nil?
+      unless userCommunitySetting.present?
         create_userCommunitySetting()
       end
       #End:Create UserCommunitySetting
@@ -652,7 +700,21 @@ module Mammoth::Api::V1
 
 				@user_community_setting = Mammoth::UserCommunitySetting.find_by(user_id: current_user.id)
       
-				return @statuses if @user_community_setting.nil? || @user_community_setting.selected_filters["is_filter_turn_on"] == false 
+				if @user_community_setting.nil? || @user_community_setting.selected_filters["is_filter_turn_on"] == false 
+
+					return render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, current_user: current_user, adapter: :json, 
+					meta: { 
+						community_followed_user_counts: community_followed_user_counts,
+						community_name: community.name,
+						community_description: community.description,
+						community_url: community.image.url,
+						community_header_url: community.header.url,
+						community_slug: community.slug,
+						is_joined: user_communities_ids.include?(community.id), 
+						is_admin: is_community_admin
+					}
+
+				end
 
 				#begin::country filter
 				is_country_filter = false
@@ -664,7 +726,17 @@ module Mammoth::Api::V1
 				end
 
 				if is_country_filter == true && accounts.blank? == true
-					return @statuses = []
+					return render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, current_user: current_user, adapter: :json, 
+					meta: { 
+						community_followed_user_counts: community_followed_user_counts,
+						community_name: community.name,
+						community_description: community.description,
+						community_url: community.image.url,
+						community_header_url: community.header.url,
+						community_slug: community.slug,
+						is_joined: user_communities_ids.include?(community.id), 
+						is_admin: is_community_admin
+						}
 				end
 				#end::country filter
 				
