@@ -166,7 +166,7 @@ module Mammoth::Api::V1
           default_country: current_user.account.country,
           location_filter: {
             selected_countries: [],
-            is_location_filter_turn_on: false
+            is_location_filter_turn_on: true
           },
           is_filter_turn_on: false,
           source_filter: {
