@@ -406,7 +406,9 @@ module Mammoth::Api::V1
 
     def change_username
       @account = current_account
-      @account.update_attribute(:username, user_credentail_params[:username])
+      @account.update!(
+        username: user_credentail_params[:username]
+      )
       render json: {message: 'update successed'}
       rescue ActiveRecord::RecordInvalid => e
         render json: ValidationErrorFormatter.new(e, 'account.username': :username, 'invite_request.text': :reason).as_json, status: :unprocessable_entity
