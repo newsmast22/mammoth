@@ -8,7 +8,7 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
              :note, :url, :avatar, :avatar_static, :header, :header_static,:primary_community_slug,:primary_community_name,
              :followers_count, :following_count, :statuses_count, :last_status_at,:collection_count,:community_count,
              :country,:country_common_name,:dob,:subtitle,:contributor_role,:voices,:media,:hash_tag_count,:is_followed,
-             :email,:phone
+             :email,:phone,:step,:is_active,:is_account_setup_finished
              
 
   has_one :moved_to_account, key: :moved, serializer: Mammoth::AccountSerializer, if: :moved_and_not_nested?
@@ -55,6 +55,18 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
 
   def id
     object.id.to_s
+  end
+
+  def step
+    object.user.step
+  end
+
+  def is_active
+    object.user.is_active
+  end
+  
+  def is_account_setup_finished
+    object.user.is_account_setup_finished
   end
 
   def email

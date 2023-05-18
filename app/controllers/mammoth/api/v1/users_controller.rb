@@ -174,10 +174,14 @@ module Mammoth::Api::V1
 
     def update_account
       @account = current_account
+      @user  = Mammoth::User.find(current_user.id)
       unless params[:country].nil? || params[:dob].nil?
         @account.country = params[:country]
         @account.dob = params[:dob]
         @account.save(validate: false)
+
+        @user.step = @account.country.present? ? "communities" : "country"
+        @user.save(validate: false)
       end
       render json: @account, serializer: Mammoth::CredentialAccountSerializer
     end

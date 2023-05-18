@@ -9,62 +9,106 @@ module Mammoth::Api::V1
 
     require 'aws-sdk-sns'
     def register_with_email
-      Rails.logger.info "Register with email API params: #{user_params.inspect}"
-      wait_list = Mammoth::WaitList.where(invitation_code: user_params[:invitation_code].downcase,
-                                          is_invitation_code_used: true).last
-      if wait_list.present?
-        @user = User.create!( 
-          created_by_application: doorkeeper_token.application, 
-          sign_up_ip: request.remote_ip, 
-          email: user_params[:email], 
-          password: user_params[:password], 
-          agreement: user_params[:agreement],
-          locale: user_params[:locale],
-          otp_code: @otp_code,
-          password_confirmation: user_params[:password], 
-          account_attributes: user_params.slice(:display_name, :username),
-          invite_request_attributes: { text: user_params[:reason] },
-          wait_list_id: wait_list.id
-        )
-        Mammoth::Mailer.with(user: @user).account_confirmation.deliver_now
+      #begin::wait_list mapping
+      # Rails.logger.info "Register with email API params: #{user_params.inspect}"
+      # wait_list = Mammoth::WaitList.where(invitation_code: user_params[:invitation_code].downcase,
+      #                                     is_invitation_code_used: true).last
+      # if wait_list.present?
+      #   @user = User.create!( 
+      #     created_by_application: doorkeeper_token.application, 
+      #     sign_up_ip: request.remote_ip, 
+      #     email: user_params[:email], 
+      #     password: user_params[:password], 
+      #     agreement: user_params[:agreement],
+      #     locale: user_params[:locale],
+      #     otp_code: @otp_code,
+      #     password_confirmation: user_params[:password], 
+      #     account_attributes: user_params.slice(:display_name, :username),
+      #     invite_request_attributes: { text: user_params[:reason] },
+      #     wait_list_id: wait_list.id
+      #   )
+      #   Mammoth::Mailer.with(user: @user).account_confirmation.deliver_now
   
-        render json: {data: @user}
-      else
-        render json: {error: 'Register invitation code verification failed.'}, status: 422
-      end
+      #   render json: {data: @user}
+      # else
+      #   render json: {error: 'Register invitation code verification failed.'}, status: 422
+      # end
+      #end::wait_list mapping
+
+      @user = User.create!( 
+        created_by_application: doorkeeper_token.application, 
+        sign_up_ip: request.remote_ip, 
+        email: user_params[:email], 
+        password: user_params[:password], 
+        agreement: user_params[:agreement],
+        locale: user_params[:locale],
+        otp_code: @otp_code,
+        password_confirmation: user_params[:password], 
+        account_attributes: user_params.slice(:display_name, :username),
+        invite_request_attributes: { text: user_params[:reason] },
+        wait_list_id: nil,
+        step: "dob"
+      )
+      Mammoth::Mailer.with(user: @user).account_confirmation.deliver_now
+
+      render json: {data: @user}
+
     rescue ActiveRecord::RecordInvalid => e
       render json: ValidationErrorFormatter.new(e, 'account.username': :username, 'invite_request.text': :reason).as_json, status: :unprocessable_entity
     end
 
     def register_with_phone
-      wait_list = Mammoth::WaitList.where(invitation_code: user_params[:invitation_code].downcase,
-                                          is_invitation_code_used: true).last
+      # wait_list = Mammoth::WaitList.where(invitation_code: user_params[:invitation_code].downcase,
+      #                                     is_invitation_code_used: true).last
+
+      # domain = ENV['LOCAL_DOMAIN'] || Rails.configuration.x.local_domain
+
+      # if wait_list.present?
+      #   @user = User.create!(
+      #     created_by_application: doorkeeper_token.application, 
+      #     sign_up_ip: request.remote_ip, 
+      #     email: "#{user_params[:phone]}@#{domain}", 
+      #     password: user_params[:password], 
+      #     agreement: user_params[:agreement],
+      #     locale: user_params[:locale],
+      #     otp_code: @otp_code,
+      #     phone: user_params[:phone],
+      #     password_confirmation: user_params[:password], 
+      #     account_attributes: user_params.slice(:display_name, :username),
+      #     invite_request_attributes: { text: user_params[:reason] },
+      #     wait_list_id: wait_list.id
+      #   )
+  
+      #   @user.save(validate: false)
+      #   set_sns_publich(user_params[:phone])
+  
+      #   render json: {data: @user}
+      # else
+      #   render json: {error: 'Register invitation code verification failed.'}, status: 422
+      # end
 
       domain = ENV['LOCAL_DOMAIN'] || Rails.configuration.x.local_domain
 
-      if wait_list.present?
-        @user = User.create!(
-          created_by_application: doorkeeper_token.application, 
-          sign_up_ip: request.remote_ip, 
-          email: "#{user_params[:phone]}@#{domain}", 
-          password: user_params[:password], 
-          agreement: user_params[:agreement],
-          locale: user_params[:locale],
-          otp_code: @otp_code,
-          phone: user_params[:phone],
-          password_confirmation: user_params[:password], 
-          account_attributes: user_params.slice(:display_name, :username),
-          invite_request_attributes: { text: user_params[:reason] },
-          wait_list_id: wait_list.id
-        )
+      @user = User.create!(
+        created_by_application: doorkeeper_token.application, 
+        sign_up_ip: request.remote_ip, 
+        email: "#{user_params[:phone]}@#{domain}", 
+        password: user_params[:password], 
+        agreement: user_params[:agreement],
+        locale: user_params[:locale],
+        otp_code: @otp_code,
+        phone: user_params[:phone],
+        password_confirmation: user_params[:password], 
+        account_attributes: user_params.slice(:display_name, :username),
+        invite_request_attributes: { text: user_params[:reason] },
+        wait_list_id: nil,
+        step: "dob",
+      )
   
-        @user.save(validate: false)
-        set_sns_publich(user_params[:phone])
-  
-        render json: {data: @user}
-      else
-        render json: {error: 'Register invitation code verification failed.'}, status: 422
-      end
+      @user.save(validate: false)
+      set_sns_publich(user_params[:phone])
+
+      render json: {data: @user}
       
     rescue ActiveRecord::RecordInvalid => e
         render json: ValidationErrorFormatter.new(e, 'account.username': :username, 'invite_request.text': :reason).as_json, status: :unprocessable_entity
@@ -151,6 +195,7 @@ module Mammoth::Api::V1
         if @user.otp_code == params[:confirmed_otp_code]
           @user.confirmed_at = Time.now.utc
           @user.otp_code = nil
+          @user.step = "dob"
           @user.save(validate: false)
 
           @app = doorkeeper_token.application

@@ -37,6 +37,7 @@ module Mammoth::Api::V1
     end
 
     def create
+      @user  = Mammoth::User.find(current_user.id)
       Mammoth::UserCommunity.where(user_id: current_user.id).destroy_all
       user_community_params[:interested_communities].each do |slug|
         @community = Mammoth::Community.find_by(slug: slug)
@@ -45,10 +46,15 @@ module Mammoth::Api::V1
             community_id: @community.id
         )
       end
+      @user.step = "communities"
+      @user.save(validate: false)
       if user_community_params[:primary_community].present?
         @community = Mammoth::Community.find_by(slug: user_community_params[:primary_community])
         Mammoth::UserCommunity.find_by(community_id: @community.id, user_id: current_user.id)
                               .update(is_primary: true)
+        @user.step = nil
+        @user.is_account_setup_finished = true
+        @user.save(validate: false)                      
       end
 
       #Begin::Create UserTimeLineSetting
