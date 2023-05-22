@@ -182,6 +182,11 @@ module Mammoth::Api::V1
 
         @user.step = @account.country.present? ? "communities" : "country"
         @user.save(validate: false)
+
+        #when user register if primary is 
+        if @user.step == "communities"
+          Mammoth::UserCommunity.where(user_id: current_user.id).destroy_all
+        end
       end
       render json: @account, serializer: Mammoth::CredentialAccountSerializer
     end
