@@ -14,13 +14,22 @@ module Mammoth::Api::V1
     end
 
     def create
+      show_popup = true
       Mammoth::UserCommunitySetting.where(user_id: current_user.id).destroy_all
       user_community_setting_params[:selected_filters][:default_country] << current_user.account.country
       Mammoth::UserCommunitySetting.create!(
         user_id: current_user.id,
         selected_filters: user_community_setting_params[:selected_filters]
       )
-      render json: {message: 'Successfully created'}
+      userCommunitySetting = user_community_setting_params[:selected_filters]
+
+      if userCommunitySetting[:location_filter][:selected_countries].length() > 0 || userCommunitySetting[:source_filter][:selected_contributor_role].length() > 0 || userCommunitySetting[:source_filter][:selected_media].length() > 0 || userCommunitySetting[:source_filter][:selected_voices].length() > 0
+        show_popup = false
+      end
+      render json: {
+        message: 'Successfully created',
+        show_setting_popup: show_popup
+      }
     end
 
     private
