@@ -14,13 +14,23 @@ module Mammoth::Api::V1
     end
 
     def create
+      is_selected = false
       Mammoth::UserTimelineSetting.where(user_id: current_user.id).destroy_all
       user_timeline_setting_params[:selected_filters][:default_country] << current_user.account.country
       Mammoth::UserTimelineSetting.create!(
         user_id: current_user.id,
         selected_filters: user_timeline_setting_params[:selected_filters]
       )
-      render json: {message: 'Successfully created'}
+      userTimelineSetting = user_timeline_setting_params[:selected_filters]
+
+      if userTimelineSetting[:location_filter][:selected_countries].length() > 0 || userTimelineSetting[:source_filter][:selected_contributor_role].length() > 0 || userTimelineSetting[:source_filter][:selected_media].length() > 0 || userTimelineSetting[:source_filter][:selected_voices].length() > 0
+        is_selected = true
+      end
+      
+      render json: {
+        message: 'Successfully created',
+        show_setting_popup: is_selected
+      }
     end
 
     private
