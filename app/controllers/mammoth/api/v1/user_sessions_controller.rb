@@ -35,20 +35,56 @@ module Mammoth::Api::V1
       # end
       #end::wait_list mapping
 
-      @user = User.create!( 
-        created_by_application: doorkeeper_token.application, 
-        sign_up_ip: request.remote_ip, 
-        email: user_params[:email], 
-        password: user_params[:password], 
-        agreement: user_params[:agreement],
-        locale: user_params[:locale],
-        otp_code: @otp_code,
-        password_confirmation: user_params[:password], 
-        account_attributes: user_params.slice(:display_name, :username),
-        invite_request_attributes: { text: user_params[:reason] },
-        wait_list_id: nil,
-        step: "dob"
-      )
+      @user = User.find_by(email: user_params[:email])
+      if @user.nil?
+        @user = User.create!( 
+          created_by_application: doorkeeper_token.application, 
+          sign_up_ip: request.remote_ip, 
+          email: user_params[:email], 
+          password: user_params[:password], 
+          agreement: user_params[:agreement],
+          locale: user_params[:locale],
+          otp_code: @otp_code,
+          password_confirmation: user_params[:password], 
+          account_attributes: user_params.slice(:display_name, :username),
+          invite_request_attributes: { text: user_params[:reason] },
+          wait_list_id: nil,
+          step: "dob"
+        )
+      elsif !@user.confirmed_at.present?
+        @user.update!(otp_code: @otp_code)
+        @user.account.update!(username: user_params[:username])
+      else
+        @user = User.create!( 
+          created_by_application: doorkeeper_token.application, 
+          sign_up_ip: request.remote_ip, 
+          email: user_params[:email], 
+          password: user_params[:password], 
+          agreement: user_params[:agreement],
+          locale: user_params[:locale],
+          otp_code: @otp_code,
+          password_confirmation: user_params[:password], 
+          account_attributes: user_params.slice(:display_name, :username),
+          invite_request_attributes: { text: user_params[:reason] },
+          wait_list_id: nil,
+          step: "dob"
+        )
+      end
+      
+      # @user = User.create!( 
+      #   created_by_application: doorkeeper_token.application, 
+      #   sign_up_ip: request.remote_ip, 
+      #   email: user_params[:email], 
+      #   password: user_params[:password], 
+      #   agreement: user_params[:agreement],
+      #   locale: user_params[:locale],
+      #   otp_code: @otp_code,
+      #   password_confirmation: user_params[:password], 
+      #   account_attributes: user_params.slice(:display_name, :username),
+      #   invite_request_attributes: { text: user_params[:reason] },
+      #   wait_list_id: nil,
+      #   step: "dob"
+      # )
       Mammoth::Mailer.with(user: @user).account_confirmation.deliver_now
 
       render json: {data: @user}
@@ -88,25 +124,46 @@ module Mammoth::Api::V1
       # end
 
       domain = ENV['LOCAL_DOMAIN'] || Rails.configuration.x.local_domain
-
-      @user = User.create!(
-        created_by_application: doorkeeper_token.application, 
-        sign_up_ip: request.remote_ip, 
-        email: "#{user_params[:phone]}@#{domain}", 
-        password: user_params[:password], 
-        agreement: user_params[:agreement],
-        locale: user_params[:locale],
-        otp_code: @otp_code,
-        phone: user_params[:phone],
-        password_confirmation: user_params[:password], 
-        account_attributes: user_params.slice(:display_name, :username),
-        invite_request_attributes: { text: user_params[:reason] },
-        wait_list_id: nil,
-        step: "dob",
-      )
-  
-      @user.save(validate: false)
-      set_sns_publich(user_params[:phone])
+      @user = User.find_by(phone: user_params[:phone])
+      if @user.nil?
+        @user = User.create!(
+          created_by_application: doorkeeper_token.application, 
+          sign_up_ip: request.remote_ip, 
+          email: "#{user_params[:phone]}@#{domain}", 
+          password: user_params[:password], 
+          agreement: user_params[:agreement],
+          locale: user_params[:locale],
+          otp_code: @otp_code,
+          phone: user_params[:phone],
+          password_confirmation: user_params[:password], 
+          account_attributes: user_params.slice(:display_name, :username),
+          invite_request_attributes: { text: user_params[:reason] },
+          wait_list_id: nil,
+          step: "dob",
+        )
+        @user.save(validate: false)
+        set_sns_publich(user_params[:phone])
+      elsif !@user.confirmed_at.present?
+        @user.update!(otp_code: @otp_code)
+        @user.account.update!(username: user_params[:username])
+        set_sns_publich(user_params[:phone])
+      else
+        @user = User.create!(
+          created_by_application: doorkeeper_token.application, 
+          sign_up_ip: request.remote_ip, 
+          email: "#{user_params[:phone]}@#{domain}", 
+          password: user_params[:password], 
+          agreement: user_params[:agreement],
+          locale: user_params[:locale],
+          otp_code: @otp_code,
+          phone: user_params[:phone],
+          password_confirmation: user_params[:password], 
+          account_attributes: user_params.slice(:display_name, :username),
+          invite_request_attributes: { text: user_params[:reason] },
+          wait_list_id: nil,
+          step: "dob",
+        )
+      end
 
       render json: {data: @user}
       
