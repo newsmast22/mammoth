@@ -325,13 +325,18 @@ module Mammoth::Api::V1
 		def get_communities_with_collections 
 			data = []
 
+			user = Mammoth::User.find(current_user.id)
+			#when user register
+			if user.step == "communities"
+				Mammoth::UserCommunity.where(user_id: current_user.id).destroy_all
+			end
+
 			if params[:collection_slugs].present?
 				collections  = Mammoth::Collection.where(slug: params[:collection_slugs]).order(position: :ASC)
 			else
 				collections  = Mammoth::Collection.all.order(position: :ASC)
 			end
 
-			user = Mammoth::User.find(current_user.id)
 			user_communities_ids = user&.user_communities.pluck(:community_id).map(&:to_i) || []
 			user_primary_community = user&.user_communities.where(is_primary: true).last
 			
