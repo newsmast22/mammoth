@@ -12,7 +12,7 @@ module Mammoth::Api::V1
               if verified_code.is_invitation_code_used == true
                 render json: {error: 'Invitation code is already used'},status: 422
               else
-                verified_code.update(is_invitation_code_used: true)
+                #verified_code.update(is_invitation_code_used: true)
                 render json: {message: 'Successfully verified'} 
               end
           else
