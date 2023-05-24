@@ -326,10 +326,6 @@ module Mammoth::Api::V1
 			data = []
 
 			user = Mammoth::User.find(current_user.id)
-			#when user register
-			if user.step == "communities"
-				Mammoth::UserCommunity.where(user_id: current_user.id).destroy_all
-			end
 
 			if params[:collection_slugs].present?
 				collections  = Mammoth::Collection.where(slug: params[:collection_slugs]).order(position: :ASC)

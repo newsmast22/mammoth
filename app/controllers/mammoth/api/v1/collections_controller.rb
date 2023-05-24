@@ -5,6 +5,12 @@ module Mammoth::Api::V1
 		before_action :set_collection, only: %i[show update destroy]
 
     def index
+			@user  = Mammoth::User.find(current_user.id)
+			#when user register
+			if @user.step == "communities" && @user.is_account_setup_finished = false
+				Mammoth::UserCommunity.where(user_id: current_user.id).destroy_all
+			end
+
 			@collections = Mammoth::Collection.all.order(position: :ASC)
 			data = []
 			@collections.each do |collection|
