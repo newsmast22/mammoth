@@ -249,43 +249,16 @@ module Mammoth::Api::V1
 
     def verify_otp_code_for_signup
       @user = User.find(params[:user_id])
-      if params[:invitation_code].present?
-      #begin::invitation_code present?
-        invited_code = Mammoth::WaitList.where(invitation_code: params[:invitation_code].downcase).last
-        unless invited_code.nil? || invited_code.is_invitation_code_used == true
-          if @user.otp_code == params[:confirmed_otp_code]
-            @user.confirmed_at = Time.now.utc
-            @user.otp_code = nil
-            @user.step = "dob"
-            @user.wait_list_id = invited_code.id
-            @user.save(validate: false)
-
-            invited_code.update(is_invitation_code_used: true)
-
-            @app = doorkeeper_token.application
-            @access_token = Doorkeeper::AccessToken.create!(
-              application: @app,
-              resource_owner_id: @user.id,
-              scopes: @app.scopes,
-              expires_in: Doorkeeper.configuration.access_token_expires_in,
-              use_refresh_token: Doorkeeper.configuration.refresh_token_enabled?
-            )
-            response = Doorkeeper::OAuth::TokenResponse.new(@access_token)
-            render json: {message: 'account confirmed', access_token: JSON.parse(Oj.dump(response.body["access_token"]))}
-          else
-            render json: {error: 'wrong otp'}
-          end
-        else
-          render json: {error: 'wrong invitation_code'}, status: 422
-        end 
-      #end::invitation_code present?
-      else
-      #begin::invitation_code not present?
+      invited_code = Mammoth::WaitList.where(invitation_code: params[:invitation_code].downcase).last
+      unless invited_code.nil? || invited_code.is_invitation_code_used == true
         if @user.otp_code == params[:confirmed_otp_code]
           @user.confirmed_at = Time.now.utc
           @user.otp_code = nil
           @user.step = "dob"
+          @user.wait_list_id = invited_code.id
           @user.save(validate: false)
+
+          invited_code.update(is_invitation_code_used: true)
 
           @app = doorkeeper_token.application
           @access_token = Doorkeeper::AccessToken.create!(
@@ -298,10 +271,11 @@ module Mammoth::Api::V1
           response = Doorkeeper::OAuth::TokenResponse.new(@access_token)
           render json: {message: 'account confirmed', access_token: JSON.parse(Oj.dump(response.body["access_token"]))}
         else
-          render json: {error: 'wrong otp'}
+          render json: {error: 'wrong otp'}, status: 422
         end
-      #end::invitation_code not present?
-      end
+      else
+        render json: {error: 'wrong invitation_code'}, status: 422
+      end 
     end
 
     def find_by_email_phone
