@@ -7,7 +7,7 @@ module Mammoth::Api::V1
     def index
 			@user  = Mammoth::User.find(current_user.id)
 			#when user register
-			if @user.step == "communities" && @user.is_account_setup_finished = false
+			if @user.is_account_setup_finished == false
 				Mammoth::UserCommunity.where(user_id: current_user.id).destroy_all
 			end
 
