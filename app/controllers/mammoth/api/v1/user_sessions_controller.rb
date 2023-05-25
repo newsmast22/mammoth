@@ -249,16 +249,16 @@ module Mammoth::Api::V1
 
     def verify_otp_code_for_signup
       @user = User.find(params[:user_id])
-      #invited_code = Mammoth::WaitList.where(invitation_code: params[:invitation_code].downcase, is_invitation_code_used: false).last
-      #if invited_code.nil?
+      invited_code = Mammoth::WaitList.where(invitation_code: params[:invitation_code].downcase).last
+      unless invited_code.nil? || invited_code.is_invitation_code_used == true
         if @user.otp_code == params[:confirmed_otp_code]
           @user.confirmed_at = Time.now.utc
           @user.otp_code = nil
           @user.step = "dob"
-          #@user.wait_list_id = invited_code.id,
+          @user.wait_list_id = invited_code.id
           @user.save(validate: false)
 
-          #invited_code.update(is_invitation_code_used: true)
+          invited_code.update(is_invitation_code_used: true)
 
           @app = doorkeeper_token.application
           @access_token = Doorkeeper::AccessToken.create!(
@@ -273,7 +273,9 @@ module Mammoth::Api::V1
         else
           render json: {error: 'wrong otp'}
         end
-      #end 
+      else
+        render json: {error: 'wrong invitation_code'}, status: 422
+      end 
     end
 
     def find_by_email_phone
