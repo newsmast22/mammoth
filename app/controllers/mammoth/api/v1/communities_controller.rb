@@ -6,6 +6,22 @@ module Mammoth::Api::V1
 
 		def index
 			data = []
+			#begin::check is_community_admin or not
+			user = User.find(current_user.id)
+			role_name = ""
+			community_slug = ""
+			if user.role_id == -99 || user.role_id.nil?
+				role_name = "end-user"
+			else
+				role_name = UserRole.find(user.role_id).name
+			end
+			#end::check is_community_admin or not
+
+			is_rss_account = false
+			if role_name == "rss-account"
+				is_rss_account = true
+			end
+			
 			if params[:collection_id].nil?
 
 				#Begin::check user have selected community 
@@ -30,7 +46,7 @@ module Mammoth::Api::V1
 							name: community.name,
 							slug: community.slug,
 							followers: community.follower_counts,
-							is_country_filtering: community.is_country_filtering,
+							is_country_filtering: is_rss_account == true ? false : community.is_country_filtering,
 							is_country_filter_on: community.is_country_filter_on,
 							header_url: community.header.url,
 							is_joined: user_communities_ids.include?(community.id), 
@@ -54,7 +70,7 @@ module Mammoth::Api::V1
 							name: community.name,
 							slug: community.slug,
 							followers: community.follower_counts,
-							is_country_filtering: community.is_country_filtering,
+							is_country_filtering: is_rss_account == true ? false : community.is_country_filtering,
 							is_country_filter_on: community.is_country_filter_on,
 							header_url: community.header.url,
 							is_joined: false, 
@@ -95,7 +111,7 @@ module Mammoth::Api::V1
 							name: community.name,
 							slug: community.slug,
 							followers: community.follower_counts,
-							is_country_filtering: community.is_country_filtering,
+							is_country_filtering: is_rss_account == true ? false : community.is_country_filtering,
 							is_country_filter_on: community.is_country_filter_on,
 							header_url: community.header.url,
 							is_joined: user_communities_ids.include?(community.id), 
@@ -125,6 +141,23 @@ module Mammoth::Api::V1
 		def show
 			if @community.present?
 				is_admin = false
+
+				#begin::check is_community_admin or not
+				user = User.find(current_user.id)
+				role_name = ""
+				community_slug = ""
+				if user.role_id == -99 || user.role_id.nil?
+					role_name = "end-user"
+				else
+					role_name = UserRole.find(user.role_id).name
+				end
+				#end::check is_community_admin or not
+
+				is_rss_account = false
+				if role_name == "rss-account"
+					is_rss_account = true
+				end
+
 				field_datas = []
 				if @community.fields.present?
 						@community.fields.each do |key, value|
@@ -146,7 +179,7 @@ module Mammoth::Api::V1
 					collection_id: @community.collection_id,
 					created_at: @community.created_at,
 					updated_at: @community.updated_at,
-					is_country_filtering: @community.is_country_filtering,
+					is_country_filtering: is_rss_account == true ? false : @community.is_country_filtering,
 					is_admin: is_admin,
 					is_country_filter_on: @community.is_country_filter_on,
 					fields: field_datas
