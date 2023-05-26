@@ -6,7 +6,24 @@ module Mammoth::Api::V1
 
     def index
       community = Mammoth::Community.find_by(slug: params[:id])
-      @community_feeds = Mammoth::CommunityFeed.where(community_id: community.id)
+
+      #begin::check is_community_admin or not
+      user = User.find(current_user.id)
+      role_name = ""
+      community_slug = ""
+      if user.role_id == -99 || user.role_id.nil?
+        role_name = "end-user"
+      else
+        role_name = UserRole.find(user.role_id).name
+      end
+      #end::check is_community_admin or not
+
+      if role_name == "rss-account"
+        @community_feeds = Mammoth::CommunityFeed.where(community_id: community.id,account_id: current_user.account.id)
+      else # community-admin
+        @community_feeds = Mammoth::CommunityFeed.where(community_id: community.id)
+      end
+
       if @community_feeds.present?
         render json: @community_feeds
       else
