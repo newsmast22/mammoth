@@ -518,6 +518,18 @@ module Mammoth::Api::V1
     def get_user_details_info_by_account(account_id, account_info)
       community_images = []
       following_account_images = []
+
+      #begin::check is_community_admin or not
+      user = User.find(current_user.id)
+      role_name = ""
+      community_slug = ""
+      if user.role_id == -99 || user.role_id.nil?
+        role_name = "end-user"
+      else
+        role_name = UserRole.find(user.role_id).name
+      end
+      #end::check is_community_admin or not
+
       is_my_account = current_account.id == account_info.id ? true : false
       account_followed_ids = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
       
@@ -593,6 +605,7 @@ module Mammoth::Api::V1
         following_images_url: following_account_images,
         is_admin: is_admin,
         community_slug: community_slug,
+        account_type: role_name,
         pagination:
           { 
             # total_pages: statuses.total_pages,
@@ -605,6 +618,17 @@ module Mammoth::Api::V1
     end
 
     def get_user_details_info(account_id, account_info)
+      #begin::check is_community_admin or not
+      user = User.find(current_user.id)
+      role_name = ""
+      community_slug = ""
+      if user.role_id == -99 || user.role_id.nil?
+        role_name = "end-user"
+      else
+        role_name = UserRole.find(user.role_id).name
+      end
+      #end::check is_community_admin or not
+
       community_images = []
       following_account_images = []
       is_my_account = current_account.id == account_info.id ? true : false
@@ -648,7 +672,8 @@ module Mammoth::Api::V1
           community_images_url: community_images,
           following_images_url: following_account_images,
           is_admin: is_admin,
-          community_slug: community_slug
+          community_slug: community_slug,
+          account_type: role_name
         }
       }
     end
