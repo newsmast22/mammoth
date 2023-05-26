@@ -47,7 +47,7 @@ module Mammoth::Api::V1
 							slug: community.slug,
 							followers: community.follower_counts,
 							is_country_filtering: is_rss_account == true ? false : community.is_country_filtering,
-							is_country_filter_on: community.is_country_filter_on,
+							is_country_filter_on: is_rss_account == true ? false : community.is_country_filter_on,
 							header_url: community.header.url,
 							is_joined: user_communities_ids.include?(community.id), 
 							image_file_name: community.image_file_name,
@@ -71,7 +71,7 @@ module Mammoth::Api::V1
 							slug: community.slug,
 							followers: community.follower_counts,
 							is_country_filtering: is_rss_account == true ? false : community.is_country_filtering,
-							is_country_filter_on: community.is_country_filter_on,
+							is_country_filter_on: is_rss_account == true ? false : community.is_country_filter_on,
 							header_url: community.header.url,
 							is_joined: false, 
 							image_file_name: community.image_file_name,
@@ -112,7 +112,7 @@ module Mammoth::Api::V1
 							slug: community.slug,
 							followers: community.follower_counts,
 							is_country_filtering: is_rss_account == true ? false : community.is_country_filtering,
-							is_country_filter_on: community.is_country_filter_on,
+							is_country_filter_on: is_rss_account == true ? false : community.is_country_filter_on,
 							header_url: community.header.url,
 							is_joined: user_communities_ids.include?(community.id), 
 							image_file_name: community.image_file_name,
@@ -181,7 +181,7 @@ module Mammoth::Api::V1
 					updated_at: @community.updated_at,
 					is_country_filtering: is_rss_account == true ? false : @community.is_country_filtering,
 					is_admin: is_admin,
-					is_country_filter_on: @community.is_country_filter_on,
+					is_country_filter_on: is_rss_account == true ? false : @community.is_country_filter_on,
 					fields: field_datas
 				}
 			else		
