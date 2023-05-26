@@ -238,6 +238,17 @@ module Mammoth::Api::V1
 		end
 
 		def get_community_details_profile
+			 #begin::check is_community_admin or not
+			 user = User.find(current_user.id)
+			 role_name = ""
+			 community_slug = ""
+			 if user.role_id == -99 || user.role_id.nil?
+				 role_name = "end-user"
+			 else
+				 role_name = UserRole.find(user.role_id).name
+			 end
+			 #end::check is_community_admin or not
+
 			@user = Mammoth::User.find(current_user.id)
 			community = Mammoth::Community.find_by(slug: params[:id])
 			#begin::check is community-admin
@@ -257,7 +268,7 @@ module Mammoth::Api::V1
 				render json: {
 				data: { 
 					community_followed_user_counts: community_followed_user_counts,
-					community_name: community.name,
+					community_name: role_name == "rss-account" ? current_user.account.display_name : community.name,
 					community_description: community.description,
 					collection_name: community.collection.name,
 					community_url: community.image.url,
