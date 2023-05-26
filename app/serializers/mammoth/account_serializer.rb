@@ -70,7 +70,11 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
   end
 
   def email
-    object.user.email
+    if object.user.phone.present?
+      nil
+    else
+      object.user.email
+    end
   end
 
   def phone

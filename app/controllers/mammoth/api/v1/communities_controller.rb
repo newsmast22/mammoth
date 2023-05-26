@@ -213,10 +213,10 @@ module Mammoth::Api::V1
 
 		def update
 			collection = Mammoth::Collection.find_by(slug: community_params[:collection_id])
-			@community.name = community_params[:name]	
+			@community.name = community_params[:name]	if community_params[:name].present?
 			@community.position = community_params[:position] if community_params[:position].present?
-			@community.description = community_params[:description]
-			@community.is_country_filtering = community_params[:is_country_filtering]
+			@community.description = community_params[:description] if community_params[:description].present?
+			@community.is_country_filtering = community_params[:is_country_filtering] if community_params[:is_country_filtering].present?
 			@community.collection_id = collection.id
 
 			social_media_json = nil
