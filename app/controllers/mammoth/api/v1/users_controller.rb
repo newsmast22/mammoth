@@ -689,9 +689,13 @@ module Mammoth::Api::V1
                 statuses.reply = :reply AND statuses.account_id = :account_id #{query_string}",
                 reply: false, account_id: account_id, max_id: params[:max_id]
                 )
-
-      statuses = statuses.filter_is_only_for_followers(account_followed_ids)
-
+      
+      #begin::ignore is_only_for_followers for login account       
+      unless account_id.to_i == current_account.id.to_i
+        statuses = statuses.filter_is_only_for_followers(account_followed_ids)      
+      end
+      #end::ignore is_only_for_followers for login account       
+          
       #begin::muted account post
       muted_accounts = Mute.where(account_id: current_account.id)
       statuses = statuses.filter_mute_accounts(muted_accounts.pluck(:target_account_id).map(&:to_i)) unless muted_accounts.blank?
