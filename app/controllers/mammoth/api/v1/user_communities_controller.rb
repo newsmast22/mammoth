@@ -29,6 +29,30 @@ module Mammoth::Api::V1
             updated_at: community.updated_at
           }
         end
+
+        if params[:community_slug].present?
+          new_community = Mammoth::Community.find_by(slug: params[:community_slug])
+          unless data.any? { |obj| obj[:slug] == params[:community_slug] }
+            data << {
+              id: new_community.id.to_s,
+              user_id: @user.id.to_s,
+              is_primary:  false,
+              name: new_community.name,
+              slug: new_community.slug,
+              image_file_name: new_community.image_file_name,
+              image_content_type: new_community.image_content_type,
+              image_file_size: new_community.image_file_size,
+              image_updated_at: new_community.image_updated_at,
+              description: new_community.description,
+              image_url: new_community.image.url,
+              collection_id: new_community.collection.id,
+              followers: Mammoth::UserCommunity.where(community_id: new_community.id).size,
+              created_at: new_community.created_at,
+              updated_at: new_community.updated_at
+            }
+          end
+        end
+
         data = data.sort_by {|h| [h[:is_primary] ? 0 : 1,h[:slug]]}
         render json: data
       else
@@ -154,8 +178,6 @@ module Mammoth::Api::V1
       if params[:slug].present?
 
         community = Mammoth::Community.where(slug: params[:slug]).last
-        puts "***** community ****"
-        puts community.inspect
         joined_user_community = Mammoth::UserCommunity.where(community_id: community.id, user_id: current_user.id).last
 
         if joined_user_community.present?
