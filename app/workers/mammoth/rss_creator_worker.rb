@@ -49,7 +49,8 @@ module Mammoth
             create_community_status if @status
           end
         end
-
+      resuce => e
+        Rails.logger.error "#{e}, URL: #{url}"
       end
 
       def create_status(title, desc, link)
