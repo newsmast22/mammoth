@@ -6,7 +6,7 @@ module Mammoth
 
     def perform
       Status.where(is_rss_content: true).each do |status|
-        if over_24h?(status.created_at) && without_actions?(status)
+        if over_definded_duration_h?(status.created_at) && without_actions?(status)
           Mammoth::CommunityStatus.where(status: status).destroy_all
           status.destroy
         end
@@ -22,9 +22,9 @@ module Mammoth
         status.favourites.empty? and reblog.nil? and (status.reply == false)
       end
 
-      def over_24h?(date)
+      def over_definded_duration_h?(date)
         current = Time.zone.now
-        current > (date + 24.hours)
+        current > (date + 12.hours)
       end
   end
 end 

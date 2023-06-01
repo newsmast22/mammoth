@@ -34,18 +34,43 @@ module Mammoth
       def fetch_feed(url)
         xml  = HTTParty.get(url).body
         feed = Feedjira.parse(xml)
-        feed.entries.each do |item|
-          link = item.url
-        
-          next if @account.statuses.find_by(rss_link: link)
-        
-          title = item.title rescue ''
-          desc  = item.summary rescue ''
-          @image = item.image rescue ''
 
-          create_status(title, desc, link)
-          create_community_status if @status
+        feed_entries = feed.entries
+        feed_entries_count = feed_entries.size
+
+        if feed_entries_count > 0
+
+          while feed_entries_count >= 0
+            item = feed_entries[feed_entries_count - 1 ]
+            if item.published >= 10.days.ago.to_date
+              link = item.url
+            
+              next if @account.statuses.find_by(rss_link: link)
+            
+              title = item.title rescue ''
+              desc  = item.summary rescue ''
+              @image = item.image rescue ''
+
+              create_status(title, desc, link)
+              create_community_status if @status
+              feed_entries_count -= 1
+            end
+          end
         end
+        
+
+        # feed.entries.each do |item|
+        #   link = item.url
+        
+        #   next if @account.statuses.find_by(rss_link: link)
+        
+        #   title = item.title rescue ''
+        #   desc  = item.summary rescue ''
+        #   @image = item.image rescue ''
+
+        #   create_status(title, desc, link)
+        #   create_community_status if @status
+        # end
       end
 
       def create_status(title, desc, link)
