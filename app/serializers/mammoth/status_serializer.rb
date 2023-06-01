@@ -78,7 +78,9 @@ class Mammoth::StatusSerializer < ActiveModel::Serializer
   end
 
   def rss_link 
-    object.rss_link.presence || get_custom_url
+    if object.is_rss_content
+      object.rss_link.presence || get_custom_url
+    end
   end
 
   def rss_host_url
