@@ -36,7 +36,7 @@ module Mammoth
         feed = Feedjira.parse(xml)
         
         feed.entries.to_a.sort_by(&:published).each do |item|
-          link = item.url
+          link = item.try(:url) || item.try(:enclosure_url)
           if item.published >= 10.days.ago.to_date
 
             next if @account.statuses.find_by(rss_link: link)
