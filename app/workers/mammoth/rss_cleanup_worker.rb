@@ -23,8 +23,7 @@ module Mammoth
       end
 
       def over_definded_duration_h?(date)
-        current = Time.zone.now
-        current > (date + 12.hours)
+        12.hours.ago > date
       end
   end
 end 
