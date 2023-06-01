@@ -41,9 +41,9 @@ module Mammoth
 
             next if @account.statuses.find_by(rss_link: link)
           
-            title = item.title rescue ''
-            desc  = item.summary rescue ''
-            @image = item.image rescue ''
+            title  = item.title rescue ''
+            desc   = item.summary rescue ''
+            @image = get_image_url(item, link)
 
             create_status(title, desc, link)
             create_community_status if @status
@@ -78,6 +78,16 @@ module Mammoth
         rescue
           puts 'RSS Feed CommunityStatus creation failed!'
         end
+      end
+
+      def get_image_url(item, link)
+        if link.present?
+          meta = LinkThumbnailer.generate(link)
+          url  = meta&.images&.first&.src
+        end
+        url ||= item.image
+      rescue 
+        url = ''
       end
 
   end
