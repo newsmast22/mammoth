@@ -43,7 +43,7 @@ module Mammoth
           
             title  = item.title rescue ''
             desc   = item.summary rescue ''
-            @image = get_image_url(item, link)
+            @image = get_image_url(item, link) || item.image
 
             create_status(title, desc, link)
             create_community_status if @status
@@ -85,7 +85,7 @@ module Mammoth
           meta = LinkThumbnailer.generate(link)
           url  = meta&.images&.first&.src
         end
-        url ||= item.image
+        url
       rescue 
         url = ''
       end
