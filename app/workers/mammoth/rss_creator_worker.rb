@@ -43,7 +43,7 @@ module Mammoth
           
             title  = item.title rescue ''
             desc   = item.summary rescue ''
-            @image = get_image_url(item, link) || item.image
+            @image = get_image_url(item, link) || item.image rescue ''
 
             create_status(title, desc, link)
             create_community_status if @status
