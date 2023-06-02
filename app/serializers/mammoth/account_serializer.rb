@@ -57,6 +57,10 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
     object.id.to_s
   end
 
+  def statuses_count
+    object.statuses.where(reply: false).count
+  end
+
   def step
     object.user.step
   end
