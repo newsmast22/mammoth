@@ -30,7 +30,7 @@ module Mammoth
     }
 
 
-    scope :filter_with_words, ->(words) {where("LOWER(statuses.text) like '%#{words}%' OR LOWER(statuses.spoiler_text) like '%#{words}%'")}
+    scope :filter_with_words, ->(words) {where("LOWER(statuses.text) like '%#{words}%'")}
 
     def reblog_posts(limit, combined_block_account_ids, depth = nil)
      reblog_ids(limit,combined_block_account_ids, depth)
