@@ -167,12 +167,14 @@
         
         = yield
 
-        -# %tr
-        -#   %td.stores{align: "center", valign: "middle"}
-        -#     %img.apple-store{src: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/app-store.png", alt: 'App Sote'}
-        -#     %img.google-play-store{src: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/google-play-store.png", alt: 'Google Play Store'}
-        -# %tr
-        -#   %td.horizontal-line{colspan: "100%"}
+        %tr
+          %td.stores{align: "center", valign: "middle"}
+            = link_to 'https://newsmastfoundation.org/download-the-app-app-store', style: 'text-decoration: none' do
+              %img.apple-store{src: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/app-store.png", alt: 'App Sote'}
+            = link_to 'https://newsmastfoundation.org/download-the-app-google-play/', style: 'text-decoration: none' do
+              %img.google-play-store{src: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/google-play-store.png", alt: 'Google Play Store'}
+        %tr
+          %td.horizontal-line{colspan: "100%"}
             %hr/
         -# %tr
         -#   %td.socials{align: "center", valign: "middle"}
