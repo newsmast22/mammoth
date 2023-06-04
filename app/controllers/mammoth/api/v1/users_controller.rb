@@ -201,19 +201,6 @@ module Mammoth::Api::V1
       save_flag = false
       about_me_array = []
 
-      @account.update(about_me_title_option_ids: [])
-
-      about_me_array = params[:contributor_role] + params[:voices] + params[:media]
-      save_flag = true
-      if params[:contributor_role].any? 
-        contributor_role = Mammoth::AboutMeTitle.find_by(slug: "contributor_roles").about_me_title_options.where(id: params[:contributor_role] ).last 
-        contributor_role_name = contributor_role.name
-      end
-      
-      if about_me_array.any?
-        @account.about_me_title_option_ids = about_me_array
-      end
-      
       if params[:subtitle].present?
         if params[:subtitle] == "none"
           @account.subtitle_id = nil
@@ -227,6 +214,20 @@ module Mammoth::Api::V1
             save_flag = true
           end
         end
+      else # For => params[:contributor_role], params[:voices], params[:media].present?
+        @account.update(about_me_title_option_ids: [])
+        about_me_array = params[:contributor_role]+ params[:voices] + params[:media]
+        save_flag = true 
+
+        if params[:contributor_role].present? 
+          contributor_role = Mammoth::AboutMeTitle.find_by(slug: "contributor_roles").about_me_title_options.where(id: params[:contributor_role] ).last 
+          contributor_role_name = contributor_role.name
+        end
+        
+        if about_me_array.any?
+          @account.about_me_title_option_ids = about_me_array
+        end
+
       end
 
       if save_flag
