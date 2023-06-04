@@ -224,11 +224,17 @@ module Mammoth::Api::V1
       
 
       if params[:subtitle].present?
-        subtitle =  Mammoth::Subtitle.where(slug: params[:subtitle]).last
-        if subtitle.present?
-          @account.subtitle_id = subtitle.id  
-          subtitle_name = subtitle.name
+        if params[:subtitle] == "none"
+          @account.subtitle_id = nil
+          subtitle_name = "None"
           save_flag = true
+        else
+          subtitle =  Mammoth::Subtitle.where(slug: params[:subtitle]).last
+          if subtitle.present?
+            @account.subtitle_id = subtitle.id  
+            subtitle_name = subtitle.name
+            save_flag = true
+          end
         end
       end
 
@@ -300,6 +306,12 @@ module Mammoth::Api::V1
       subtitle_data = []
       subtitles = Mammoth::Subtitle.all
       unless subtitles.empty?
+        subtitle_data << {
+          subtitle_id: 0,
+          subtitle_name: "None",
+          subtitle_slug: "none",
+          is_checked: current_account.subtitle_id.present? ? false: true
+        }
         subtitles.each do |subtitle|
           subtitle_data << {
             subtitle_id: subtitle.id,
