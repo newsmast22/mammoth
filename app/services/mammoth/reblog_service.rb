@@ -18,7 +18,7 @@ class Mammoth::ReblogService < BaseService
 
     reblog = account.statuses.find_by(reblog: reblogged_status)
 
-    return reblog unless reblog.nil?
+    #return reblog unless reblog.nil?
 
     visibility = begin
       if reblogged_status.hidden?
