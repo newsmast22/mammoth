@@ -197,6 +197,8 @@ module Mammoth::Api::V1
     def update_account_sources
       @account = current_account
       contributor_role_name = ""
+      voices_name = ""
+      media_name = ""
       subtitle_name = ""
       save_flag = false
       about_me_array = []
@@ -220,8 +222,18 @@ module Mammoth::Api::V1
         save_flag = true 
 
         if params[:contributor_role].present? 
-          contributor_role = Mammoth::AboutMeTitle.find_by(slug: "contributor_roles").about_me_title_options.where(id: params[:contributor_role] ).last 
+          contributor_role = Mammoth::AboutMeTitle.find_by(slug: "contributor_roles").about_me_title_options.where(id: params[:contributor_role].first).last 
           contributor_role_name = contributor_role.name
+        end
+
+        if params[:voices].present? 
+          voices_role = Mammoth::AboutMeTitle.find_by(slug: "voices").about_me_title_options.where(id: params[:voices].first).last 
+          voices_name = voices_role.name
+        end
+
+        if params[:media].present? 
+          media = Mammoth::AboutMeTitle.find_by(slug: "media").about_me_title_options.where(id: params[:media].first).last 
+          media_name = media.name
         end
         
         if about_me_array.any?
@@ -235,6 +247,8 @@ module Mammoth::Api::V1
         render json: {
           message: 'Successfully saved',
           contributor_role_name: contributor_role_name,
+          voices_name: voices_name,
+          media_name: media_name,
           subtitle_name: subtitle_name
         }
       else

@@ -39,6 +39,7 @@ module Mammoth::Api::V1
 
 
 				if user_communities_ids.any?
+					primary_community =  user&.user_communities.where(is_primary: true).last
 					@communities.each do |community|
 						data << {
 							id: community.id,
@@ -50,6 +51,7 @@ module Mammoth::Api::V1
 							is_country_filter_on: is_rss_account == true ? false : community.is_country_filter_on,
 							header_url: community.header.url,
 							is_joined: user_communities_ids.include?(community.id), 
+							is_primary: primary_community.community_id == community.id,
 							image_file_name: community.image_file_name,
 							image_content_type: community.image_content_type,
 							image_file_size: community.image_file_size,
@@ -74,6 +76,7 @@ module Mammoth::Api::V1
 							is_country_filter_on: is_rss_account == true ? false : community.is_country_filter_on,
 							header_url: community.header.url,
 							is_joined: false, 
+							is_primary: false,
 							image_file_name: community.image_file_name,
 							image_content_type: community.image_content_type,
 							image_file_size: community.image_file_size,
@@ -97,11 +100,13 @@ module Mammoth::Api::V1
 					@communities= @collection.communities.joins("
 												LEFT JOIN mammoth_communities_users ON mammoth_communities_users.community_id = mammoth_communities.id"
 												)
-												.where("mammoth_communities.id != :primary_community_id", primary_community_id: primary_community.community_id)
 												.select("mammoth_communities.*,COUNT(mammoth_communities_users.id) as follower_counts"
 												)
 												.order("mammoth_communities.position ASC,mammoth_communities.name ASC")
 												.group("mammoth_communities.id")
+
+											#	.where("mammoth_communities.id != :primary_community_id", primary_community_id: primary_community.community_id)
+
 
 
 					@communities.each do |community|
@@ -115,6 +120,7 @@ module Mammoth::Api::V1
 							is_country_filter_on: is_rss_account == true ? false : community.is_country_filter_on,
 							header_url: community.header.url,
 							is_joined: user_communities_ids.include?(community.id), 
+							is_primary: primary_community.community_id == community.id,
 							image_file_name: community.image_file_name,
 							image_content_type: community.image_content_type,
 							image_file_size: community.image_file_size,
