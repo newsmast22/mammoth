@@ -19,7 +19,7 @@ module Mammoth
         end
       else
         # scheduler
-        Mammoth::CommunityFeed.where.not(custom_url: nil).each do |feed|
+        Mammoth::CommunityFeed.where.not(custom_url: nil).where(delete_at: nil).each do |feed|
           @cid      = feed.community_id
           @account  = feed.account
           @cfeed_id = feed.id
