@@ -85,14 +85,24 @@ class Mammoth::StatusSerializer < ActiveModel::Serializer
 
   def rss_host_url
     if object.is_rss_content
-      uri = URI.parse(get_custom_url)
-      uri.host
+      custom_url = get_custom_url
+      unless custom_url.empty?
+        uri = URI.parse(custom_url)
+        uri.host
+      else
+        uri = URI.parse(object.rss_link)
+        uri.host
+      end
     end
   end
 
   def get_custom_url
-    @feed ||= Mammoth::CommunityFeed.find(object.community_feed_id)
-    @feed.custom_url
+    @feed ||= Mammoth::CommunityFeed.where(id: object.community_feed_id).last
+    unless @feed.nil?
+      @feed.custom_url
+    else
+      ""
+    end
   end
 
   def is_meta_preview
