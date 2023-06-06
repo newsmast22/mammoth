@@ -87,7 +87,7 @@ module Mammoth::Api::V1
       # )
       Mammoth::Mailer.with(user: @user).account_confirmation.deliver_now
 
-      render json: {data: @user}
+      render json: {data: @user.as_json(except: [:otp_code])}
 
     rescue ActiveRecord::RecordInvalid => e
       render json: ValidationErrorFormatter.new(e, 'account.username': :username, 'invite_request.text': :reason).as_json, status: :unprocessable_entity
