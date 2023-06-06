@@ -7,7 +7,7 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
   attributes :id, :username, :acct, :display_name, :locked, :bot, :discoverable,:hide_collections, :group, :created_at,
              :note, :url, :avatar, :avatar_static, :header, :header_static,:primary_community_slug,:primary_community_name,
              :followers_count, :following_count, :statuses_count, :last_status_at,:collection_count,:community_count,
-             :country,:country_common_name,:dob,:subtitle,:contributor_role,:voices,:media,:hash_tag_count,:is_followed,
+             :country,:country_common_name,:dob,:subtitle,:about_me,:hash_tag_count,:is_followed,
              :email,:phone,:step,:is_active,:is_account_setup_finished
              
 
@@ -135,30 +135,14 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
     TagFollow.where(account: object.id).count
   end
 
-  def contributor_role
-    contributor_role = Mammoth::AboutMeTitle.find_by(slug: "contributor_roles").about_me_title_options.where(id:object.about_me_title_option_ids ).last
+  def about_me
+    contributor_role = Mammoth::AboutMeTitle.find_by(slug: "contributor_roles").about_me_title_options.where(id:object.about_me_title_option_ids ).first
     if contributor_role.present?
       contributor_role.name
     else
-      ""
-    end
-  end
-
-  def voices
-    voice = Mammoth::AboutMeTitle.find_by(slug: "voices").about_me_title_options.where(id:object.about_me_title_option_ids).last
-    if voice.present?
-      voice.name
-    else
-      ""
-    end
-  end
-
-  def media
-    media = Mammoth::AboutMeTitle.find_by(slug: "media").about_me_title_options.where(id:object.about_me_title_option_ids).last
-    if media.present?
-      media.name
-    else
-      ""
+      about_me_option = ""
+      about_me_option = Mammoth::AboutMeTitleOption.where(id: object.about_me_title_option_ids.first).last.name if object.about_me_title_option_ids.present?
+      about_me_option
     end
   end
 
