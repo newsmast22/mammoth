@@ -19,7 +19,7 @@ module Mammoth
         end
       else
         # scheduler
-        Mammoth::CommunityFeed.where.not(custom_url: nil).where(delete_at: nil).each do |feed|
+        Mammoth::CommunityFeed.where.not(custom_url: nil).where(deleted_at: nil).each do |feed|
           @cid      = feed.community_id
           @account  = feed.account
           @cfeed_id = feed.id
@@ -71,7 +71,7 @@ module Mammoth
       def create_community_status
         begin
           @community_status = Mammoth::CommunityStatus.new(status: @status, community_id: @cid)
-          if @image
+          unless @image.blank?
             @community_status.image = URI.open(@image)
           end
           @community_status.save

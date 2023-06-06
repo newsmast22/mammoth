@@ -19,9 +19,9 @@ module Mammoth::Api::V1
       #end::check is_community_admin or not
 
       if role_name == "rss-account"
-        @community_feeds = Mammoth::CommunityFeed.where(community_id: community.id,account_id: current_user.account.id,delete_at: nil)
+        @community_feeds = Mammoth::CommunityFeed.where(community_id: community.id,account_id: current_user.account.id,deleted_at: nil)
       else # community-admin
-        @community_feeds = Mammoth::CommunityFeed.where(community_id: community.id,delete_at: nil)
+        @community_feeds = Mammoth::CommunityFeed.where(community_id: community.id,deleted_at: nil)
       end
 
       if @community_feeds.present?
@@ -64,7 +64,7 @@ module Mammoth::Api::V1
     end
 
     def destroy
-      @community_feed.update(delete_at: Time.zone.now)
+      @community_feed.update(deleted_at: Time.zone.now)
       render json: {message: 'community-feed deleted successfully!'}
     end
 
