@@ -819,14 +819,16 @@ module Mammoth::Api::V1
 
 		def link_preview
 			unless params[:url].nil?
-				begin
-					data = LinkThumbnailer.generate("#{params[:url]}")
-					render json: data
-				rescue LinkThumbnailer::Exceptions => e
-					render json: {
-						error: "Invalid Url"
-					 }
-				end
+				# begin
+				# 	data = LinkThumbnailer.generate("#{params[:url]}")
+				# 	render json: data
+				# rescue LinkThumbnailer::Exceptions => e
+				# 	render json: {
+				# 		error: "Invalid Url"
+				# 	 }
+				# end
+				data = LinkThumbnailer.generate("#{params[:url]}")
+				render json: data
 			else
 				render json: {
 					error: "Url must be present"
