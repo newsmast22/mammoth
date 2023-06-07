@@ -2,7 +2,7 @@ module Mammoth::Api::V1
 	class CommunityStatusesController < Api::BaseController
 		before_action -> { authorize_if_got_token! :read, :'read:statuses' }
 		before_action -> { doorkeeper_authorize! :write, :'write:statuses' }
-		before_action :require_user!, except: [:show, :context]
+		before_action :require_user!, except: [:show, :context, :link_preview]
     before_action :set_status, only: [:show, :context]
 		before_action :set_thread, only: [:create]
 
@@ -819,8 +819,14 @@ module Mammoth::Api::V1
 
 		def link_preview
 			unless params[:url].nil?
-				data = LinkThumbnailer.generate("#{params[:url]}")
-				render json: data
+				begin
+					data = LinkThumbnailer.generate("#{params[:url]}")
+					render json: data
+				rescue LinkThumbnailer::Exceptions => e
+					render json: {
+						error: "Invalid Url"
+					 }
+				end
 			else
 				render json: {
 					error: "Url must be present"
