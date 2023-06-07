@@ -22,6 +22,7 @@ LinkThumbnailer.configure do |config|
   # See http://www.ruby-doc.org/stdlib-2.1.1/libdoc/net/http/rdoc/Net/HTTP.html#open_timeout
   #
   config.http_open_timeout = 120
+  config.http_read_timeout = 120
 
   # List of blacklisted urls you want to skip when searching for images.
   #
@@ -35,6 +36,7 @@ LinkThumbnailer.configure do |config|
   # List of attributes you want LinkThumbnailer to fetch on a website.
   #
   # config.attributes = [:title, :images, :description, :videos, :favicon]
+  config.attributes = [:title, :images, :description]
 
   # Prior favicon size. If the website doesn't have such size - returns the first favicon.
   # Value should be like '32x32' or '16x16'. Default value is nil.
