@@ -764,50 +764,29 @@ module Mammoth::Api::V1
       when "Website"
         value
       when "Twitter"
-        if (value.include?("https://twitter.com/"))
-          username = value.to_s.split('/').last
-        else
-          username = value
-        end
+        get_validated_url(value)
       when "TikTok"
-        if (value.include?("https://www.tiktok.com/"))
-          username = value.to_s.split('/').last
-        else
-          username = value
-        end
+        get_validated_url(value)
       when "Youtube"
-        if (value.include?("https://www.youtube.com/channel/"))
-          username = value.to_s.split('/').last
-        else
-          username = value
-        end
+        get_validated_url(value)
       when "Linkedin"
-        if (value.include?("https://www.linkedin.com/in/"))
-          username = value.to_s.split('/').last
-        else
-          username = value
-        end
+        get_validated_url(value)
       when "Instagram"
-        if (value.include?("https://www.instagram.com/"))
-          username = value.to_s.split('/').last
-        else
-          username = value
-        end
+        get_validated_url(value)
       when "Substack"
-        if (value.include?("substack.com"))
-          username = value.to_s.split('/').last
-          username = username.to_s.split('.').first
-        else
-          username = value
-        end
+        get_validated_url(value)
       when "Facebook"
-        if (value.include?("https://www.facebook.com/"))
-          username = value.to_s.split('/').last
-        else
-          username = value
-        end
+        get_validated_url(value)
       when "Email"
         object.value
+      end
+    end
+
+    def get_validated_url(url) 
+      begin
+        url_path = URI::parse(url).path # => URI::InvalidURIError
+      rescue URI::InvalidURIError
+        url
       end
     end
 
