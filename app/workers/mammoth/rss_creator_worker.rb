@@ -82,14 +82,16 @@ module Mammoth
       end
 
       def get_image_url(item, link)
-        if link.present?
-          meta = LinkThumbnailer.generate(link)
-          url  = meta&.images&.first&.src
+        begin
+          url = nil
+          if link.present?
+            meta = LinkThumbnailer.generate(link)
+            url  = meta&.images&.first&.src
+          end
+          url
+        rescue 
+          url
         end
-        url
-      rescue 
-        nil
       end
-
   end
 end
