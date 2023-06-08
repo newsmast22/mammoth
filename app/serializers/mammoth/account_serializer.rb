@@ -31,19 +31,19 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
       when "Website"
         object.value
       when "Twitter"
-        object.value == "" ? "" : "https://twitter.com/"+object.value
+        object.value == "" ? "" : "https://twitter.com"+object.value
       when "TikTok"
-        object.value == "" ? "" : "https://www.tiktok.com/"+object.value
+        object.value == "" ? "" : "https://www.tiktok.com"+object.value
       when "Youtube"
-        object.value == "" ? "" : "https://www.youtube.com/channel/"+object.value
+        object.value == "" ? "" : "https://www.youtube.com"+object.value
       when "Linkedin"
-        object.value == "" ? "" : "https://www.linkedin.com/in/"+object.value
+        object.value == "" ? "" : "https://www.linkedin.com"+object.value
       when "Instagram"
-        object.value == "" ? "" : "https://www.instagram.com/"+object.value
+        object.value == "" ? "" : "https://www.instagram.com"+object.value
       when "Substack"
-        object.value == "" ? "" : "https://"+object.value+".substack.com"
+        object.value == "" ? "" : "https://substack.com"+object.value
       when "Facebook"
-        object.value == "" ? "" : "https://www.facebook.com/"+object.value  
+        object.value == "" ? "" : "https://www.facebook.com"+object.value  
       when "Email"
         object.value
       end
