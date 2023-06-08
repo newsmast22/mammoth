@@ -34,6 +34,7 @@ module Mammoth
       def fetch_feed(url)
         xml  = HTTParty.get(url).body
         feed = Feedjira.parse(xml)
+        fallback_image_url = "https://newsmast-assets.s3.eu-west-2.amazonaws.com/default_fallback_resized.png"
         
         feed.entries.to_a.sort_by(&:published).each do |item|
           link = item.try(:url) || item.try(:enclosure_url)
@@ -43,8 +44,13 @@ module Mammoth
           
             title  = item.title rescue ''
             desc   = item.summary rescue ''
-            @image = get_image_url(item, link) || item.image rescue ''
-
+            
+            begin
+              @image = get_image_url(item, link) || item.image
+            rescue
+              @image = fallback_image_url  
+            end
+            
             create_status(title, desc, link)
             create_community_status if @status
           end
