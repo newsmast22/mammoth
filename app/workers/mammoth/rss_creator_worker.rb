@@ -44,12 +44,7 @@ module Mammoth
           
             title  = item.title rescue ''
             desc   = item.summary rescue ''
-            
-            begin
-              @image = get_image_url(item, link) || item.image
-            rescue
-              @image = fallback_image_url  
-            end
+            @image = get_image_url(item, link) || item.image || fallback_image_url
             
             create_status(title, desc, link)
             create_community_status if @status
@@ -93,7 +88,7 @@ module Mammoth
         end
         url
       rescue 
-        url = ''
+        nil
       end
 
   end
