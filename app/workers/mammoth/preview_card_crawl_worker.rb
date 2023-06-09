@@ -10,7 +10,11 @@ module Mammoth
         preview_cards.each do |preview_card|
           url = preview_card.url
           if image_url=get_image_url(url)
-            preview_card.image = URI.open(image_url)
+            begin
+              preview_card.image = URI.open(image_url)
+            rescue
+              preview_card.retry_count += 1
+            end
           else
             preview_card.retry_count += 1
           end
