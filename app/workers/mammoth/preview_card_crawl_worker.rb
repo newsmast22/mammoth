@@ -5,8 +5,8 @@ module Mammoth
 
     sidekiq_options backtrace: true, retry: 0
     
-    def perform(id)
-      preview_cards = PreviewCard.where(image_file_name: nil,id: id).where("retry_count < 3")
+    def perform
+      preview_cards = PreviewCard.where(image_file_name: nil).where("retry_count < 3")
         preview_cards.each do |preview_card|
           url = preview_card.url
           if image_url=get_image_url(url)
