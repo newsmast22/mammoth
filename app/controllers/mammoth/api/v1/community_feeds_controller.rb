@@ -19,13 +19,23 @@ module Mammoth::Api::V1
       #end::check is_community_admin or not
 
       if role_name == "rss-account"
-        @community_feeds = Mammoth::CommunityFeed.where(community_id: community.id,account_id: current_user.account.id,deleted_at: nil)
+       @community_feeds = Mammoth::CommunityFeed.feeds_for_rss_account(community.id,current_user.account.id)
       else # community-admin
-        @community_feeds = Mammoth::CommunityFeed.where(community_id: community.id,deleted_at: nil)
+        @community_feeds = Mammoth::CommunityFeed.feeds_for_admin(community.id)
       end
 
       if @community_feeds.present?
-        render json: @community_feeds
+        data = []
+        @community_feeds.each do |community_feed|
+          data << {
+            id: community_feed.id,
+            name: community_feed.name,
+            slug: community_feed.slug,
+            custom_url: community_feed.custom_url,
+            feed_counts: community_feed.feed_counts
+         }
+        end
+        render json: data
       else
         render json: {error: "Record not found"}
       end
