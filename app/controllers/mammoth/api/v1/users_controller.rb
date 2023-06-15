@@ -190,6 +190,7 @@ module Mammoth::Api::V1
 
         @user.step = "communities"
         @user.save(validate: false)
+
       end
       render json: @account, serializer: Mammoth::CredentialAccountSerializer
     end
