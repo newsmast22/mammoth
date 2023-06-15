@@ -5,7 +5,6 @@ module Mammoth::Api::V1
     before_action :require_user!
 
     require 'aws-sdk-sns'
-    require 'fcm'
 
     rescue_from ArgumentError do |e|
       render json: { error: e.to_s }, status: 422
@@ -192,27 +191,8 @@ module Mammoth::Api::V1
         @user.step = "communities"
         @user.save(validate: false)
 
-        #firebase start
-        fcm = FCM.new(
-          ENV['API_TOKEN'],
-          "/Users/macbookpro/Documents/app_dev/newsmast/newsmast-fcm-firebase-adminsdk-ikife-95dfc5601d.json",
-          ENV['FIREBASE_PROJECT_ID']
-        )
-        #fcm = FCM.new("my_server_key")
-
-        registration_ids= ["eBY6Af9hThWf-f4WTIxFMh:APA91bFVSBvaxVx6JfZVisZ6wV4PC7-z9_Acfsc5RsfLkBVXD9RIShkyVHOvTTM6fIEo7dh69K3tJgHfGpBJfygdn0UXa9Ap75mrqkMFirKTHPeUUv2tGQSMHXJC68HWVzD3LZkBlt-7"] # an array of one or more client registration tokens
-
-        # See https://firebase.google.com/docs/cloud-messaging/http-server-ref for all available options.
-        options = { "notification": {
-                      "title": "Portugal vs. Denmark",
-                      "body": "5 to 1"
-                  }
-        }
-        response = fcm.send(registration_ids, options)
-        render json: fcm
-        #firebase end
       end
-      #render json: @account, serializer: Mammoth::CredentialAccountSerializer
+      render json: @account, serializer: Mammoth::CredentialAccountSerializer
     end
 
     def update_account_sources

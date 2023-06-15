@@ -258,7 +258,17 @@ module Mammoth::Api::V1
           @user.wait_list_id = invited_code.id
           @user.save(validate: false)
 
+          #begin::invitation code update
           invited_code.update(is_invitation_code_used: true)
+          #end::invitation code update
+
+          #begin::notification token insert
+          Mammoth::NotificationToken.create(
+            account_id: @user.account.id,
+            notification_token: params[:notification_token],
+            platform_type: params[:platform_type]
+          )
+          #end::notification token insert
 
           @app = doorkeeper_token.application
           @access_token = Doorkeeper::AccessToken.create!(
