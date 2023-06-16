@@ -129,6 +129,8 @@ Mammoth::Engine.routes.draw do
       resources :following_accounts, only: :index
       resources :follower_accounts, only: :index
 
+      resources :notification_tokens, only: :create
+
     end
   end
 end
