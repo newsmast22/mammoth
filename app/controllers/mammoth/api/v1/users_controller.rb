@@ -334,11 +334,6 @@ module Mammoth::Api::V1
       
     end
 
-    def get_profile_details_by_account
-      account = Account.find(params[:id])
-      get_user_details_info_by_account(params[:id], account)
-    end
-
     def get_profile_detail_info_by_account
       account = Account.find(params[:id])
       get_user_details_info(params[:id], account)
@@ -534,108 +529,6 @@ module Mammoth::Api::V1
       )
     end
 
-    def get_user_details_info_by_account(account_id, account_info)
-      community_images = []
-      following_account_images = []
-
-      #begin::check is_community_admin or not
-      user = User.find(current_user.id)
-      role_name = ""
-      community_slug = ""
-      if user.role_id == -99 || user.role_id.nil?
-        role_name = "end-user"
-      else
-        role_name = UserRole.find(user.role_id).name
-      end
-      #end::check is_community_admin or not
-
-      is_my_account = current_account.id == account_info.id ? true : false
-      account_followed_ids = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
-      
-      #statuses = Mammoth::Status.filter_is_only_for_followers_profile_details(account_id)
-
-      query_string = "AND statuses.id < :max_id" if params[:max_id].present?
-      statuses = Mammoth::Status.where("
-                statuses.reply = :reply AND statuses.account_id = :account_id #{query_string}",
-                reply: false, account_id: account_id, max_id: params[:max_id]
-                )
-
-      statuses = statuses.filter_is_only_for_followers(account_followed_ids)
-
-      #begin::get collection images
-      @user  = Mammoth::User.find(current_user.id)
-			@user_communities= @user.user_communities
-			unless @user_communities.empty?
-        community_ids = @user_communities.pluck(:community_id).map(&:to_i)
-        communities = Mammoth::Community.where(id: community_ids).take(2)
-        communities.each do |community|
-					community_images << community.image.url
-				end
-      end
-      #end::get community images
-
-      #begin:get following images
-      followed_account_ids = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
-      if followed_account_ids.any?
-
-        Account.where(id: followed_account_ids).take(2).each do |following_account|
-					following_account_images << following_account.avatar.url
-				end
-      end
-      #end:get following images
-
-      #begin::check community admin & communnity_slug
-      is_admin = false
-      community_slug = ""
-      community_admin = Mammoth::CommunityAdmin.where(user_id: current_user.id).last
-      if community_admin.present?
-        is_admin = true
-        community_slug = community_admin.community.slug
-      end
-      #end::check community admin & communnity_slug
-
-      #begin::muted account post
-      muted_accounts = Mute.where(account_id: current_account.id)
-      statuses = statuses.filter_mute_accounts(muted_accounts.pluck(:target_account_id).map(&:to_i)) unless muted_accounts.blank?
-      #end::muted account post
-
-      #begin::blocked account post
-      blocked_accounts = Block.where(account_id: current_account.id).or(Block.where(target_account_id: current_account.id))
-      unless blocked_accounts.blank?
-
-        combined_block_account_ids = blocked_accounts.pluck(:account_id,:target_account_id).flatten
-        combined_block_account_ids.delete(current_account.id)
-
-        blocked_statuses_by_accounts= Mammoth::Status.where(account_id: combined_block_account_ids)
-        blocled_status_ids = statuses.fetch_all_blocked_status_ids(blocked_statuses_by_accounts.pluck(:id).map(&:to_i))
-        statuses = statuses.filter_blocked_statuses(blocled_status_ids.pluck(:id).map(&:to_i))
-      
-      end
-      #end::blocked account post
-
-      account_data = single_serialize(account_info, Mammoth::CredentialAccountSerializer)
-      #statuses = statuses.order(created_at: :desc).page(params[:page]).per(5)
-      before_limit_statuses = statuses
-      statuses = statuses.order(created_at: :desc).limit(5)
-      render json: statuses,root: 'statuses_data', each_serializer: Mammoth::StatusSerializer,current_user: current_user,adapter: :json,
-      meta:{
-        account_data: account_data.merge(:is_my_account => is_my_account, :is_followed => account_followed_ids.include?(account_id.to_i)),
-        community_images_url: community_images,
-        following_images_url: following_account_images,
-        is_admin: is_admin,
-        community_slug: community_slug,
-        account_type: role_name,
-        pagination:
-          { 
-            # total_pages: statuses.total_pages,
-            # total_objects: statuses.total_count,
-            # current_page: statuses.current_page
-            total_objects: before_limit_statuses.size,
-            has_more_objects: 5 <= before_limit_statuses.size ? true : false
-          } 
-      }
-    end
-
     def get_user_details_info(account_id, account_info)
       #begin::check is_community_admin or not
       user = User.find(current_user.id)
@@ -699,21 +592,11 @@ module Mammoth::Api::V1
 
     def get_user_details_statuses(account_id, account_info)
 
-      account_followed_ids = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
-      
-      #statuses = Mammoth::Status.filter_is_only_for_followers_profile_details(account_id)
-
       query_string = "AND statuses.id < :max_id" if params[:max_id].present?
       statuses = Mammoth::Status.where("
                 statuses.reply = :reply AND statuses.account_id = :account_id #{query_string}",
                 reply: false, account_id: account_id, max_id: params[:max_id]
-                )
-      
-      #begin::ignore is_only_for_followers for login account       
-      unless account_id.to_i == current_account.id.to_i
-        statuses = statuses.filter_is_only_for_followers(account_followed_ids)      
-      end
-      #end::ignore is_only_for_followers for login account       
+                )      
           
       #begin::muted account post
       muted_accounts = Mute.where(account_id: current_account.id)
