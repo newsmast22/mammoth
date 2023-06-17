@@ -73,8 +73,10 @@ module Mammoth::Api::V1
 			#end::check is_community_admin or not
 
 			selected_communities = []
-			if community_status_params[:community_ids].any?
-				selected_communities = Mammoth::Community.where(slug: community_status_params[:community_ids]).pluck(:id)
+			if community_status_params[:community_ids].present?
+				if community_status_params[:community_ids].any?
+					selected_communities = Mammoth::Community.where(slug: community_status_params[:community_ids]).pluck(:id)
+				end
 			end
 
 			if community_status_params[:community_id].present?
