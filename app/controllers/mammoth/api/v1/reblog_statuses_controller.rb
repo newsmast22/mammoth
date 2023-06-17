@@ -11,45 +11,17 @@ module Mammoth::Api::V1
     override_rate_limit_headers :create, family: :statuses
 
     def create
+			selected_communities = []
 
-			# selected_communities = []
-
-      # if params[:community_ids].any?
-      #   selected_communities = Mammoth::Community.where(slug: params[:community_ids]).ids
-      # else
-      #   community_id=  Mammoth::CommunityStatus.find_by(status_id: params[:status_id]).community_id
-      #   selected_communities << community_id
-      # end
-      
-      # selected_communities.each do |community_id|
-      #   @status = Mammoth::ReblogService.new.call(current_account, @reblog, reblog_params)
-      #   @community_status = Mammoth::CommunityStatus.new()
-      #   @community_status.status_id = @status.id
-      #   @community_status.community_id = community_id
-      #   @community_status.save
-      #   unless params[:image_data].nil?
-      #     image = Paperclip.io_adapters.for(params[:image_data])
-      #     @community_status.image = image
-      #     @community_status.save
-      #   end
-      # end
-
-      @status = Mammoth::ReblogService.new.call(current_account, @reblog, reblog_params)
-
-      @community_id = Mammoth::CommunityStatus.find_by(status_id: params[:status_id]).community_id unless params[:community_id].present?
-
-      @community_id = Mammoth::Community.find_by(slug: params[:community_id]).id if params[:community_id].present?
-              
-      @community_status = Mammoth::CommunityStatus.new()
-			@community_status.status_id = @status.id
-			@community_status.community_id = @community_id
-			@community_status.save
-			unless params[:image_data].nil?
-				image = Paperclip.io_adapters.for(params[:image_data])
-				@community_status.image = image
-				@community_status.save
+			if params[:community_ids].any?
+				selected_communities = Mammoth::Community.where(slug: params[:community_ids]).pluck(:id)
 			end
 
+			if params[:community_id].present?
+				selected_communities = Mammoth::Community.where(slug: params[:community_id]).pluck(:id)
+			end
+
+      save_reblog_status(selected_communities)
       render json: @status, serializer: Mammoth::StatusSerializer
     end
 
@@ -73,6 +45,38 @@ module Mammoth::Api::V1
 
     private
 
+    def save_reblog_status(selected_communities)
+      if selected_communities.any?
+        
+        selected_communities.each do |community_id|
+
+          @status = Mammoth::ReblogService.new.call(current_account, @reblog, reblog_params)
+          @community_status = Mammoth::CommunityStatus.new()
+          @community_status.status_id = @status.id
+          @community_status.community_id = community_id
+          @community_status.save
+          unless params[:image_data].nil?
+            image = Paperclip.io_adapters.for(params[:image_data])
+            @community_status.image = image
+            @community_status.save
+          end
+
+        end
+      else
+
+        @status = Mammoth::ReblogService.new.call(current_account, @reblog, reblog_params)
+        @community_status = Mammoth::CommunityStatus.new()
+        @community_status.status_id = @status.id
+        @community_status.save
+        unless params[:image_data].nil?
+          image = Paperclip.io_adapters.for(params[:image_data])
+          @community_status.image = image
+          @community_status.save
+        end
+
+      end 
+    end
+
     def set_reblog
       @reblog = Status.find(params[:status_id])
       authorize @reblog, :show?
@@ -86,6 +90,6 @@ module Mammoth::Api::V1
         :status
       )
     end
-  end
 
+  end
 end

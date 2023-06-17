@@ -35,7 +35,7 @@ class Mammoth::StatusSerializer < ActiveModel::Serializer
 
   def community_name
     community_status =  Mammoth::CommunityStatus.where(status_id: object.id).last
-    if community_status.present?
+    if community_status.community_id.present?
       community_status.community.name
     else
       ""
@@ -44,7 +44,7 @@ class Mammoth::StatusSerializer < ActiveModel::Serializer
 
   def community_slug
     community_status =  Mammoth::CommunityStatus.where(status_id: object.id).last
-    if community_status.present?
+    if community_status.community_id.present?
       community_status.community.slug
     else
       ""
@@ -53,7 +53,7 @@ class Mammoth::StatusSerializer < ActiveModel::Serializer
 
   def community_id
     community_status =  Mammoth::CommunityStatus.where(status_id: object.id).last
-    if community_status.present?
+    if community_status.community_id.present?
       community_status.community.id
     else
       ""

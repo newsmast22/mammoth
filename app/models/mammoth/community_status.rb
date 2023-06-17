@@ -3,7 +3,7 @@ module Mammoth
     self.table_name = 'mammoth_communities_statuses'
     include Attachmentable
 
-    belongs_to :community 
+    belongs_to :community, optional: true
     belongs_to :status
 
     IMAGE_LIMIT = 100.megabytes
