@@ -13,9 +13,11 @@ module Mammoth::Api::V1
     def create
 			selected_communities = []
 
-			if params[:community_ids].any?
-				selected_communities = Mammoth::Community.where(slug: params[:community_ids]).pluck(:id)
-			end
+      if params[:community_ids].present?
+        if params[:community_ids].any?
+          selected_communities = Mammoth::Community.where(slug: params[:community_ids]).pluck(:id)
+        end
+      end
 
 			if params[:community_id].present?
 				selected_communities = Mammoth::Community.where(slug: params[:community_id]).pluck(:id)
@@ -47,7 +49,7 @@ module Mammoth::Api::V1
 
     def save_reblog_status(selected_communities)
       if selected_communities.any?
-        
+
         selected_communities.each do |community_id|
 
           @status = Mammoth::ReblogService.new.call(current_account, @reblog, reblog_params)
