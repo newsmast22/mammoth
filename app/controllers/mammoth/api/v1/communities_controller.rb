@@ -120,7 +120,7 @@ module Mammoth::Api::V1
 							is_country_filter_on: is_rss_account == true ? false : community.is_country_filter_on,
 							header_url: community.header.url,
 							is_joined: user_communities_ids.include?(community.id), 
-							is_primary: primary_community.community_id == community.id,
+							is_primary: primary_community.present? ? primary_community.community_id == community.id  : false,
 							image_file_name: community.image_file_name,
 							image_content_type: community.image_content_type,
 							image_file_size: community.image_file_size,
