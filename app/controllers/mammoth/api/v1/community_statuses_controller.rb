@@ -225,8 +225,8 @@ module Mammoth::Api::V1
 
 				#begin::check is primary community country filter on/off
 				unless is_community_admin
-					primary_user_communities = Mammoth::UserCommunity.find_by(user_id: current_user.id,is_primary: true)
-					if primary_user_communities.community_id == community.id && community.is_country_filtering && community.is_country_filter_on
+					primary_user_community = Mammoth::UserCommunity.find_by(user_id: current_user.id,is_primary: true)
+					if primary_user_community.community_id == community.id && community.is_country_filtering && community.is_country_filter_on
 						#condition: if (is_country_filter_on = true) fetch only same country user's primary-community statuses
 						accounts = Mammoth::Account.filter_timeline_with_countries(current_account.country)
 						@statuses = @statuses.filter_is_only_for_followers_profile_details(accounts.pluck(:id).map(&:to_i)) unless accounts.blank?
@@ -402,8 +402,8 @@ module Mammoth::Api::V1
 	
 					#begin::check is primary community country filter on/off [only for end-user]
 					unless is_community_admin
-						primary_user_communities = Mammoth::UserCommunity.find_by(user_id: current_user.id,is_primary: true)
-						if primary_user_communities.community_id == community.id && community.is_country_filtering && community.is_country_filter_on
+						primary_user_community = Mammoth::UserCommunity.find_by(user_id: current_user.id,is_primary: true)
+						if primary_user_community.community_id == community.id && community.is_country_filtering && community.is_country_filter_on
 							#condition: if (is_country_filter_on = true) fetch only same country user's primary-community statuses
 							accounts = Mammoth::Account.filter_timeline_with_countries(current_account.country)
 							@statuses = @statuses.filter_is_only_for_followers_profile_details(accounts.pluck(:id).map(&:to_i)) unless accounts.blank?
@@ -575,8 +575,8 @@ module Mammoth::Api::V1
 
 				#begin::check is primary community country filter on/off
 				unless is_community_admin
-					primary_user_communities = Mammoth::UserCommunity.find_by(user_id: current_user.id,is_primary: true)
-					if primary_user_communities.community_id == community.id && community.is_country_filtering && community.is_country_filter_on
+					primary_user_community = Mammoth::UserCommunity.find_by(user_id: current_user.id,is_primary: true)
+					if primary_user_community.community_id == community.id && community.is_country_filtering && community.is_country_filter_on
 						#condition: if (is_country_filter_on = true) fetch only same country user's primary-community statuses
 						accounts = Mammoth::Account.filter_timeline_with_countries(current_account.country)
 						@statuses = @statuses.filter_is_only_for_followers_profile_details(accounts.pluck(:id).map(&:to_i)) unless accounts.blank?

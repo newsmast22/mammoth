@@ -29,8 +29,9 @@ class Mammoth::ReblogService < BaseService
     end
 
     reblog = account.statuses.create!(reblog: reblogged_status, text: options[:status], visibility: visibility, rate_limit: options[:with_rate_limit])
-
+  
     Trends.register!(reblog)
+    process_mentions_service.call(reblog)
     DistributionWorker.perform_async(reblog.id)
     ActivityPub::DistributionWorker.perform_async(reblog.id)
 
@@ -63,4 +64,9 @@ class Mammoth::ReblogService < BaseService
   def build_json(reblog)
     Oj.dump(serialize_payload(ActivityPub::ActivityPresenter.from_status(reblog), ActivityPub::ActivitySerializer, signer: reblog.account))
   end
+
+  def process_mentions_service
+    ProcessMentionsService.new
+  end
+
 end
