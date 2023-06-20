@@ -221,7 +221,7 @@ module Mammoth::Api::V1
 								statuses.id IN (:community_statues_ids) AND statuses.reply = :reply #{query_string}",
 								community_statues_ids: community_statues_ids, reply: false,max_id: params[:max_id] )
 
-				@statuses = @statuses.filter_is_only_for_followers(account_followed_ids)
+				#@statuses = @statuses.filter_is_only_for_followers(account_followed_ids)
 
 				#begin::check is primary community country filter on/off
 				unless is_community_admin
@@ -400,7 +400,7 @@ module Mammoth::Api::V1
 								account_ids: community_admin_followed_account_ids, reply: false,max_id: params[:max_id] )
 
 					@statuses = @statuses.filter_with_community_status_ids(community_statues_ids)
-					@statuses = @statuses.filter_is_only_for_followers(account_followed_ids)
+					#@statuses = @statuses.filter_is_only_for_followers(account_followed_ids)
 	
 					#begin::check is primary community country filter on/off [only for end-user]
 					unless is_community_admin
@@ -575,7 +575,7 @@ module Mammoth::Api::V1
 				account_followed_ids.push(current_account.id)
 				community_statues_ids= community_statuses.pluck(:status_id).map(&:to_i)
 				@statuses = Mammoth::Status.filter_with_community_status_ids(community_statues_ids)
-				@statuses = @statuses.filter_is_only_for_followers(account_followed_ids)
+				#@statuses = @statuses.filter_is_only_for_followers(account_followed_ids)
 
 				#begin::check is primary community country filter on/off
 				unless is_community_admin
