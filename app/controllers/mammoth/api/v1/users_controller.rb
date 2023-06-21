@@ -621,8 +621,14 @@ module Mammoth::Api::V1
       #statuses = statuses.order(created_at: :desc).page(params[:page]).per(5)
       before_limit_statuses = statuses
 
-      statuses = statuses.order(created_at: :desc).limit(5)
+      status_pins = StatusPin.where(account_id: account_id).order(created_at: :asc)
 
+      if status_pins.any?
+        statuses = statuses.joins("LEFT JOIN status_pins on statuses.id = status_pins.status_id").reorder("status_pins.created_at desc").limit(5)
+      else
+        statuses = statuses.order(created_at: :desc).limit(5)
+      end
+      
       render json: statuses,root: 'statuses_data', each_serializer: Mammoth::StatusSerializer,adapter: :json,
       meta:{
         pagination:
