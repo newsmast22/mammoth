@@ -621,10 +621,14 @@ module Mammoth::Api::V1
       #statuses = statuses.order(created_at: :desc).page(params[:page]).per(5)
       before_limit_statuses = statuses
 
-      status_pins = StatusPin.where(account_id: account_id).order(created_at: :asc)
+      status_pins = StatusPin.where(account_id: account_id)
 
       if status_pins.any?
-        statuses = statuses.joins("LEFT JOIN status_pins on statuses.id = status_pins.status_id").reorder("status_pins.created_at desc").limit(5)
+        statuses = statuses.joins(
+          "LEFT JOIN status_pins on statuses.id = status_pins.status_id"
+          ).reorder(
+            Arel.sql('(case when status_pins.created_at is not null then 1 else 0 end) desc, statuses.id desc')
+          ).limit(5)
       else
         statuses = statuses.order(created_at: :desc).limit(5)
       end
