@@ -454,18 +454,17 @@ module Mammoth::Api::V1
 		end
 
 		def get_community_follower_list
+			query_string = "AND users.account_id < :max_id" if params[:max_id].present?
+
 			community = Mammoth::Community.find_by(slug: params[:id])
 
 			users = User.joins("
 				INNER JOIN mammoth_communities_users on mammoth_communities_users.user_id = users.id"
 			).where("
-				mammoth_communities_users.community_id = :community_id",community_id: community.id)
+				mammoth_communities_users.community_id = :community_id #{query_string}",community_id: community.id, max_id: params[:max_id]).order("users.account_id desc")
 
-			left_seggession_count = 0
-      if params[:limit].present?
-        left_seggession_count = users.size - params[:limit].to_i <= 0 ? 0 : users.size - params[:limit].to_i
-        users = users.limit(params[:limit])
-      end
+			before_limit_statuses = users
+			users = users.limit(10)
 
 			account_followed = Follow.where(account_id: current_account).pluck(:target_account_id).map(&:to_i)
 
@@ -484,8 +483,12 @@ module Mammoth::Api::V1
       end
       render json: {
         data: data,
-        meta: { 
-					left_suggession_count: left_seggession_count
+        meta: {
+					pagination:
+					{ 
+						total_objects: before_limit_statuses.size,
+						has_more_objects: 10 <= before_limit_statuses.size ? true : false
+					} 
 				}
       }
 		end
