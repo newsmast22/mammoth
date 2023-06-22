@@ -4,6 +4,8 @@ class Mammoth::CredentialAccountSerializer < Mammoth::AccountSerializer
   attributes :source
 
   has_one :role, serializer: REST::RoleSerializer
+  has_many :tags
+
 
   def source
     user = object.user
@@ -20,5 +22,23 @@ class Mammoth::CredentialAccountSerializer < Mammoth::AccountSerializer
 
   def role
     object.user_role
+  end
+
+  class TagSerializer < ActiveModel::Serializer
+    include RoutingHelper
+
+    attributes :name, :url
+
+    def url
+      # Begin::orignal_code
+      #tag_url(object)
+      # End::original_code
+
+      #Begin::MKK's modified_code
+      tagged_url_str = tag_url(object).to_s
+      tagged_url_str.gsub("/tags/", "/api/v1/tag_timelines/")
+      #End::MKK's modified_code
+
+    end
   end
 end
