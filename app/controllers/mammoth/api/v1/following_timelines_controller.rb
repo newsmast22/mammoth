@@ -20,10 +20,21 @@ module Mammoth::Api::V1
       followed_account_ids = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
       followed_tag_ids = TagFollow.where(account_id: current_account.id).pluck(:tag_id).map(&:to_i)
       
-      # status_tag_ids = Mammoth::StatusTag.group(:tag_id,:status_id).where(tag_id:followed_tag_ids).pluck(:status_id).map(&:to_i)
-      # filtered_followed_statuses = Mammoth::Status.filter_with_status_ids(status_tag_ids,current_account.id).or( Mammoth::Status.filter_followed_accounts(followed_account_ids))
+      exclude_community = Mammoth::Community.where(slug: "breaking_news").last
 
+      user_followed_community_ids = Mammoth::UserCommunity.where(user_id: current_user.id).pluck(:community_id).map(&:to_i)
+
+      community_statuses_ids = []
+      if user_followed_community_ids.any?
+        community_statuses = Mammoth::CommunityStatus.where(community_id: user_followed_community_ids)
+        community_statuses = community_statuses.filter_out_breaking_news(exclude_community.id) if exclude_community.present?
+        
+        community_statuses_ids = community_statuses.pluck(:status_id).map(&:to_i)
+      end
+      
       query_string = "AND statuses.id < :max_id" if params[:max_id].present?
+      community_statuses_query = "AND statuses.id IN (:community_statues_ids)" if community_statuses_ids.any?
+
       filtered_followed_statuses = Mammoth::Status.joins('
                                                     LEFT JOIN statuses_tags ON statuses_tags.status_id = statuses.id 
                                                     LEFT JOIN tags ON tags.id = statuses_tags.tag_id'
@@ -34,11 +45,10 @@ module Mammoth::Api::V1
                                                       OR 
                                                       account_id IN (:account_ids)
                                                     )
-                                                      AND reply = FALSE #{query_string}
+                                                      AND reply = FALSE AND statuses.community_feed_id IS NULL  #{query_string} #{community_statuses_query}
                                                     ", 
-                                                    tag_ids: followed_tag_ids, account_id: current_account.id, account_ids: followed_account_ids, max_id: params[:max_id]
+                                                    tag_ids: followed_tag_ids, account_id: current_account.id, account_ids: followed_account_ids, max_id: params[:max_id], community_statues_ids: community_statuses_ids
                                                   )
-
       
       unless filtered_followed_statuses.blank?
         #Begin::Filter
