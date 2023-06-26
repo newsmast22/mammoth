@@ -49,7 +49,7 @@ module Mammoth::Api::V1
           #   } 
           # }
           before_limit_statuses = @statuses
-          @statuses = @statuses.order(created_at: :desc).limit(500)
+          @statuses = @statuses.order(created_at: :desc).limit(5)
           render json: @statuses, root: 'data', 
                                   each_serializer: Mammoth::StatusSerializer, current_user: current_user, adapter: :json, 
                                   meta: {
