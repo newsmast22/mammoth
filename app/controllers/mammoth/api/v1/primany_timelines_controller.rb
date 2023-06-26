@@ -17,19 +17,20 @@ module Mammoth::Api::V1
       end
       #End:Create UserTimeLineSetting
 
-      user_primary_community= Mammoth::UserCommunity.where(user_id: current_user.id, is_primary: true).last
-      if user_primary_community.present?
+      exclude_community = Mammoth::Community.where(slug: "breaking_news").last
 
-        #primary_community_statuses = Mammoth::CommunityStatus.where(community_id: user_primary_community.community_id).order(created_at: :desc).pluck(:status_id).map(&:to_i)
-
+      user_primary_community= Mammoth::UserCommunity.where(user_id: current_user.id)
+      if user_primary_community.any?
 
         query_string = "AND mammoth_communities_statuses.status_id < :max_id" if params[:max_id].present?
         primary_community_statuses = Mammoth::CommunityStatus.where("
-                                     mammoth_communities_statuses.community_id = :community_id #{query_string}",
-                                     community_id: user_primary_community.community_id, max_id: params[:max_id]
+                                     mammoth_communities_statuses.community_id IN (:community_id) #{query_string}",
+                                     community_id: user_primary_community.pluck(:community_id).map(&:to_i), max_id: params[:max_id]
                                     )
-                                    .order(created_at: :desc)
-                                    .pluck(:status_id).map(&:to_i)
+
+        primary_community_statuses = primary_community_statuses.filter_out_breaking_news(exclude_community.id) if exclude_community.present?
+        
+        primary_community_statuses = primary_community_statuses.order(created_at: :desc).pluck(:status_id).map(&:to_i)
 
         #Begin::Filter
         fetch_primary_timeline_filter(primary_community_statuses)
@@ -48,7 +49,7 @@ module Mammoth::Api::V1
           #   } 
           # }
           before_limit_statuses = @statuses
-          @statuses = @statuses.order(created_at: :desc).limit(5)
+          @statuses = @statuses.order(created_at: :desc).limit(500)
           render json: @statuses, root: 'data', 
                                   each_serializer: Mammoth::StatusSerializer, current_user: current_user, adapter: :json, 
                                   meta: {
@@ -93,7 +94,9 @@ module Mammoth::Api::V1
 			#account_followed_ids = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
       #account_followed_ids.push(current_account.id)
 
-      @statuses = Mammoth::Status.filter_with_community_status_ids(primary_community_statues_ids)
+      #@statuses = Mammoth::Status.filter_with_community_status_ids(primary_community_statues_ids)
+
+      @statuses = Mammoth::Status.filter_with_community_status_ids_without_rss(primary_community_statues_ids)
 
       #begin::muted account post
       muted_accounts = Mute.where(account_id: current_account.id)
