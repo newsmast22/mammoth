@@ -33,7 +33,7 @@ module Mammoth::Api::V1
       end
       
       query_string = "AND statuses.id < :max_id" if params[:max_id].present?
-      community_statuses_query = "AND statuses.id IN (:community_statues_ids)" if community_statuses_ids.any?
+      community_statuses_query = "OR (statuses.id IN (:community_statues_ids))" if community_statuses_ids.any?
 
       filtered_followed_statuses = Mammoth::Status.joins('
                                                     LEFT JOIN statuses_tags ON statuses_tags.status_id = statuses.id 
@@ -45,7 +45,8 @@ module Mammoth::Api::V1
                                                       OR 
                                                       account_id IN (:account_ids)
                                                     )
-                                                      AND reply = FALSE AND statuses.community_feed_id IS NULL  #{query_string} #{community_statuses_query}
+                                                      AND 
+                                                      (reply = FALSE AND statuses.community_feed_id IS NULL AND statuses.group_id IS NULL  #{query_string}) #{community_statuses_query}
                                                     ", 
                                                     tag_ids: followed_tag_ids, account_id: current_account.id, account_ids: followed_account_ids, max_id: params[:max_id], community_statues_ids: community_statuses_ids
                                                   )

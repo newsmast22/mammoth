@@ -177,6 +177,7 @@ class Mammoth::PostStatusService < BaseService
       rss_link: @options[:rss_link],
       is_rss_content: @options[:is_rss_content],
       community_feed_id: @options[:community_feed_id],
+      group_id: @options[:group_id]
     }.compact
   end
 

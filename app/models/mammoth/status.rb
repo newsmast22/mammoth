@@ -10,7 +10,7 @@ module Mammoth
     
     scope :filter_with_community_status_ids, ->(ids) { where(id: ids,reply: false) }
 
-    scope :filter_with_community_status_ids_without_rss, ->(ids) { where(id: ids,reply: false,community_feed_id: nil) }
+    scope :filter_with_community_status_ids_without_rss, ->(ids) { where(id: ids,reply: false,community_feed_id: nil,group_id: nil) }
 
     scope :filter_timeline_with_accounts,->(account_ids) {where(account_id: account_ids)}
     scope :filter_followed_accounts,->(account_ids) {where(account_id: account_ids, reply: false)}
