@@ -20,20 +20,36 @@ module Mammoth::Api::V1
       followed_account_ids = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
       followed_tag_ids = TagFollow.where(account_id: current_account.id).pluck(:tag_id).map(&:to_i)
       
-      exclude_community = Mammoth::Community.where(slug: "breaking_news").last
+      ##exclude_community = Mammoth::Community.where(slug: "breaking_news").last
 
-      user_followed_community_ids = Mammoth::UserCommunity.where(user_id: current_user.id).pluck(:community_id).map(&:to_i)
+      #user_followed_community_ids = Mammoth::UserCommunity.where(user_id: current_user.id).pluck(:community_id).map(&:to_i)
 
-      community_statuses_ids = []
-      if user_followed_community_ids.any?
-        community_statuses = Mammoth::CommunityStatus.where(community_id: user_followed_community_ids)
-        community_statuses = community_statuses.filter_out_breaking_news(exclude_community.id) if exclude_community.present?
+      # community_statuses_ids = []
+      # if user_followed_community_ids.any?
+      #   community_statuses = Mammoth::CommunityStatus.where(community_id: user_followed_community_ids)
+      #   community_statuses = community_statuses.filter_out_breaking_news(exclude_community.id) if exclude_community.present?
         
-        community_statuses_ids = community_statuses.pluck(:status_id).map(&:to_i)
-      end
+      #   community_statuses_ids = community_statuses.pluck(:status_id).map(&:to_i)
+      # end
       
       query_string = "statuses.id < :max_id AND" if params[:max_id].present?
-      community_statuses_query = "OR (statuses.id IN (:community_statues_ids))" if community_statuses_ids.any?
+      #community_statuses_query = "OR (statuses.id IN (:community_statues_ids))" if community_statuses_ids.any?
+
+      # filtered_followed_statuses = Mammoth::Status.joins('
+      #                                               LEFT JOIN statuses_tags ON statuses_tags.status_id = statuses.id 
+      #                                               LEFT JOIN tags ON tags.id = statuses_tags.tag_id'
+      #                                             )
+      #                                             .where("#{query_string}
+      #                                               ((
+      #                                                 (tags.id IN (:tag_ids) AND account_id != :account_id)
+      #                                                 OR 
+      #                                                 account_id IN (:account_ids)
+      #                                               ) #{community_statuses_query}
+      #                                                 AND 
+      #                                                 (reply = FALSE AND statuses.community_feed_id IS NULL AND statuses.group_id IS NULL))
+      #                                               ", 
+      #                                               tag_ids: followed_tag_ids, account_id: current_account.id, account_ids: followed_account_ids, max_id: params[:max_id], community_statues_ids: community_statuses_ids
+      #                                             )
 
       filtered_followed_statuses = Mammoth::Status.joins('
                                                     LEFT JOIN statuses_tags ON statuses_tags.status_id = statuses.id 
@@ -44,13 +60,13 @@ module Mammoth::Api::V1
                                                       (tags.id IN (:tag_ids) AND account_id != :account_id)
                                                       OR 
                                                       account_id IN (:account_ids)
-                                                    ) #{community_statuses_query}
+                                                    )
                                                       AND 
-                                                      (reply = FALSE AND statuses.community_feed_id IS NULL AND statuses.group_id IS NULL ))
+                                                      (reply = FALSE ))
                                                     ", 
-                                                    tag_ids: followed_tag_ids, account_id: current_account.id, account_ids: followed_account_ids, max_id: params[:max_id], community_statues_ids: community_statuses_ids
-                                                  )
-                                                  
+                                                    tag_ids: followed_tag_ids, account_id: current_account.id, account_ids: followed_account_ids, max_id: params[:max_id]
+                                                  )                                            
+
       unless filtered_followed_statuses.blank?
         #Begin::Filter
         fetch_following_filter_timeline(filtered_followed_statuses)
