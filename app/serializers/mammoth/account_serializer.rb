@@ -62,41 +62,41 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
   end
 
   def step
-    object.try(:user).try(:step)
+    #object.try(:user).try(:step)
     #object.user.step
   end
 
   def is_active
-    object.try(:user).try(:is_active)
+    #object.try(:user).try(:is_active)
     #object.user.is_active
   end
   
   def is_account_setup_finished
-    object.try(:user).try(:is_account_setup_finished)
+    #object.try(:user).try(:is_account_setup_finished)
     #object.user.is_account_setup_finished
   end
 
   def email
-    if object.try(:user).try(:phone).present? #object.user.phone.present?
-      nil
-    else
-      object.try(:user).try(:email)
-       #object.user.email
-    end
+    # if object.try(:user).try(:phone).present? #object.user.phone.present?
+    #   nil
+    # else
+    #   object.try(:user).try(:email)
+    #    #object.user.email
+    # end
   end
 
   def phone
-    object.try(:user).try(:phone)
+    #object.try(:user).try(:phone)
     #object.user.phone
   end
 
   def is_followed
-    if  @instance_options[:current_user].present?
-      account_followed_ids = Follow.where(account_id: @instance_options[:current_user].account.id).pluck(:target_account_id).map(&:to_i)
-      account_followed_ids.include?(object.id)
-    else
+    # if  @instance_options[:current_user].present?
+    #   account_followed_ids = Follow.where(account_id: @instance_options[:current_user].account.id).pluck(:target_account_id).map(&:to_i)
+    #   account_followed_ids.include?(object.id)
+    # else
       return false
-    end
+    #end
   end
 
   def country
@@ -152,53 +152,53 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
   end
 
   def collection_count
-    if object.try(:user).present?
-      user  = Mammoth::User.find(object.user.id)
-      user_communities= user.user_communities
-      count = 0
-      unless user_communities.empty?
-        ids = user_communities.pluck(:community_id).map(&:to_i)
-        collections = Mammoth::Collection.joins(:communities).where(communities: { id: ids }).distinct
-        count = collections.size
-      else
-        count
-      end
-    end
+    # if object.try(:user).present?
+    #   user  = Mammoth::User.find(object.user.id)
+    #   user_communities= user.user_communities
+    #   count = 0
+    #   unless user_communities.empty?
+    #     ids = user_communities.pluck(:community_id).map(&:to_i)
+    #     collections = Mammoth::Collection.joins(:communities).where(communities: { id: ids }).distinct
+    #     count = collections.size
+    #   else
+    #     count
+    #   end
+    # end
   end
 
   def community_count
-    if object.try(:user).present?
-      @user = Mammoth::User.find(object.user.id)
-      @communities = @user&.communities || []
-      count = 0
-      if @communities.any?
-        count = @communities.size
-      else
-        count
-      end
-    end
+    # if object.try(:user).present?
+    #   @user = Mammoth::User.find(object.user.id)
+    #   @communities = @user&.communities || []
+    #   count = 0
+    #   if @communities.any?
+    #     count = @communities.size
+    #   else
+    #     count
+    #   end
+    # end
   end
 
   def primary_community_slug
-    if object.try(:user).present?
-      user_communities = Mammoth::UserCommunity.where(user_id: object.user.id,is_primary: true).last
-      if user_communities.present?
-        Mammoth::Community.find(user_communities.community_id).slug
-      else
-        ""
-      end
-    end
+    # if object.try(:user).present?
+    #   user_communities = Mammoth::UserCommunity.where(user_id: object.user.id,is_primary: true).last
+    #   if user_communities.present?
+    #     Mammoth::Community.find(user_communities.community_id).slug
+    #   else
+    #     ""
+    #   end
+    # end
   end
 
   def primary_community_name
-    if object.try(:user).present?
-      user_communities = Mammoth::UserCommunity.where(user_id: object.user.id,is_primary: true).last
-      if user_communities.present?
-        Mammoth::Community.find(user_communities.community_id).name
-      else
-        ""
-      end
-    end
+    # if object.try(:user).present?
+    #   user_communities = Mammoth::UserCommunity.where(user_id: object.user.id,is_primary: true).last
+    #   if user_communities.present?
+    #     Mammoth::Community.find(user_communities.community_id).name
+    #   else
+    #     ""
+    #   end
+    # end
   end
 
   def note
