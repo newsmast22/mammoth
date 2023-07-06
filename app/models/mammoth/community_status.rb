@@ -8,7 +8,7 @@ module Mammoth
 
     scope :filter_out_breaking_news, ->(breaking_news_id) { where.not(community_id: breaking_news_id) }
 
-    IMAGE_LIMIT = 100.megabytes
+    IMAGE_LIMIT = 15.megabytes
 
     IMAGE_MIME_TYPES = %w(image/jpeg image/png image/gif image/heic image/heif image/webp image/avif).freeze
 

@@ -29,11 +29,12 @@ module Mammoth::Api::V1
             updated_at: community.updated_at
           }
         end
+        data = data.sort_by {|h| [h[:is_primary] ? 0 : 1,h[:slug]]}
 
         if params[:community_slug].present?
           new_community = Mammoth::Community.find_by(slug: params[:community_slug])
           unless data.any? { |obj| obj[:slug] == params[:community_slug] }
-            data << {
+            data.prepend << {
               id: new_community.id.to_s,
               user_id: @user.id.to_s,
               is_primary:  false,
@@ -50,10 +51,10 @@ module Mammoth::Api::V1
               created_at: new_community.created_at,
               updated_at: new_community.updated_at
             }
+            data = data.sort_by {|h| [h[:slug] == new_community.slug ? 0 : 1,h[:slug]]}
           end
         end
 
-        data = data.sort_by {|h| [h[:is_primary] ? 0 : 1,h[:slug]]}
         render json: data
       else
         render json: { error: 'no communities found' }
