@@ -764,22 +764,23 @@ module Mammoth::Api::V1
 						with_rate_limit: true,
 						is_only_for_followers: community_status_params[:is_only_for_followers],
 						is_meta_preview: community_status_params[:is_meta_preview],
-						group_id: group_id
+						group_id: group_id,
+						community_id: community_id,
+						image_data: community_status_params[:image_data]
 					) 
 					if index == 0
 						group_id = @status.id
 					end
-					
-	
-					@community_status = Mammoth::CommunityStatus.new()
-					@community_status.status_id = @status.id
-					@community_status.community_id = community_id
-					@community_status.save
-					unless community_status_params[:image_data].nil?
-						image = Paperclip.io_adapters.for(community_status_params[:image_data])
-						@community_status.image = image
-						@community_status.save
-					end
+				
+					# @community_status = Mammoth::CommunityStatus.new()
+					# @community_status.status_id = @status.id
+					# @community_status.community_id = community_id
+					# @community_status.save
+					# unless community_status_params[:image_data].nil?
+					# 	image = Paperclip.io_adapters.for(community_status_params[:image_data])
+					# 	@community_status.image = image
+					# 	@community_status.save
+					# end
 				end
 			else
 				## not selected community
@@ -798,17 +799,19 @@ module Mammoth::Api::V1
 					idempotency: request.headers['Idempotency-Key'],
 					with_rate_limit: true,
 					is_only_for_followers: community_status_params[:is_only_for_followers],
-					is_meta_preview: community_status_params[:is_meta_preview]
+					is_meta_preview: community_status_params[:is_meta_preview],
+					community_id: nil,
+					image_data: community_status_params[:image_data]
 				)
 
-				@community_status = Mammoth::CommunityStatus.new()
-				@community_status.status_id = @status.id
-				@community_status.save
-				unless community_status_params[:image_data].nil?
-					image = Paperclip.io_adapters.for(community_status_params[:image_data])
-					@community_status.image = image
-					@community_status.save
-				end
+				# @community_status = Mammoth::CommunityStatus.new()
+				# @community_status.status_id = @status.id
+				# @community_status.save
+				# unless community_status_params[:image_data].nil?
+				# 	image = Paperclip.io_adapters.for(community_status_params[:image_data])
+				# 	@community_status.image = image
+				# 	@community_status.save
+				# end
 
 			end
 			

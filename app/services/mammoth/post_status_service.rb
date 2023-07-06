@@ -28,6 +28,8 @@ class Mammoth::PostStatusService < BaseService
     @options     = options
     @text        = @options[:text] || ''
     @in_reply_to = @options[:thread]
+    @community_id = @options[:community_id] || nil
+    @image_data = @options[:image_data] || nil
 
     return idempotency_duplicate if idempotency_given? && idempotency_duplicate?
 
@@ -69,6 +71,16 @@ class Mammoth::PostStatusService < BaseService
 
     ApplicationRecord.transaction do
       @status = @account.statuses.create!(status_attributes)
+
+      @community_status = Mammoth::CommunityStatus.new()
+      @community_status.status_id = @status.id
+      @community_status.community_id = @community_id
+      @community_status.save
+      unless @image_data.nil?
+        image = Paperclip.io_adapters.for(@image_data)
+        @community_status.image = image
+        @community_status.save
+      end
     end
   end
 
