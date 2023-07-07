@@ -743,6 +743,25 @@ module Mammoth::Api::V1
 		end
 
 		def save_statuses(selected_communities)
+
+			# Assuming `base64_data` contains the Base64-encoded file
+			image_data_array = []
+			unless community_status_params[:image_data].nil? || community_status_params[:image_data] == ""
+				puts "--------------------------********************************************-----"
+				data = community_status_params[:image_data]# code like this  data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABPUAAAI9CAYAAABSTE0XAAAgAElEQVR4Xuy9SXPjytKm6ZwnUbNyHs7Jc7/VV9bW1WXWi9q
+				image_data = Base64.decode64(data['data:image/png;base64,'.length .. -1])
+				new_file=File.new("#{Time.now.utc.strftime('%m%d%Y%H:%M')}.png", 'wb')
+				new_file.write(image_data)
+				
+				media_attachment_params = {
+					file: new_file
+				}
+				
+				@media_attachment = current_account.media_attachments.create!(media_attachment_params)
+				image_data_array << @media_attachment.id
+			end
+
+
 			## loop selected_communities
 			if selected_communities.any?
 				group_id = nil
@@ -752,7 +771,7 @@ module Mammoth::Api::V1
 						current_user.account,
 						text: community_status_params[:status],
 						thread: @thread,
-						media_ids: community_status_params[:media_ids],
+						media_ids: image_data_array,
 						sensitive: community_status_params[:sensitive],
 						spoiler_text: community_status_params[:spoiler_text],
 						visibility: community_status_params[:visibility],
