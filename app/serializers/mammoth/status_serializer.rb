@@ -65,7 +65,12 @@ class Mammoth::StatusSerializer < ActiveModel::Serializer
     if community_status.present?
       community_status.image.url
     else
-      ""
+      media_attchment = MediaAttachment.where(status_id: object.id).last
+      if media_attchment.present?
+        media_attchment.file.url
+      else
+        ""
+      end
     end
   end
 
