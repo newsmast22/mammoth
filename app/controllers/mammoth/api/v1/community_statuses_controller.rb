@@ -76,7 +76,6 @@ module Mammoth::Api::V1
 			if community_status_params[:community_ids].present?
 				if community_status_params[:community_ids].any?
 					selected_communities = Mammoth::Community.where(slug: community_status_params[:community_ids]).pluck(:id)
-					puts selected_communities
 				end
 			end
 
@@ -747,10 +746,9 @@ module Mammoth::Api::V1
 			# Assuming `base64_data` contains the Base64-encoded file
 			image_data_array = []
 			unless community_status_params[:image_data].nil? || community_status_params[:image_data] == ""
-				puts "--------------------------********************************************-----"
 				data = community_status_params[:image_data]# code like this  data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABPUAAAI9CAYAAABSTE0XAAAgAElEQVR4Xuy9SXPjytKm6ZwnUbNyHs7Jc7/VV9bW1WXWi9q
 				image_data = Base64.decode64(data['data:image/png;base64,'.length .. -1])
-				new_file=File.new("#{Time.now.utc.strftime('%m%d%Y%H:%M')}.png", 'wb')
+				new_file=File.new("#{Time.now.utc.strftime('%m%d%Y%H%M')}.png", 'wb')
 				new_file.write(image_data)
 				
 				media_attachment_params = {
