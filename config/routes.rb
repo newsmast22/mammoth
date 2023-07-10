@@ -8,8 +8,6 @@ Mammoth::Engine.routes.draw do
       get  'get_reset_password_otp' => 'user_sessions#get_reset_password_otp', as: 'get_reset_password_otp'
       post 'verify_reset_password_otp' => 'user_sessions#verify_reset_password_otp', as: 'verify_reset_password_otp'
       put  'reset_password' => 'user_sessions#reset_password', as: 'reset_password'
-      get  'search_all_commnities' => 'search_all_commnities#index', as: 'search_all_commnities'
-      get  'search_my_communities' => 'search_my_communities#index', as: 'search_my_communities'
 
       resources :communities do 
         collection do 
@@ -66,7 +64,6 @@ Mammoth::Engine.routes.draw do
           get 'get_my_community_status_timelines' => 'search#get_my_community_status_timelines', as: 'get_my_community_status_timelines'
           post 'create_user_search_setting' => 'search#create_user_search_setting', as: 'create_user_search_setting'
           get 'get_user_search_setting' => 'search#get_user_search_setting', as: 'get_user_search_setting'
-
         end
       end
       

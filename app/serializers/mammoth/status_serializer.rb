@@ -61,8 +61,6 @@ class Mammoth::StatusSerializer < ActiveModel::Serializer
   end
 
   def image_url 
-
-
     community_status =  Mammoth::CommunityStatus.where(status_id: object.id).last
     if community_status.present?
       if community_status.image.present?

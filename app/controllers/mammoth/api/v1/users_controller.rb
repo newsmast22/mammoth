@@ -64,51 +64,69 @@ module Mammoth::Api::V1
     end
 
     def global_suggestion
-      @user  = Mammoth::User.find(current_user.id)
-      @users = Mammoth::User.where.not(id: @user.id).where(role_id: nil).distinct
+      # @user  = Mammoth::User.find(current_user.id)
+      # @users = Mammoth::User.where.not(id: @user.id).where(role_id: nil).distinct
       
+      #begin::search from other instance
+      filtered_accounts = []
+      if params[:words].present?
+        filtered_accounts = perform_accounts_search! if account_searchable?
+        if filtered_accounts.any?
+          @accounts = Account.where(id: filtered_accounts.pluck(:id))   
+        end        
+      end
+
+      if !filtered_accounts.any? || !params[:words].present?
+        @accounts = Account.joins("LEFT JOIN users on accounts.id = users.account_id").where("
+                    users.role_id IS NULL")
+      end
+      
+      #end::search from other instance
+
       #begin::blocked account post
       blocked_accounts = Block.where(account_id: current_account.id).or(Block.where(target_account_id: current_account.id))
       unless blocked_accounts.blank?
         combined_block_account_ids = blocked_accounts.pluck(:account_id,:target_account_id).flatten
         combined_block_account_ids.delete(current_account.id)
-        @users = @users.filter_blocked_accounts(combined_block_account_ids)
+        @accounts = @accounts.filter_blocked_accounts(combined_block_account_ids)
       end
       #end::blocked account post
 
       #begin::deactivated account post
 				deactivated_accounts = Account.joins(:user).where('users.is_active = ?', false)
 				unless deactivated_accounts.blank?
-          @users = @users.filter_blocked_accounts(deactivated_accounts.pluck(:id).map(&:to_i))
+          @accounts = @accounts.filter_blocked_accounts(deactivated_accounts.pluck(:id).map(&:to_i))
 				end
 			#end::deactivated account post
 
-      @users = @users.filter_with_words(params[:words].downcase) if params[:words].present?
+      #@accounts = @accounts.filter_with_words(params[:words].downcase) if params[:words].present?
 
       left_seggession_count = 0
       if params[:limit].present?
-        left_seggession_count = @users.size - params[:limit].to_i <= 0 ? 0 : @users.size - params[:limit].to_i
-        @users = @users.limit(params[:limit])
+        left_seggession_count = @accounts.size - params[:limit].to_i <= 0 ? 0 : @accounts.size - params[:limit].to_i
+        @accounts = @accounts.limit(params[:limit])
       end
 
       account_followed = Follow.where(account_id: current_account).pluck(:target_account_id).map(&:to_i)
+
       data   = []
-      @users.each do |user|
+      @accounts.order(id: :desc).each do |account|
         data << {
-          account_id: user.account_id.to_s,
-          is_followed: account_followed.include?(user.account_id), 
-          user_id: user.id.to_s,
-          username: user.account.username,
-          display_name: user.account.display_name.presence || user.account.username,
-          email: user.email,
-          image_url: user.account.avatar.url,
-          bio: user.account.note
+          account_id: account.id.to_s,
+          domain: account.domain,
+          is_followed: account_followed.include?(account.id), 
+          user_id: account.try(:user).try(:id).present? ? account.try(:user).try(:id) : nil ,
+          username: account.username,
+          display_name: account.display_name.presence || account.username,
+          email: account.try(:user).try(:email).present? ? account.try(:user).try(:email) : nil,
+          image_url: account.avatar.url,
+          bio: account.note
         }
       end
       render json: {
         data: data,
         meta: { 
-					left_suggession_count: left_seggession_count
+					left_suggession_count: left_seggession_count,
 				}
       }
     end
@@ -719,6 +737,20 @@ module Mammoth::Api::V1
       else
         return obj_list.pluck(:id).map(&:to_i)
       end
+    end
+
+    def perform_accounts_search!
+      AccountSearchService.new.call(
+        params[:words],
+        current_account,
+        limit: params[:limit],
+        resolve: true,
+        offset: 0
+      )
+    end
+
+    def account_searchable?
+      !params[:type].present? && !(params[:words].start_with?('#') || (params[:words].include?('@') && params[:words].include?(' ')))
     end
 
   end

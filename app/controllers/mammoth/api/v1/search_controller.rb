@@ -4,29 +4,8 @@ module Mammoth::Api::V1
   class SearchController < Api::BaseController
     include Authorization
 
-    RESULTS_LIMIT = 20
-
     before_action :require_user!
     before_action -> { authorize_if_got_token! :read, :'read:search' }
-    before_action :validate_search_params!, only: [:create]
-
-    def index
-      @search = Search.new(search_results)
-      render json: @search, serializer: Mammoth::SearchSerializer
-    rescue Mastodon::SyntaxError
-      unprocessable_entity
-    rescue ActiveRecord::RecordNotFound
-      not_found
-    end
-
-    def search_my_communities
-      @search = Search.new(search_results)
-      render json: @search, serializer: Mammoth::SearchSerializer
-    rescue Mastodon::SyntaxError
-      unprocessable_entity
-    rescue ActiveRecord::RecordNotFound
-      not_found
-    end
 
     def get_all_community_status_timelines
       @user_search_setting = Mammoth::UserSearchSetting.find_by(user_id: current_user.id)
@@ -169,25 +148,6 @@ module Mammoth::Api::V1
 
     private
 
-    def validate_search_params!
-      params.require(:q)
-
-      return if user_signed_in?
-
-      return render json: { error: 'Search queries pagination is not supported without authentication' }, status: 401 if params[:offset].present?
-
-      render json: { error: 'Search queries that resolve remote resources are not supported without authentication' }, status: 401 if truthy_param?(:resolve)
-    end
-
-    def search_results
-      SearchService.new.call(
-        params[:q],
-        current_account,
-        limit_param(RESULTS_LIMIT),
-        search_params.merge(resolve: truthy_param?(:resolve), exclude_unreviewed: truthy_param?(:exclude_unreviewed))
-      )
-    end
-
     def create_default_user_search_setting
       user_search_settings = Mammoth::UserSearchSetting.where(user_id: current_user.id)
       user_search_settings.destroy_all
@@ -208,21 +168,7 @@ module Mammoth::Api::V1
         return obj_list.pluck(:id).map(&:to_i)
       end
     end
-
-    def search_params
-      params.permit(
-        :type,
-        :offset,
-        :min_id,
-        :max_id,
-        :account_id,
-        selected_filters: [
-            communities_filter:[
-              selected_communities: [],
-            ]
-        ]
-      )
-    end
+  
   end
 
 end
