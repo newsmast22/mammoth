@@ -80,7 +80,6 @@ module Mammoth::Api::V1
         @accounts = Account.joins("LEFT JOIN users on accounts.id = users.account_id").where("
                     users.role_id IS NULL")
       end
-      
       #end::search from other instance
 
       #begin::blocked account post
