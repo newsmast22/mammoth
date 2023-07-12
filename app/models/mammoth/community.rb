@@ -9,7 +9,7 @@ module Mammoth
     belongs_to :collection, class_name: "Mammoth::Collection"
 
 
-  	IMAGE_LIMIT = 100.megabytes
+  	IMAGE_LIMIT = 15.megabytes
 
   	IMAGE_MIME_TYPES = %w(image/jpeg image/png image/gif image/heic image/heif image/webp image/avif).freeze
 
