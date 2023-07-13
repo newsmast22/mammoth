@@ -759,7 +759,6 @@ module Mammoth::Api::V1
 				image_data_array << @media_attachment.id
 			end
 
-
 			## loop selected_communities
 			if selected_communities.any?
 				group_id = nil
@@ -782,22 +781,11 @@ module Mammoth::Api::V1
 						is_only_for_followers: community_status_params[:is_only_for_followers],
 						is_meta_preview: community_status_params[:is_meta_preview],
 						group_id: group_id,
-						community_id: community_id,
-						image_data: community_status_params[:image_data]
+						community_id: community_id
 					) 
 					if index == 0
 						group_id = @status.id
 					end
-				
-					# @community_status = Mammoth::CommunityStatus.new()
-					# @community_status.status_id = @status.id
-					# @community_status.community_id = community_id
-					# @community_status.save
-					# unless community_status_params[:image_data].nil?
-					# 	image = Paperclip.io_adapters.for(community_status_params[:image_data])
-					# 	@community_status.image = image
-					# 	@community_status.save
-					# end
 				end
 			else
 				## not selected community
@@ -805,7 +793,7 @@ module Mammoth::Api::V1
 					current_user.account,
 					text: community_status_params[:status],
 					thread: @thread,
-					media_ids: community_status_params[:media_ids],
+					media_ids: image_data_array,
 					sensitive: community_status_params[:sensitive],
 					spoiler_text: community_status_params[:spoiler_text],
 					visibility: community_status_params[:visibility],
@@ -817,21 +805,16 @@ module Mammoth::Api::V1
 					with_rate_limit: true,
 					is_only_for_followers: community_status_params[:is_only_for_followers],
 					is_meta_preview: community_status_params[:is_meta_preview],
-					community_id: nil,
-					image_data: community_status_params[:image_data]
+					community_id: nil
 				)
-
-				# @community_status = Mammoth::CommunityStatus.new()
-				# @community_status.status_id = @status.id
-				# @community_status.save
-				# unless community_status_params[:image_data].nil?
-				# 	image = Paperclip.io_adapters.for(community_status_params[:image_data])
-				# 	@community_status.image = image
-				# 	@community_status.save
-				# end
-
+			end
+		
+			## delete temp stored file
+			if image_data_array.any?
+				File.delete("#{Time.now.utc.strftime('%m%d%Y%H%M')}.png")
 			end
 			
 		end
+
   end
 end

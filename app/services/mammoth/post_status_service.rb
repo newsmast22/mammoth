@@ -22,6 +22,7 @@ class Mammoth::PostStatusService < BaseService
   # @option [Boolean] :with_rate_limit
   # @option [Boolean] :is_only_for_followers
   # @option [Boolean] :is_meta_preview
+  # @option [Boolean] :community_id
   # @return [Status]
   def call(account, options = {})
     @account     = account
@@ -29,7 +30,6 @@ class Mammoth::PostStatusService < BaseService
     @text        = @options[:text] || ''
     @in_reply_to = @options[:thread]
     @community_id = @options[:community_id] || nil
-    @image_data = @options[:image_data] || nil
 
     return idempotency_duplicate if idempotency_given? && idempotency_duplicate?
 
@@ -76,11 +76,6 @@ class Mammoth::PostStatusService < BaseService
       @community_status.status_id = @status.id
       @community_status.community_id = @community_id
       @community_status.save
-      unless @image_data.nil?
-        image = Paperclip.io_adapters.for(@image_data)
-        @community_status.image = image
-        @community_status.save
-      end
     end
   end
 
