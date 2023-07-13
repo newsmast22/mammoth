@@ -52,7 +52,8 @@ module Mammoth::Api::V1
           display_name: user.account.display_name.presence || user.account.username,
           email: user.email,
           image_url: user.account.avatar.url,
-          bio: user.account.note
+          bio: user.account.note,
+          acct: user.account.pretty_acct
         }
       end
       render json: {
@@ -119,7 +120,8 @@ module Mammoth::Api::V1
           display_name: account.display_name.presence || account.username,
           email: account.try(:user).try(:email).present? ? account.try(:user).try(:email) : nil,
           image_url: account.avatar.url,
-          bio: account.note
+          bio: account.note,
+          acct: account.pretty_acct
         }
       end
       render json: {
