@@ -61,20 +61,14 @@ class Mammoth::StatusSerializer < ActiveModel::Serializer
   end
 
   def image_url 
-    community_status =  Mammoth::CommunityStatus.where(status_id: object.id).last
-    if community_status.present?
-      if community_status.image.present?
-         community_status.image.url
-      else
-        media_attchment = MediaAttachment.where(status_id: object.id).last
-        if media_attchment.present?
-          media_attchment.file.url
-        else
-          "/images/original/missing.png"
-        end 
-      end
+    media_attchment = MediaAttachment.where(status_id: object.id).last
+    if media_attchment.present?
+      media_attchment.file.url
     else
-      "/images/original/missing.png"   
+      community_status =  Mammoth::CommunityStatus.where(status_id: object.id).last
+      if community_status.present? && community_status.try(:image).present?
+        community_status.try(:image).url
+      end
     end
   end
 
