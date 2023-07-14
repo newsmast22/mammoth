@@ -597,10 +597,16 @@ module Mammoth::Api::V1
       end
       #end::check community admin & communnity_slug
 
+      #begin::check account requested or not
+      is_requested = false
+      follow_request = FollowRequest.where(account_id: current_account.id, target_account_id: account_id)
+      is_requested = follow_request.present? ? true : false
+      #end::check account requested or not
+
       account_data = single_serialize(account_info, Mammoth::CredentialAccountSerializer)
       render json: {
         data:{
-          account_data: account_data.merge(:is_my_account => is_my_account, :is_followed => account_followed_ids.include?(account_id.to_i)),
+          account_data: account_data.merge(:is_requested => is_requested,:is_my_account => is_my_account, :is_followed => account_followed_ids.include?(account_id.to_i)),
           community_images_url: community_images,
           following_images_url: following_account_images,
           is_admin: is_admin,
