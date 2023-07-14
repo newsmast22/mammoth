@@ -6,16 +6,8 @@ module Mammoth::Api::V1
 
 		def index
 			data = []
-			#begin::check is_community_admin or not
-			user = User.find(current_user.id)
-			role_name = ""
-			community_slug = ""
-			if user.role_id == -99 || user.role_id.nil?
-				role_name = "end-user"
-			else
-				role_name = UserRole.find(user.role_id).name
-			end
-			#end::check is_community_admin or not
+
+			role_name = current_user_role
 
 			is_rss_account = false
 			if role_name == "rss-account"
@@ -148,16 +140,7 @@ module Mammoth::Api::V1
 			if @community.present?
 				is_admin = false
 
-				#begin::check is_community_admin or not
-				user = User.find(current_user.id)
-				role_name = ""
-				community_slug = ""
-				if user.role_id == -99 || user.role_id.nil?
-					role_name = "end-user"
-				else
-					role_name = UserRole.find(user.role_id).name
-				end
-				#end::check is_community_admin or not
+				role_name = current_user_role
 
 				is_rss_account = false
 				if role_name == "rss-account"

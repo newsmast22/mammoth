@@ -61,16 +61,7 @@ module Mammoth::Api::V1
 
 		def create
 
-			#begin::check is_community_admin or not
-			user = User.find(current_user.id)
-			role_name = ""
-			community_slug = ""
-			if user.role_id == -99 || user.role_id.nil?
-				role_name = "end-user"
-			else
-				role_name = UserRole.find(user.role_id).name
-			end
-			#end::check is_community_admin or not
+			role_name = current_user_role
 
 			selected_communities = []
 			if community_status_params[:community_ids].present?
@@ -89,16 +80,7 @@ module Mammoth::Api::V1
 		end
 
 		def get_community_details_profile
-			 #begin::check is_community_admin or not
-			 user = User.find(current_user.id)
-			 role_name = ""
-			 community_slug = ""
-			 if user.role_id == -99 || user.role_id.nil?
-				 role_name = "end-user"
-			 else
-				 role_name = UserRole.find(user.role_id).name
-			 end
-			 #end::check is_community_admin or not
+			role_name = current_user_role
 
 			@user = Mammoth::User.find(current_user.id)
 			community = Mammoth::Community.find_by(slug: params[:id])

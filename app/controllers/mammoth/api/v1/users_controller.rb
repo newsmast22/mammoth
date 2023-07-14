@@ -44,9 +44,17 @@ module Mammoth::Api::V1
 
       data   = []
       @users.each do |user|
+
+        #begin::check account requested or not
+        is_requested = false
+        follow_request = FollowRequest.where(account_id: current_account.id, target_account_id: user.account.id)
+        is_requested = follow_request.present? ? true : false
+        #end::check account requested or not
+
         data << {
           account_id: user.account_id.to_s,
           is_followed: account_followed.include?(user.account_id), 
+          is_requested: is_requested,
           user_id: user.id.to_s,
           username: user.account.username,
           display_name: user.account.display_name.presence || user.account.username,
@@ -111,10 +119,18 @@ module Mammoth::Api::V1
 
       data   = []
       @accounts.order(id: :desc).each do |account|
+
+        #begin::check account requested or not
+        is_requested = false
+        follow_request = FollowRequest.where(account_id: current_account.id, target_account_id: account.id)
+        is_requested = follow_request.present? ? true : false
+        #end::check account requested or not
+
         data << {
           account_id: account.id.to_s,
           domain: account.domain,
           is_followed: account_followed.include?(account.id), 
+          is_requested: is_requested,
           user_id: account.try(:user).try(:id).present? ? account.try(:user).try(:id) : nil ,
           username: account.username,
           display_name: account.display_name.presence || account.username,
@@ -550,16 +566,8 @@ module Mammoth::Api::V1
     end
 
     def get_user_details_info(account_id, account_info)
-      #begin::check is_community_admin or not
-      user = User.find(current_user.id)
-      role_name = ""
-      community_slug = ""
-      if user.role_id == -99 || user.role_id.nil?
-        role_name = "end-user"
-      else
-        role_name = UserRole.find(user.role_id).name
-      end
-      #end::check is_community_admin or not
+      
+      role_name = current_user_role
 
       community_images = []
       following_account_images = []

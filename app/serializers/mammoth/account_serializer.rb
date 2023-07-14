@@ -7,7 +7,7 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
   attributes :id, :username, :acct, :display_name, :locked, :bot, :discoverable,:hide_collections, :group, :created_at,
              :note, :url, :avatar, :avatar_static, :header, :header_static,:primary_community_slug,:primary_community_name,
              :followers_count, :following_count, :statuses_count, :last_status_at,:collection_count,:community_count,
-             :country,:country_common_name,:dob,:subtitle,:about_me,:hash_tag_count,:is_followed,
+             :country,:country_common_name,:dob,:subtitle,:about_me,:hash_tag_count,:is_followed,:is_requested,
              :email,:phone,:step,:is_active,:is_account_setup_finished
              
 
@@ -94,6 +94,16 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
     if  @instance_options[:current_user].present?
       account_followed_ids = Follow.where(account_id: @instance_options[:current_user].account.id).pluck(:target_account_id).map(&:to_i)
       account_followed_ids.include?(object.id)
+    else
+      return false
+    end
+  end
+
+  def is_requested 
+    if  @instance_options[:current_user].present?
+    is_requested = false
+    follow_request = FollowRequest.where(account_id: @instance_options[:current_user].id, target_account_id: object.id)
+    is_requested = follow_request.present? ? true : false 
     else
       return false
     end
