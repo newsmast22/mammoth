@@ -29,16 +29,16 @@ class Mammoth::CollectionService < BaseService
 		data = {
 		  id: Mammoth::Collection.count + 1,
 		  position: nil,
+          name: 'All',
+          slug: 'all',
 		  image_file_name: nil,
 		  image_content_type: nil,
 		  image_file_size: nil,
-		  image_url: nil,
-		  name: 'All',
-		  slug: 'all',
+          image_updated_at: Time.now,
 		  community_count: all_collection_count,
 		  created_at: Time.now,
 		  updated_at: Time.now,
-		  image_updated_at: Time.now
+          image_url: nil
 		}
 	  
 		return data
