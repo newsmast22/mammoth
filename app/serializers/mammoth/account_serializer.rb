@@ -101,9 +101,8 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
 
   def is_requested 
     if  @instance_options[:current_user].present?
-    is_requested = false
-    follow_request = FollowRequest.where(account_id: @instance_options[:current_user].id, target_account_id: object.id)
-    is_requested = follow_request.present? ? true : false 
+      follow_request = FollowRequest.where(account_id: @instance_options[:current_user].account_id, target_account_id: object.id)
+      is_requested = follow_request.present? ? true : false 
     else
       return false
     end
