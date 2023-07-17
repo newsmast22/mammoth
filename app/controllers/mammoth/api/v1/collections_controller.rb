@@ -1,35 +1,18 @@
+require 'date'
 module Mammoth::Api::V1
 	class CollectionsController < Api::BaseController
 		before_action :require_user!
 		before_action -> { doorkeeper_authorize! :read , :write}
 		before_action :set_collection, only: %i[show update destroy]
 
-    def index
+    	def index
 			@user  = Mammoth::User.find(current_user.id)
 			#when user register
 			if @user.is_account_setup_finished == false
 				Mammoth::UserCommunity.where(user_id: current_user.id).destroy_all
 			end
-
-			@collections = Mammoth::Collection.all.order(position: :ASC)
-			data = []
-			@collections.each do |collection|
-        data << {
-        id: collection.id,
-				position: collection.position,
-        name: collection.name,
-        slug: collection.slug,
-        image_file_name: collection.image_file_name,
-        image_content_type: collection.image_content_type,
-        image_file_size: collection.image_file_size,
-        image_updated_at: collection.image_updated_at,
-				community_count: collection.communities.ids.size,
-        created_at: collection.created_at,
-        updated_at: collection.updated_at,
-				image_url: collection.image.url
-        }
-			end
-				render json: data
+			data = Mammoth::CollectionService.get_collections
+			render json: data
 		end
 
 		def get_collection_by_user
@@ -120,7 +103,7 @@ module Mammoth::Api::V1
 		
 
     private
-
+	  
     def return_collection
 			render json: @collection
 		end
@@ -133,5 +116,5 @@ module Mammoth::Api::V1
 			params.require(:collection).permit(:name, :slug, :image_data)
 		end
 
-  end
+  	end
 end
