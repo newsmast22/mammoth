@@ -1,7 +1,7 @@
 module Mammoth::Api::V1
 	class CommunityStatusesController < Api::BaseController
-		before_action -> { authorize_if_got_token! :read, :'read:statuses' }
-		before_action -> { doorkeeper_authorize! :write, :'write:statuses' }
+		before_action -> { authorize_if_got_token! :read, :'read:statuses' }, except: [:create, :update, :destroy]
+  	before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only:   [:create, :update, :destroy]
 		before_action :require_user!, except: [:show, :context, :link_preview]
     before_action :set_status, only: [:show, :context]
 		before_action :set_thread, only: [:create]

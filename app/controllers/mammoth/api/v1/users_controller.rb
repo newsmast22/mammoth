@@ -86,8 +86,9 @@ module Mammoth::Api::V1
       end
 
       if !filtered_accounts.any? || !params[:words].present?
+        is_registeration_query = "AND accounts.protocol = 0 AND accounts.discoverable != false" if params[:is_registeration_state].present? && params[:is_registeration_state]
         @accounts = Account.joins("LEFT JOIN users on accounts.id = users.account_id").where("
-                    users.role_id IS NULL")
+                    users.role_id IS NULL #{is_registeration_query}")
       end
       #end::search from other instance
 
