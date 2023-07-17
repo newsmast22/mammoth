@@ -38,7 +38,7 @@ class Mammoth::CollectionService < BaseService
 		  community_count: all_collection_count,
 		  created_at: Time.now,
 		  updated_at: Time.now,
-          image_url: nil
+          image_url: "https://s3-eu-west-2.amazonaws.com/newsmast/mammoth/collections/images/000/000/001/original/0644f0f95a1f6945.jpeg"
 		}
 	  
 		return data
