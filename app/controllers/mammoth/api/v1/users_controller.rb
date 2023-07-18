@@ -16,6 +16,10 @@ module Mammoth::Api::V1
 
       @users = Mammoth::User.joins(:user_communities).where.not(id: @user.id).where(user_communities: {community_id: @user.communities.ids}).distinct.order(created_at: :desc)
 
+      if params[:max_id].present?
+        @users = @users.where("users.account_id < #{params[:max_id]}")
+      end
+
       #begin::blocked account post
       blocked_accounts = Block.where(account_id: current_account.id).or(Block.where(target_account_id: current_account.id))
       unless blocked_accounts.blank?
@@ -37,7 +41,7 @@ module Mammoth::Api::V1
       left_seggession_count = 0
       if params[:limit].present?
         left_seggession_count = @users.size - params[:limit].to_i <= 0 ? 0 : @users.size - params[:limit].to_i
-        @users = @users.limit(params[:limit])
+        @users = @users.limit(params[:limit].to_i)
       end
         
       account_followed = Follow.where(account_id: current_account).pluck(:target_account_id).map(&:to_i)
@@ -67,15 +71,13 @@ module Mammoth::Api::V1
       render json: {
         data: data,
         meta: { 
-					left_suggession_count: left_seggession_count
+					left_suggession_count: left_seggession_count,
+          has_more_objects: left_seggession_count > 0 ? true : false
 				}
       }
     end
 
-    def global_suggestion
-      # @user  = Mammoth::User.find(current_user.id)
-      # @users = Mammoth::User.where.not(id: @user.id).where(role_id: nil).distinct
-      
+    def global_suggestion      
       #begin::search from other instance
       filtered_accounts = []
       if params[:words].present?
@@ -86,9 +88,8 @@ module Mammoth::Api::V1
       end
 
       if !filtered_accounts.any? || !params[:words].present?
-        is_registeration_query = "AND accounts.protocol = 0 AND accounts.discoverable != false" if params[:is_registeration_state].present? && params[:is_registeration_state]
         @accounts = Account.joins("LEFT JOIN users on accounts.id = users.account_id").where("
-                    users.role_id IS NULL #{is_registeration_query}")
+                    users.role_id IS NULL")
       end
       #end::search from other instance
 
@@ -108,12 +109,14 @@ module Mammoth::Api::V1
 				end
 			#end::deactivated account post
 
-      #@accounts = @accounts.filter_with_words(params[:words].downcase) if params[:words].present?
+      if params[:max_id].present?
+        @accounts = @accounts.where("accounts.id < #{params[:max_id]}")
+      end
 
       left_seggession_count = 0
       if params[:limit].present?
         left_seggession_count = @accounts.size - params[:limit].to_i <= 0 ? 0 : @accounts.size - params[:limit].to_i
-        @accounts = @accounts.limit(params[:limit])
+        @accounts = @accounts.limit(params[:limit].to_i)
       end
 
       account_followed = Follow.where(account_id: current_account).pluck(:target_account_id).map(&:to_i)
@@ -145,6 +148,7 @@ module Mammoth::Api::V1
         data: data,
         meta: { 
 					left_suggession_count: left_seggession_count,
+          has_more_objects: left_seggession_count > 0 ? true : false
 				}
       }
     end
