@@ -28,7 +28,6 @@ module Mammoth::Api::V1
       #end::custom following accounts for user
 
       # @accounts = load_accounts
-      # puts @accounts.inspect
       # render json: @accounts, current_user: current_user,each_serializer: Mammoth::AccountSerializer
     end
 
@@ -53,15 +52,12 @@ module Mammoth::Api::V1
 
     def default_accounts
       #account = Account.where(Account.arel_table[:id].lt(params[:max_id])) if params[:max_id].present?
-      #puts "***************default_accounts***********************"
       account = Account.includes(:passive_relationships, :account_stat).references(:passive_relationships)
-     account
+      account
 
     end
 
     def paginated_follows
-      puts "*********************** paginated_follows ***********************"
-      puts @account
       Follow.where(account: @account)
       .paginate_by_max_id(
         limit_param(FOLLOWING_ACCOUNTS_LIMIT),
