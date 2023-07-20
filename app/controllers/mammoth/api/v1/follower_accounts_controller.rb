@@ -7,8 +7,29 @@ module Mammoth::Api::V1
     after_action :insert_pagination_headers
 
     def index
-      @accounts = load_accounts
-      render json: @accounts, current_user: current_user, each_serializer: Mammoth::AccountSerializer
+      # @accounts = load_accounts
+      # render json: @accounts, current_user: current_user, each_serializer: Mammoth::AccountSerializer
+
+      #begin::custom following accounts for user
+      following_account = Follow.where(target_account_id: @account.id)
+      pagination_max_query = "AND accounts.id < :max_id" if params[:max_id].present?
+      accounts = Account.where("
+        accounts.id IN (:following_account_ids) AND accounts.id != #{current_account.id} #{pagination_max_query}",
+        following_account_ids: following_account.pluck(:account_id) , max_id: params[:max_id]
+      ).order(id: :desc)
+      
+      before_limit_account = accounts
+      accounts = accounts.limit(10)
+      return render json: accounts,root: 'data', each_serializer: Mammoth::AccountSerializer, current_user: current_user, adapter: :json, 
+					meta: {
+						pagination:
+						{ 
+							total_objects: before_limit_account.size,
+							has_more_objects: 10 <= before_limit_account.size ? true : false
+						} 
+					}
+      #end::custom following accounts for user
+
     end
 
     private
