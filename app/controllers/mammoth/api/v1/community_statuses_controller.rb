@@ -791,7 +791,7 @@ module Mammoth::Api::V1
 				)
 			end
 		
-			## delete temp stored file
+			# Delete temp stored files
 			if image_data_array.any?
 				File.delete("#{Time.now.utc.strftime('%m%d%Y%H%M')}.png")
 			end

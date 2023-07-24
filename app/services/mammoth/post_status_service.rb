@@ -76,6 +76,11 @@ class Mammoth::PostStatusService < BaseService
       @community_status.status_id = @status.id
       @community_status.community_id = @community_id
       @community_status.save
+
+      if ENV['TRANSLATION_ENABLED'] == "true"
+        Mammoth::AwsTextTranslationWorker.perform_async(@status.id)
+      end
+
     end
   end
 
