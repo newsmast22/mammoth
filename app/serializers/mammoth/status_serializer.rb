@@ -7,7 +7,7 @@ class Mammoth::StatusSerializer < ActiveModel::Serializer
   attributes :id,:community_id,:community_name,:community_slug,:created_at, :in_reply_to_id, :in_reply_to_account_id,
              :sensitive, :spoiler_text, :visibility, :language, :is_only_for_followers,
              :uri, :url, :replies_count, :reblogs_count,:is_rss_content,:rss_host_url,
-             :favourites_count, :edited_at,:image_url,:rss_link,:is_meta_preview
+             :favourites_count, :edited_at,:image_url,:rss_link,:is_meta_preview,:translated_text
 
   attribute :favourited, if: :current_user?
   attribute :reblogged, if: :current_user?
@@ -160,6 +160,9 @@ class Mammoth::StatusSerializer < ActiveModel::Serializer
     status_content_format(object)
   end
 
+  def translated_text
+    status_translated_text_format(object)
+  end
 
   def url
     ActivityPub::TagManager.instance.url_for(object)
