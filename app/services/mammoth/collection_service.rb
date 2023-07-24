@@ -3,7 +3,7 @@ class Mammoth::CollectionService < BaseService
     def self.get_collections
         @collections = Mammoth::Collection.all.order(position: :ASC)
         data = []
-        # data << all_collection
+        data << all_collection
         @collections.each do |collection|
             data << {
                 id: collection.id,
