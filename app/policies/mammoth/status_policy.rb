@@ -1,60 +1,140 @@
 class Mammoth::StatusPolicy
-  attr_reader :current_account, :status
+  attr_reader :current_account, :current_user, :status
 
-  def initialize(current_account, status)
+  def initialize(current_account, current_user, status)
     @current_account = current_account
+    @current_user = current_user
     @status = status
   end
 
-  def self.policy_scope(current_account,max_id)
+  def self.policy_scope(current_account, current_user, max_id)
     acc_id = current_account.id
+    usr_id = current_user.id
     
-    sql_query = "SELECT statuses.*
-                FROM statuses
-                LEFT JOIN statuses_tags ON statuses_tags.status_id = statuses.id
-                LEFT JOIN tags ON tags.id = statuses_tags.tag_id
-                WHERE (:MAX_ID IS NULL OR statuses.id < :MAX_ID) 
-                  AND statuses.deleted_at IS NULL 
-                  AND (
-                    (tags.id IN (
-                      SELECT tag_follows.tag_id 
-                      FROM tag_follows 
-                      WHERE tag_follows.account_id = :USER_ID
-                    )
-                    AND statuses.account_id != :USER_ID)
-                    OR statuses.account_id IN (
-                      SELECT follows.target_account_id
-                      FROM follows 
-                      WHERE follows.account_id = :USER_ID
-                    )
-                  ) 
-                  AND reply = FALSE
-                  AND statuses.id NOT IN ( 
-                    WITH acc_ids AS (
-                    SELECT DISTINCT id
-                    FROM (
-                    SELECT account_id AS id FROM blocks WHERE account_id = :USER_ID
-                      UNION
-                    SELECT target_account_id AS id FROM blocks WHERE target_account_id = :USER_ID
-                      UNION
-                    SELECT target_account_id AS id FROM mutes WHERE account_id = :USER_ID
-                        UNION
-                      SELECT account_id AS id FROM accounts JOIN users ON accounts.id = users.account_id 
-                                  WHERE users.is_active = false
-                    ) AS acc_ids
-                    WHERE id != :USER_ID
-                  )
-                  SELECT id
-                  FROM statuses
-                  WHERE id IN (
-                    SELECT id FROM statuses WHERE account_id IN (SELECT * FROM acc_ids)
-                  )
-                  OR reblog_of_id IN (
-                    SELECT id FROM statuses WHERE account_id IN (SELECT * FROM acc_ids)
-                  ) 
-                  );
-                "
-    result = Mammoth::Status.find_by_sql([sql_query, { USER_ID: acc_id,  MAX_ID: max_id }])
-    return result
+    sql_query = "SELECT statuses.id
+    FROM statuses
+    LEFT JOIN statuses_tags ON statuses_tags.status_id = statuses.id
+    LEFT JOIN tags ON tags.id = statuses_tags.tag_id
+    WHERE statuses.id < :MAX_ID 
+      AND statuses.deleted_at IS NULL 
+      AND (
+        (tags.id IN (
+          SELECT tag_follows.tag_id 
+          FROM tag_follows 
+          WHERE tag_follows.account_id = :ACC_ID
+        )
+        AND statuses.account_id != :ACC_ID)
+        OR statuses.account_id IN (
+          SELECT follows.target_account_id
+          FROM follows 
+          WHERE follows.account_id = :ACC_ID
+        )
+      ) 
+      AND reply = FALSE
+      AND statuses.account_id IN (
+        WITH selected_filters AS (
+          SELECT
+            (selected_filters->'source_filter'->'selected_contributor_role') AS selected_contributor_roles,
+            (selected_filters->'source_filter'->'selected_voices') AS selected_voices,
+            (selected_filters->'source_filter'->'selected_media') AS selected_media,
+            (selected_filters->'location_filter'->'selected_countries') AS selected_countries,
+            (selected_filters->'communities_filter'->'selected_communities') AS selected_communities
+          FROM mammoth_user_timeline_settings
+          WHERE user_id = :USR_ID
+        ),
+        filtered_data AS (
+          SELECT
+            jsonb_array_elements_text(selected_contributor_roles)::integer AS contributor_role_ids,
+            jsonb_array_elements_text(selected_voices)::integer AS voice_ids,
+            jsonb_array_elements_text(selected_media)::integer AS media_ids,
+            jsonb_array_elements_text(selected_countries) AS country_codes,
+            jsonb_array_elements_text(selected_communities)::integer AS community_ids
+          FROM selected_filters
+        )
+        SELECT accounts.id AS id
+        FROM accounts
+        WHERE 
+          CASE
+            WHEN (SELECT COUNT(filtered_data.country_codes) FROM filtered_data ) > 0 THEN
+              country = ANY (
+                              SELECT country_codes
+                              FROM filtered_data
+                              WHERE country_codes IS NOT NULL
+                            )
+            ELSE
+              TRUE
+          END
+        INTERSECT
+        SELECT accounts.id AS id
+        FROM accounts
+        WHERE 
+          CASE
+            WHEN (SELECT COUNT(filtered_data.contributor_role_ids) FROM filtered_data ) > 0 THEN
+              about_me_title_option_ids && ARRAY(
+                SELECT contributor_role_ids
+                FROM filtered_data
+                WHERE contributor_role_ids IS NOT NULL
+              )
+            ELSE
+              TRUE
+          END
+        INTERSECT
+        SELECT accounts.id AS id
+        FROM accounts
+        WHERE 
+          CASE
+            WHEN (SELECT COUNT(filtered_data.media_ids) FROM filtered_data ) > 0 THEN
+              about_me_title_option_ids && ARRAY(
+                SELECT media_ids
+                FROM filtered_data
+                WHERE media_ids IS NOT NULL
+              )
+            ELSE
+              TRUE
+          END
+        INTERSECT
+        SELECT accounts.id AS id
+        FROM accounts
+        WHERE 
+          CASE
+            WHEN (SELECT COUNT(filtered_data.voice_ids) FROM filtered_data ) > 0 THEN
+              about_me_title_option_ids && ARRAY(
+                SELECT voice_ids
+                FROM filtered_data
+                WHERE voice_ids IS NOT NULL
+              )
+            ELSE
+              TRUE
+          END
+      )
+      AND statuses.id NOT IN ( 
+        WITH acc_ids AS (
+          SELECT DISTINCT id
+          FROM (
+            SELECT account_id AS id FROM blocks WHERE account_id = :ACC_ID
+              UNION
+            SELECT target_account_id AS id FROM blocks WHERE target_account_id = :ACC_ID
+              UNION
+            SELECT target_account_id AS id FROM mutes WHERE account_id = :ACC_ID
+              UNION
+            SELECT account_id AS id FROM accounts JOIN users ON accounts.id = users.account_id 
+                                WHERE users.is_active = false
+          ) AS acc_ids
+          WHERE id != :ACC_ID
+        )
+        SELECT id
+        FROM statuses
+        WHERE id IN (
+          SELECT id FROM statuses WHERE account_id IN (SELECT * FROM acc_ids)
+        )
+        OR reblog_of_id IN (
+          SELECT id FROM statuses WHERE account_id IN (SELECT * FROM acc_ids)
+        ) 
+      ) ORDER BY statuses.created_at DESC;"
+     
+    result = Mammoth::Status.find_by_sql([sql_query, { USR_ID: usr_id, ACC_ID: acc_id,  MAX_ID: max_id }])
+    status_ids = result.map(&:id)
+    statuses_relation = Mammoth::Status.where(id: status_ids)
+    return statuses_relation
   end
 end
