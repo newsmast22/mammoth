@@ -69,6 +69,10 @@ Mammoth::Engine.routes.draw do
       
       resources :primany_timelines
 
+      namespace :timeline do
+        get 'all', to: 'timelines#all'
+      end
+
       resources :following_timelines do
         collection do
           get 'get_following_timelines' => 'following_timelines#get_following_timelines', as: 'get_following_timelines'
