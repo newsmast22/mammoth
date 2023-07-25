@@ -26,6 +26,7 @@ class Mammoth::StatusPolicy
       max_id = 0
     end
     
+    
     if max_id == 0
       condition = "statuses.id > :MAX_ID"
     else
