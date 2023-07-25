@@ -10,12 +10,33 @@ class Mammoth::StatusPolicy
   def self.policy_scope(current_account, current_user, max_id)
     acc_id = current_account.id
     usr_id = current_user.id
+
+    userTimeLineSetting = Mammoth::UserTimelineSetting.where(user_id: current_user.id).last
+    if userTimeLineSetting.nil?
+      create_userTimelineSetting()
+    elsif userTimeLineSetting.selected_filters.dig('location_filter').nil?
+      create_userTimelineSetting()
+    elsif userTimeLineSetting.selected_filters.dig('source_filter').nil?
+      create_userTimelineSetting()
+    elsif userTimeLineSetting.selected_filters.dig('communities_filter').nil?
+      create_userTimelineSetting()
+    end
+
+    if max_id.nil?
+      max_id = 0
+    end
+    
+    if max_id == 0
+      condition = "statuses.id > :MAX_ID"
+    else
+      condition = "statuses.id < :MAX_ID"
+    end
     
     sql_query = "SELECT statuses.id
     FROM statuses
     LEFT JOIN statuses_tags ON statuses_tags.status_id = statuses.id
     LEFT JOIN tags ON tags.id = statuses_tags.tag_id
-    WHERE statuses.id < :MAX_ID 
+    WHERE #{condition}
       AND statuses.deleted_at IS NULL 
       AND (
         (tags.id IN (
@@ -131,10 +152,35 @@ class Mammoth::StatusPolicy
           SELECT id FROM statuses WHERE account_id IN (SELECT * FROM acc_ids)
         ) 
       ) ORDER BY statuses.created_at DESC;"
-     
+    
     result = Mammoth::Status.find_by_sql([sql_query, { USR_ID: usr_id, ACC_ID: acc_id,  MAX_ID: max_id }])
+
     status_ids = result.map(&:id)
     statuses_relation = Mammoth::Status.where(id: status_ids)
     return statuses_relation
+  end
+
+  def self.create_userTimelineSetting
+    userTimeLineSetting = Mammoth::UserTimelineSetting.where(user_id: current_user.id)
+    userTimeLineSetting.destroy_all
+    Mammoth::UserTimelineSetting.create!(
+      user_id: current_user.id,
+      selected_filters: {
+        default_country: current_user.account.country,
+        location_filter: {
+          selected_countries: [],
+          is_location_filter_turn_on: true
+        },
+        is_filter_turn_on: false,
+        source_filter: {
+          selected_media: [],
+          selected_voices: [],
+          selected_contributor_role: []
+        },
+        communities_filter: {
+          selected_communities: []
+        }
+      }
+    )
   end
 end
