@@ -70,7 +70,7 @@ Mammoth::Engine.routes.draw do
       resources :primany_timelines
 
       namespace :timeline do
-        get 'all', to: 'timelines#all'
+        get 'all', to: 'timelines#primary'
       end
 
       resources :following_timelines do
