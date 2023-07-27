@@ -71,6 +71,8 @@ Mammoth::Engine.routes.draw do
 
       namespace :timeline do
         get 'all', to: 'timelines#primary'
+        get 'newsmast', to: 'timelines#newsmast'
+        get 'federated', to: 'timelines#federated'
       end
 
       resources :following_timelines do

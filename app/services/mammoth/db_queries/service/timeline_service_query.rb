@@ -3,20 +3,6 @@ module Mammoth
     module Service
       module TimelineServiceQuery 
 
-        def self.select_status_without_rss
-          " statuses.reply = FALSE 
-          AND statuses.community_feed_id IS NULL 
-          AND statuses.group_id IS NULL "
-        end
-
-        def self.condition(max_id) 
-          if  max_id.nil?
-            condition = "statuses.id > 0"
-          else
-            condition = "statuses.id < :MAX_ID"
-          end
-        end
-
         def self.primary_timeline_query(max_id)
           sql_query = "SELECT statuses.id
                       FROM statuses
@@ -48,6 +34,20 @@ module Mammoth
                         AND statuses.account_id NOT IN (#{Mammoth::DbQueries::Common::StatusAuthorizeQuery.select_acc_by_block_mute_delete})
                         AND statuses.account_id IN (#{Mammoth::DbQueries::Common::StatusAuthorizeQuery.select_acc_by_user_filter})
                         ORDER BY statuses.created_at DESC;"
+        end
+
+        def self.select_status_without_rss
+          " statuses.reply = FALSE 
+          AND statuses.community_feed_id IS NULL 
+          AND statuses.group_id IS NULL "
+        end
+
+        def self.condition(max_id) 
+          if  max_id.nil?
+            condition = "statuses.id > 0"
+          else
+            condition = "statuses.id < :MAX_ID"
+          end
         end
       end
     end
