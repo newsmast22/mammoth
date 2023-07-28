@@ -141,6 +141,10 @@ Mammoth::Engine.routes.draw do
         end
       end
 
+      namespace :community_admin do
+        resources :community_filter_keywords
+      end
+      
     end
   end
 end
