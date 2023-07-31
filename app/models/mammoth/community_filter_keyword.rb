@@ -14,7 +14,7 @@ module Mammoth
 
       community_filter_keywords = Mammoth::CommunityFilterKeyword.where("
         mammoth_community_filter_keywords.account_id = :account_id AND mammoth_community_filter_keywords.community_id = :community_id #{query_string}",
-        account_id: account_id, community_id: community_id, max_id: max_id)
+        account_id: account_id, community_id: community_id, max_id: max_id).limit(100)
 
     end
 
