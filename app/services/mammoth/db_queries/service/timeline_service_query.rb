@@ -11,6 +11,7 @@ module Mammoth
                       WHERE #{condition(max_id)}
                       AND mammoth_communities.slug != 'breaking_news' 
                       AND #{select_status_without_rss}
+                      AND statuses.account_id IN (#{Mammoth::DbQueries::Common::StatusAuthorizeQuery.select_by_followed_acc})
                       AND statuses.account_id NOT IN (#{Mammoth::DbQueries::Common::StatusAuthorizeQuery.select_acc_by_block_mute_delete})
                       AND statuses.account_id IN (#{Mammoth::DbQueries::Common::StatusAuthorizeQuery.select_acc_by_user_filter})
                       ORDER BY statuses.created_at DESC;"
