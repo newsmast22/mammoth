@@ -1,13 +1,18 @@
 module Mammoth::Api::V1::Timeline
   class TimelinesController < Api::BaseController
     before_action :require_user!
-    before_action :set_max_id, only: [:primary, :federated, :newsmast] 
-    before_action :create_policy, except: [:primary, :federated, :newsmast]
+    before_action :set_max_id, only: [:primary, :federated, :newsmast, :my_community] 
+    before_action :create_policy, only: [:create]
     before_action -> { doorkeeper_authorize! :read , :write}
 
     def primary
      
       @statuses = Mammoth::TimelineService.primary_timeline(current_account, @max_id, current_user)
+      format_json
+    end
+
+    def my_community
+      @statuses = Mammoth::TimelineService.my_community_timeline(current_account, @max_id, current_user)
       format_json
     end
 

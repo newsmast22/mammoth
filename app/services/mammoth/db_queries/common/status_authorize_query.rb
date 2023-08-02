@@ -15,6 +15,20 @@ module Mammoth
           ) AS acc_ids
           WHERE id != :ACC_ID"
       end
+
+      def self.select_joined_community_by_login_user
+        "SELECT DISTINCT mammoth_communities_users.community_id
+          FROM mammoth_communities_users
+          JOIN users ON users.id = mammoth_communities_users.user_id
+          WHERE users.account_id = :ACC_ID"
+      end
+
+      def self.select_by_followed_acc
+        "SELECT DISTINCT accounts.id
+          FROM accounts
+          LEFT JOIN follows on accounts.id = follows.target_account_id
+          WHERE follows.account_id = :ACC_ID"
+      end
       
       def self.select_acc_by_user_filter
         "WITH selected_filters AS (

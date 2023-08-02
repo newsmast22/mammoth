@@ -3,6 +3,20 @@ module Mammoth
     module Service
       module TimelineServiceQuery 
 
+        def self.my_community_timeline_query(max_id)
+          sql_query = "SELECT statuses.id
+                      FROM statuses
+                      JOIN mammoth_communities_statuses ON statuses.id = mammoth_communities_statuses.status_id
+                      JOIN mammoth_communities ON mammoth_communities_statuses.community_id = mammoth_communities.id
+                      WHERE #{condition(max_id)}
+                      AND mammoth_communities.slug != 'breaking_news' 
+                      AND #{select_status_without_rss}
+                      AND mammoth_communities.id IN (#{Mammoth::DbQueries::Common::StatusAuthorizeQuery.select_joined_community_by_login_user})
+                      AND statuses.account_id NOT IN (#{Mammoth::DbQueries::Common::StatusAuthorizeQuery.select_acc_by_block_mute_delete})
+                      AND statuses.account_id IN (#{Mammoth::DbQueries::Common::StatusAuthorizeQuery.select_acc_by_user_filter})
+                      ORDER BY statuses.created_at DESC;"
+        end
+
         def self.primary_timeline_query(max_id)
           sql_query = "SELECT statuses.id
                       FROM statuses
