@@ -84,5 +84,49 @@ module Mammoth
       self.header = {data: data} if data.present?
     end
 
+    def self.get_community_info_details(role_name, current_user, community_slug)
+
+			@user = Mammoth::User.find(current_user.id)
+
+			all_community_hash = Mammoth::CollectionService.all_collection
+
+			community = Mammoth::Community.new(
+				name: "All",
+				description: all_community_hash[:description],
+				collection_id: nil,
+				image: nil,
+				header: nil,
+				slug: "all",
+				id: all_community_hash[:id]
+			)
+
+			community = Mammoth::Community.find_by(slug: community_slug) unless community_slug == "all"
+
+			#begin::check is community-admin
+			is_community_admin = false
+			user_community_admin= Mammoth::CommunityAdmin.where(user_id: @user.id, community_id: community.id).last
+			if user_community_admin.present?
+				is_community_admin = true
+			end
+			#end::check is community-admin
+
+			user_communities_ids  = @user.user_communities.pluck(:community_id).map(&:to_i)
+
+			community_followed_user_counts = Mammoth::UserCommunity.where(community_id: community.id).size
+
+      result = {
+          community_followed_user_counts: community_followed_user_counts,
+          community_name: role_name == "rss-account" ? current_user.account.display_name : community.name,
+          community_description: community.description,
+          collection_name: community.try(:collection).try(:name).nil? ? " " : community.try(:collection).try(:name), 
+          community_url: community.try(:image).present? ? community.image.url : all_community_hash[:image_url] ,
+          community_header_url: community.try(:header).present? ? community.try(:header).try(:url) : all_community_hash[:collection_detail_image_url],
+          community_slug: community.slug,
+          is_joined: user_communities_ids.include?(community.id),
+          is_admin: is_community_admin,
+      }
+
+    end
+
   end
 end
