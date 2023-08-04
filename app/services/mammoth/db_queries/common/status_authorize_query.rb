@@ -1,7 +1,7 @@
 module Mammoth
   module DbQueries
-    module Common::StatusAuthorizeQuery
-      def self.select_acc_by_block_mute_delete
+    class Common::StatusAuthorizeQuery
+      def select_acc_by_block_mute_delete
         "SELECT DISTINCT id
           FROM (
             SELECT account_id AS id FROM blocks WHERE account_id = :ACC_ID
@@ -16,14 +16,14 @@ module Mammoth
           WHERE id != :ACC_ID"
       end
 
-      def self.select_by_followed_acc
+      def select_by_followed_acc
         "SELECT DISTINCT accounts.id
           FROM accounts
           LEFT JOIN follows on accounts.id = follows.target_account_id
           WHERE follows.account_id = :ACC_ID"
       end
       
-      def self.select_acc_by_user_filter
+      def select_acc_by_user_filter
         "WITH selected_filters AS (
           SELECT
             (selected_filters->'source_filter'->'selected_contributor_role') AS selected_contributor_roles,

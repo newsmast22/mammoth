@@ -7,22 +7,22 @@ module Mammoth::Api::V1::Timeline
     before_action -> { doorkeeper_authorize! :read , :write}
 
     def primary
-      @statuses = @timeline_service.primary_timeline
+      @statuses = @timeline_service.call
       format_json
     end
 
     def my_community
-      @statuses = @timeline_service.my_community_timeline
+      @statuses = @timeline_service.call
       format_json
     end
 
     def federated
-      @statuses = @timeline_service.federated_timeline
+      @statuses = @timeline_service.call
       format_json
     end
 
     def newsmast
-      @statuses = @timeline_service.newsmast_timeline
+      @statuses = @timeline_service.call
       format_json
     end
 
