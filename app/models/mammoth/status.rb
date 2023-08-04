@@ -6,7 +6,7 @@ module Mammoth
     has_and_belongs_to_many :communities, class_name: "Mammoth::Community"
     belongs_to :community_feed, inverse_of: :statuses
     has_and_belongs_to_many :tags,class_name: "Mammoth::Tag"
-
+    has_many :community_filter_statuses, class_name: "Mammoth::CommunityFilterStatus"
     
     scope :filter_with_community_status_ids, ->(ids) { where(id: ids,reply: false) }
 
@@ -33,6 +33,7 @@ module Mammoth
     }
 
     scope :filter_with_words, ->(words) {where("LOWER(statuses.text) like '%#{words}%'")}
+    scope :filter_banned_statuses, -> { left_joins(:community_filter_statuses).where(community_filter_statuses: { id: nil }) }
 
   end
 end

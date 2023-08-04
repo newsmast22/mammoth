@@ -66,11 +66,12 @@ module Mammoth::Api::V1
                                                     ", 
                                                     tag_ids: followed_tag_ids, account_id: current_account.id, account_ids: followed_account_ids, max_id: params[:max_id]
                                                   )                                            
-
+      
       unless filtered_followed_statuses.blank?
         #Begin::Filter
         fetch_following_filter_timeline(filtered_followed_statuses)
-        #End::Filter
+        # End::Filter
+        @statuses = @statuses.filter_banned_statuses
         unless @statuses.empty?
           before_limit_statuses = @statuses
           @statuses = @statuses.order(created_at: :desc).limit(5)

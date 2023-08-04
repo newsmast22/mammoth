@@ -127,7 +127,7 @@ module Mammoth::Api::V1
 			community = Mammoth::Community.find_by(slug: params[:id])
 			#begin::check is community-admin
 			is_community_admin = false
-			user_community_admin= Mammoth::CommunityAdmin.where(user_id: @user.id, community_id: community.id).last
+			user_community_admin = Mammoth::CommunityAdmin.where(user_id: @user.id, community_id: community.id).last
 			if user_community_admin.present?
 				is_community_admin = true
 			end
@@ -148,7 +148,7 @@ module Mammoth::Api::V1
 								community_statues_ids: community_statues_ids, reply: false,max_id: params[:max_id] )
 
 				#@statuses = @statuses.filter_is_only_for_followers(account_followed_ids)
-
+        #@statuses = @statuses.filter_banned_statuses
 				#begin::check is primary community country filter on/off
 				unless is_community_admin
 					primary_user_community = Mammoth::UserCommunity.where(user_id: current_user.id,is_primary: true).last
@@ -318,7 +318,7 @@ module Mammoth::Api::V1
 								account_ids: community_admin_followed_account_ids, reply: false,max_id: params[:max_id] )
 
 					@statuses = @statuses.filter_with_community_status_ids(community_statues_ids)
-	
+          @statuses = @statuses.filter_banned_statuses
 					#begin::check is primary community country filter on/off [only for end-user]
 					unless is_community_admin
 						primary_user_community = Mammoth::UserCommunity.find_by(user_id: current_user.id,is_primary: true)
