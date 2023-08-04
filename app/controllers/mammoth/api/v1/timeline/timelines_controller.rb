@@ -2,29 +2,27 @@ module Mammoth::Api::V1::Timeline
   class TimelinesController < Api::BaseController
     before_action :require_user!
     before_action :set_max_id, only: [:primary, :federated, :newsmast, :my_community] 
+    before_action :create_service, only: [:primary, :federated, :newsmast, :my_community] 
     before_action :create_policy, only: [:create]
     before_action -> { doorkeeper_authorize! :read , :write}
 
     def primary
-     
-      @statuses = Mammoth::TimelineService.primary_timeline(current_account, @max_id, current_user)
+      @statuses = @timeline_service.primary_timeline
       format_json
     end
 
     def my_community
-      @statuses = Mammoth::TimelineService.my_community_timeline(current_account, @max_id, current_user)
+      @statuses = @timeline_service.my_community_timeline
       format_json
     end
 
     def federated
-    
-      @statuses = Mammoth::TimelineService.federated_timeline(current_account, @max_id, current_user)
+      @statuses = @timeline_service.federated_timeline
       format_json
     end
 
     def newsmast
-      
-      @statuses = Mammoth::TimelineService.newsmast_timeline(current_account, @max_id, current_user)
+      @statuses = @timeline_service.newsmast_timeline
       format_json
     end
 
@@ -59,6 +57,10 @@ module Mammoth::Api::V1::Timeline
           }
         }
       end
+    end
+
+    def create_service
+      @timeline_service = Mammoth::TimelineService.new(current_account, @max_id, current_user)
     end
 
     def create_policy
