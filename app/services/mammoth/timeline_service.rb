@@ -41,9 +41,10 @@ module Mammoth
       query_time = Benchmark.measure do
         @result = Mammoth::Status.find_by_sql([@sql_query, { ACC_ID: @current_account.id,  MAX_ID: @max_id, USR_ID: @current_user.id }])
       end
+      puts "Query processing time : #{query_time.real} seconds"
       status_ids = @result.map(&:id)
       statuses_relation = Mammoth::Status.where(id: status_ids)
-      puts "Query processing time : #{query_time.real} seconds"
+      statuses_relation = statuses_relation.filter_banned_statuses
       return statuses_relation
     end
   end

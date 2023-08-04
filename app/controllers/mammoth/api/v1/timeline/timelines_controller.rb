@@ -34,15 +34,13 @@ module Mammoth::Api::V1::Timeline
 
     def format_json
       unless @statuses.empty?
-        before_limit_statuses = @statuses
-        @statuses = @statuses.order(created_at: :desc).limit(5)
         render json: @statuses, root: 'data', 
                                 each_serializer: Mammoth::StatusSerializer, current_user: current_user, adapter: :json, 
                                 meta: {
                                   pagination:
                                   { 
-                                    total_objects: before_limit_statuses.size,
-                                    has_more_objects: 5 <= before_limit_statuses.size ? true : false
+                                    total_objects: nil,
+                                    has_more_objects: 5 <= @statuses.size ? true : false
                                   } 
                                 }
       else
