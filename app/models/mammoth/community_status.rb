@@ -58,5 +58,28 @@ module Mammoth
 
     validates_attachment_content_type :image, content_type: IMAGE_MIME_TYPES
     validates_attachment_size :image, less_than: IMAGE_LIMIT
+
+    after_create :create_filter_community_keywords
+
+    before_destroy :destroy_filter_community_filter_statuses
+
+    private
+
+    def create_filter_community_keywords
+
+      json = {
+        'community_id' => self.community_id,
+        'is_status_create' => true,
+        'status_id' => self.status_id
+      }
+
+      community_statuses = Mammoth::CommunityFilterStatusesCreateWorker.perform_async(json)
+
+    end
+
+    def destroy_filter_community_filter_statuses
+      Mammoth::CommunityFilterStatus.where(status_id: self.status_id).joins(:community_filter_keyword).where(community_filter_keyword: {community_id: self.community_id}).destroy_all
+    end
+
   end
 end
