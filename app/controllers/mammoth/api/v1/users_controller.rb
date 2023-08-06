@@ -79,6 +79,7 @@ module Mammoth::Api::V1
 
     def global_suggestion      
       #begin::search from other instance
+      params[:limit] = 20
       filtered_accounts = []
       if params[:words].present?
         filtered_accounts = perform_accounts_search! if account_searchable?
@@ -768,7 +769,7 @@ module Mammoth::Api::V1
       AccountSearchService.new.call(
         params[:words],
         current_account,
-        limit: params[:limit] ,
+        limit: 20 ,
         resolve: true,
         offset: params[:offset].present? ? params[:offset] : 0
       )
