@@ -80,10 +80,16 @@ module Mammoth::Api::V1
     def global_suggestion      
       #begin::search from other instance
       params[:limit] = 20
+      puts "******************************************************************************"
+      puts "*************global_suggestion***************"
+      puts "***************params[:limit]***************"
+      puts params[:limit]
       filtered_accounts = []
       if params[:words].present?
         filtered_accounts = perform_accounts_search! if account_searchable?
-        @accounts = Account.where(id: filtered_accounts.pluck(:id)).order(id: :desc)   
+        @accounts = Account.where(id: filtered_accounts.pluck(:id)).order(id: :desc) 
+        puts "***************filtered_accounts***************"
+        puts filtered_accounts.inspect
       end
 
       unless filtered_accounts.any? || params[:words].present?
