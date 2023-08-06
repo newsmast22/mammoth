@@ -86,6 +86,8 @@ module Mammoth::Api::V1
       puts params[:limit]
       filtered_accounts = []
       if params[:words].present?
+        puts "***************account_searchable?***************"
+        puts account_searchable?
         filtered_accounts = perform_accounts_search! if account_searchable?
         @accounts = Account.where(id: filtered_accounts.pluck(:id)).order(id: :desc) 
         puts "***************filtered_accounts***************"
