@@ -8,9 +8,18 @@ module Mammoth::Api::V1
     before_action -> { authorize_if_got_token! :read, :'read:search' }
 
     def get_all_community_status_timelines
-      @user_search_setting = Mammoth::UserSearchSetting.find_by(user_id: current_user.id)
+      #@user_search_setting = Mammoth::UserSearchSetting.find_by(user_id: current_user.id)
 
       @statuses = Mammoth::Status.where(reply: false).where.not(account_id: current_account.id)
+
+      if params[:words].present?
+        @statuses = Mammoth::Status.where(reply: false).where.not(account_id: current_account.id).filter_with_words(params[:words].downcase).limit(params[:limit])
+      else
+        @statuses = Mammoth::Status.where(reply: false).where.not(account_id: current_account.id).limit(params[:limit])
+      end
+      
+      #@statuses = @statuses.filter_with_words(params[:words].downcase)
+
 
       #begin::muted account post
       muted_accounts = Mute.where(account_id: current_account.id)
@@ -42,8 +51,6 @@ module Mammoth::Api::V1
         @statuses = @statuses.filter_blocked_statuses(combine_deactivated_status_ids)
       end
       #end::deactivated account post
-
-      @statuses = @statuses.filter_with_words(params[:words].downcase) if params[:words].present?
       
       #begin::community filter
       # create_default_user_search_setting() if @user_search_setting.nil?
@@ -71,7 +78,15 @@ module Mammoth::Api::V1
 
       user_community_ids = Mammoth::UserCommunity.where(user_id: current_account.user.id).pluck(:community_id).map(&:to_i)
       community_statuses_ids = Mammoth::CommunityStatus.where(community_id: user_community_ids).order(created_at: :desc).pluck(:status_id).map(&:to_i)
-      @statuses = Mammoth::Status.where(reply: false,id: community_statuses_ids)
+
+      if params[:words].present?
+        @statuses = Mammoth::Status.where(reply: false,id: community_statuses_ids).filter_with_words(params[:words].downcase).limit(params[:limit])
+      else
+        @statuses = Mammoth::Status.where(reply: false,id: community_statuses_ids).limit(params[:limit])
+      end
+      #@statuses = @statuses.filter_with_words(params[:words].downcase) if params[:words].present?
+
+      #@statuses = Mammoth::Status.where(reply: false,id: community_statuses_ids)
 
       #begin::muted account post
       muted_accounts = Mute.where(account_id: current_account.id)
@@ -104,7 +119,7 @@ module Mammoth::Api::V1
       end
       #end::deactivated account post
 
-      @statuses = @statuses.filter_with_words(params[:words].downcase) if params[:words].present?
+      #@statuses = @statuses.filter_with_words(params[:words].downcase) if params[:words].present?
       
       #begin::community filter
       # create_default_user_search_setting() if @user_search_setting.nil?
