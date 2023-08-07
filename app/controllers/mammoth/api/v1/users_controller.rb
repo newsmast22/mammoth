@@ -80,25 +80,25 @@ module Mammoth::Api::V1
     def global_suggestion      
       #begin::search from other instance
       params[:limit] = 20
-      puts "******************************************************************************"
-      puts "*************global_suggestion***************"
-      puts "***************params[:limit]***************"
-      puts params[:limit]
       filtered_accounts = []
       if params[:words].present?
-        puts "***************account_searchable?***************"
-        puts account_searchable?
+        puts "******************************************************************************"
+        @start_time = Time.now
+        puts "***************time mastondon search api start:#{@start_time} ***************"
         filtered_accounts = perform_accounts_search! if account_searchable?
         @accounts = Account.where(id: filtered_accounts.pluck(:id)).order(id: :desc) 
-        puts "***************filtered_accounts***************"
-        puts filtered_accounts.inspect
+
+        puts "******************************* end: #{ Time.now - @start_time} ***********************************************"
       end
 
       unless filtered_accounts.any? || params[:words].present?
-        @accounts = Account.joins("LEFT JOIN users on accounts.id = users.account_id").where("
-                    users.role_id IS NULL").order(id: :desc)
-        
-        @accounts = @accounts.offset(params[:offset]) if params[:offset].present?
+        if params[:offset].present?
+          @accounts = Account.joins("LEFT JOIN users on accounts.id = users.account_id").where("
+            users.role_id IS NULL").order(id: :desc).offset(params[:offset]) 
+        else
+          @accounts = Account.joins("LEFT JOIN users on accounts.id = users.account_id").where("
+            users.role_id IS NULL").order(id: :desc).take(20)
+        end
       end
       #end::search from other instance
 
