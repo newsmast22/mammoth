@@ -4,11 +4,11 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
   include RoutingHelper
   include FormattingHelper
 
-  attributes :id, :username, :acct, :display_name, :locked, :bot, :discoverable,:hide_collections, :group, :created_at,
+  attributes :id,:account_id, :username, :acct, :display_name, :locked, :bot, :discoverable,:hide_collections, :group, :created_at,
              :note, :url, :avatar, :avatar_static, :header, :header_static,:primary_community_slug,:primary_community_name,
              :followers_count, :following_count, :statuses_count, :last_status_at,:collection_count,:community_count,
              :country,:country_common_name,:dob,:subtitle,:about_me,:hash_tag_count,:is_followed,:is_requested,
-             :email,:phone,:step,:is_active,:is_account_setup_finished
+             :email,:phone,:step,:is_active,:is_account_setup_finished,:domain,:image_url,:bio
              
 
   has_one :moved_to_account, key: :moved, serializer: Mammoth::AccountSerializer, if: :moved_and_not_nested?
@@ -54,6 +54,18 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
   has_many :fields
 
   def id
+    object.id.to_s
+  end
+
+  def image_url
+    object.avatar.url
+  end
+
+  def bio 
+    object.suspended? ? '' : object.note
+  end
+
+  def account_id
     object.id.to_s
   end
 
@@ -143,6 +155,10 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
     else
       ""
     end
+  end
+
+  def domain 
+    object.domain
   end
 
   def hash_tag_count
