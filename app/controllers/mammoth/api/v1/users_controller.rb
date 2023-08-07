@@ -79,17 +79,26 @@ module Mammoth::Api::V1
 
     def global_suggestion      
       #begin::search from other instance
+      params[:limit] = 20
+      puts "******************************************************************************"
+      puts "*************global_suggestion***************"
+      puts "***************params[:limit]***************"
+      puts params[:limit]
       filtered_accounts = []
       if params[:words].present?
+        puts "***************account_searchable?***************"
+        puts account_searchable?
         filtered_accounts = perform_accounts_search! if account_searchable?
-        if filtered_accounts.any?
-          @accounts = Account.where(id: filtered_accounts.pluck(:id))   
-        end        
+        @accounts = Account.where(id: filtered_accounts.pluck(:id)).order(id: :desc) 
+        puts "***************filtered_accounts***************"
+        puts filtered_accounts.inspect
       end
 
-      if !filtered_accounts.any? || !params[:words].present?
+      unless filtered_accounts.any? || params[:words].present?
         @accounts = Account.joins("LEFT JOIN users on accounts.id = users.account_id").where("
-                    users.role_id IS NULL")
+                    users.role_id IS NULL").order(id: :desc)
+        
+        @accounts = @accounts.offset(params[:offset]) if params[:offset].present?
       end
       #end::search from other instance
 
@@ -109,12 +118,15 @@ module Mammoth::Api::V1
 				end
 			#end::deactivated account post
 
+      #begin::this code going to destroy soon
       if params[:max_id].present?
         @accounts = @accounts.where("accounts.id < #{params[:max_id]}")
       end
+      #end::this code going to destroy soon
+
 
       left_seggession_count = 0
-      if params[:limit].present?
+      if params[:limit].present? 
         left_seggession_count = @accounts.size - params[:limit].to_i <= 0 ? 0 : @accounts.size - params[:limit].to_i
         @accounts = @accounts.limit(params[:limit].to_i)
       end
@@ -144,11 +156,13 @@ module Mammoth::Api::V1
           acct: account.pretty_acct
         }
       end
+      offset =  params[:offset].present? ?  params[:offset] : 0
       render json: {
         data: data,
         meta: { 
 					left_suggession_count: left_seggession_count,
-          has_more_objects: left_seggession_count > 0 ? true : false
+          has_more_objects: left_seggession_count > 0 ? true : false,
+          offset: offset
 				}
       }
     end
@@ -763,9 +777,9 @@ module Mammoth::Api::V1
       AccountSearchService.new.call(
         params[:words],
         current_account,
-        limit: params[:limit],
+        limit: 20 ,
         resolve: true,
-        offset: 0
+        offset: params[:offset].present? ? params[:offset] : 0
       )
     end
 
