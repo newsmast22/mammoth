@@ -126,40 +126,50 @@ module Mammoth::Api::V1
         @accounts = @accounts.limit(params[:limit].to_i)
       end
 
-      account_followed = Follow.where(account_id: current_account).pluck(:target_account_id).map(&:to_i)
+      #account_followed = Follow.where(account_id: current_account).pluck(:target_account_id).map(&:to_i)
 
-      data   = []
-      @accounts.order(id: :desc).each do |account|
+      # data   = []
+      # @accounts.order(id: :desc).each do |account|
 
-        #begin::check account requested or not
-        is_requested = false
-        follow_request = FollowRequest.where(account_id: current_account.id, target_account_id: account.id)
-        is_requested = follow_request.present? ? true : false
-        #end::check account requested or not
+      #   #begin::check account requested or not
+      #   is_requested = false
+      #   follow_request = FollowRequest.where(account_id: current_account.id, target_account_id: account.id)
+      #   is_requested = follow_request.present? ? true : false
+      #   #end::check account requested or not
 
-        data << {
-          account_id: account.id.to_s,
-          domain: account.domain,
-          is_followed: account_followed.include?(account.id), 
-          is_requested: is_requested,
-          user_id: account.try(:user).try(:id).present? ? account.try(:user).try(:id) : nil ,
-          username: account.username,
-          display_name: account.display_name.presence || account.username,
-          email: account.try(:user).try(:email).present? ? account.try(:user).try(:email) : nil,
-          image_url: account.avatar.url,
-          bio: account.note,
-          acct: account.pretty_acct
-        }
-      end
+      #   data << {
+      #     account_id: account.id.to_s,
+      #     domain: account.domain,
+      #     is_followed: account_followed.include?(account.id), 
+      #     is_requested: is_requested,
+      #     user_id: account.try(:user).try(:id).present? ? account.try(:user).try(:id) : nil ,
+      #     username: account.username,
+      #     display_name: account.display_name.presence || account.username,
+      #     email: account.try(:user).try(:email).present? ? account.try(:user).try(:email) : nil,
+      #     image_url: account.avatar.url,
+      #     bio: account.note,
+      #     acct: account.pretty_acct
+      #   }
+      # end
       offset =  params[:offset].present? ?  params[:offset] : 0
-      render json: {
-        data: data,
-        meta: { 
-					left_suggession_count: left_seggession_count,
-          has_more_objects: left_seggession_count > 0 ? true : false,
-          offset: offset
-				}
-      }
+      # render json: {
+      #   data: data,
+      #   meta: { 
+			# 		left_suggession_count: left_seggession_count,
+      #     has_more_objects: left_seggession_count > 0 ? true : false,
+      #     offset: offset
+			# 	}
+      # }
+
+      render json: @accounts, root: 'data', 
+                                each_serializer: Mammoth::AccountSerializer, current_user: current_user, adapter: :json, 
+                                meta: { 
+                                  left_suggession_count: left_seggession_count,
+                                  has_more_objects: left_seggession_count > 0 ? true : false,
+                                  offset: offset
+                                }
+      
+      
     end
 
     def update
