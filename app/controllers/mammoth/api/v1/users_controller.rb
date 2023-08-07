@@ -82,13 +82,8 @@ module Mammoth::Api::V1
       params[:limit] = 20
       filtered_accounts = []
       if params[:words].present?
-        puts "******************************************************************************"
-        @start_time = Time.now
-        puts "***************time mastondon search api start:#{@start_time} ***************"
         filtered_accounts = perform_accounts_search! if account_searchable?
         @accounts = Account.where(id: filtered_accounts.pluck(:id)).order(id: :desc) 
-
-        puts "******************************* end: #{ Time.now - @start_time} ***********************************************"
       end
 
       unless filtered_accounts.any? || params[:words].present?
@@ -102,21 +97,21 @@ module Mammoth::Api::V1
       end
       #end::search from other instance
 
-      #begin::blocked account post
-      blocked_accounts = Block.where(account_id: current_account.id).or(Block.where(target_account_id: current_account.id))
-      unless blocked_accounts.blank?
-        combined_block_account_ids = blocked_accounts.pluck(:account_id,:target_account_id).flatten
-        combined_block_account_ids.delete(current_account.id)
-        @accounts = @accounts.filter_blocked_accounts(combined_block_account_ids)
-      end
-      #end::blocked account post
+      # #begin::blocked account post
+      # blocked_accounts = Block.where(account_id: current_account.id).or(Block.where(target_account_id: current_account.id))
+      # unless blocked_accounts.blank?
+      #   combined_block_account_ids = blocked_accounts.pluck(:account_id,:target_account_id).flatten
+      #   combined_block_account_ids.delete(current_account.id)
+      #   @accounts = @accounts.filter_blocked_accounts(combined_block_account_ids)
+      # end
+      # #end::blocked account post
 
-      #begin::deactivated account post
-				deactivated_accounts = Account.joins(:user).where('users.is_active = ?', false)
-				unless deactivated_accounts.blank?
-          @accounts = @accounts.filter_blocked_accounts(deactivated_accounts.pluck(:id).map(&:to_i))
-				end
-			#end::deactivated account post
+      # #begin::deactivated account post
+			# 	deactivated_accounts = Account.joins(:user).where('users.is_active = ?', false)
+			# 	unless deactivated_accounts.blank?
+      #     @accounts = @accounts.filter_blocked_accounts(deactivated_accounts.pluck(:id).map(&:to_i))
+			# 	end
+			# #end::deactivated account post
 
       #begin::this code going to destroy soon
       if params[:max_id].present?
