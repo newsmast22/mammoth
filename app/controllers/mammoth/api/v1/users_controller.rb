@@ -97,7 +97,7 @@ module Mammoth::Api::V1
             users.role_id IS NULL").order(id: :desc).offset(params[:offset]) 
         else
           @accounts = Account.joins("LEFT JOIN users on accounts.id = users.account_id").where("
-            users.role_id IS NULL").order(id: :desc).take(20)
+            users.role_id IS NULL").order(id: :desc).limit(20)
         end
       end
       #end::search from other instance
