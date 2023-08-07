@@ -17,6 +17,8 @@ module Mammoth::Api::V1
       end
       #End:Create UserTimeLineSetting
 
+      start_time = Time.now
+
       followed_account_ids = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
       followed_tag_ids = TagFollow.where(account_id: current_account.id).pluck(:tag_id).map(&:to_i)
       
@@ -72,6 +74,11 @@ module Mammoth::Api::V1
         fetch_following_filter_timeline(filtered_followed_statuses)
         # End::Filter
         @statuses = @statuses.filter_banned_statuses
+
+        end_time = Time.now
+        processing_time = end_time - start_time
+        puts " Following Timeline Processing time: #{format('%.4f', processing_time)} seconds"
+
         unless @statuses.empty?
           before_limit_statuses = @statuses
           @statuses = @statuses.order(created_at: :desc).limit(5)
