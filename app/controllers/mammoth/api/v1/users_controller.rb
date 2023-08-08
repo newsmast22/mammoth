@@ -634,12 +634,6 @@ module Mammoth::Api::V1
       follow_request = Account.requested_map(target_account_id, current_account.id)
 
       following = Account.following_map(target_account_id, current_account.id)
-      
-      # FollowRequest.where(account_id: current_account.id, target_account_id: target_account_id)
-      # following =Follow.where(account_id:  current_account.id , target_account_id: target_account_id)
-
-      puts "***************** fetch follow request: #{follow_request.inspect} *****************"
-      puts "***************** fetch follow: #{following.inspect} *****************"
 
       is_requested = follow_request.present? ? true : false
       is_following = following.present? ? true : false
