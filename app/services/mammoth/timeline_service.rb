@@ -45,7 +45,7 @@ module Mammoth
       status_ids = @result.map(&:id)
       @statuses_relation = Mammoth::Status.where(id: status_ids)
       # @statuses = @statuses_relation.filter_banned_statuses
-      return @statuses
+      return @statuses_relation
     end
   end
 end
