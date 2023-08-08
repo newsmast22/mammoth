@@ -25,7 +25,7 @@ module Mammoth
                       AND statuses.account_id NOT IN (#{@filter_block_delete_mute})
                       AND statuses.account_id IN (#{@filter_amplifier})
                       ORDER BY statuses.created_at DESC 
-                      LIMIT 5;"
+                      ;"
           return sql_query
         end
 
@@ -41,7 +41,7 @@ module Mammoth
                       AND statuses.account_id NOT IN (#{@filter_block_delete_mute})
                       AND statuses.account_id IN (#{@filter_amplifier})
                       ORDER BY statuses.created_at DESC 
-                      LIMIT 5;"
+                      ;"
 
           puts sql_query
           return sql_query
@@ -56,7 +56,7 @@ module Mammoth
                         AND statuses.account_id NOT IN (#{@filter_block_delete_mute})
                         AND statuses.account_id IN (#{@filter_amplifier})
                         ORDER BY statuses.created_at DESC 
-                        LIMIT 5;"
+                        ;"
         end
 
         def federated_timeline_query
@@ -67,7 +67,7 @@ module Mammoth
                         AND statuses.deleted_at IS NULL 
                         AND statuses.account_id NOT IN (#{@filter_block_delete_mute})
                         ORDER BY statuses.created_at DESC 
-                        LIMIT 5;"
+                        ;"
         end
 
         def select_status_without_rss
