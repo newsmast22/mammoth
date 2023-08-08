@@ -639,15 +639,16 @@ module Mammoth::Api::V1
       # following =Follow.where(account_id:  current_account.id , target_account_id: target_account_id)
 
       puts "***************** fetch follow request: #{follow_request.inspect} *****************"
-      puts "***************** fetch follow: #{following.insepct} *****************"
+      puts "***************** fetch follow: #{following.inspect} *****************"
 
       is_requested = follow_request.present? ? true : false
+      is_following = following.present? ? true : false
       #end::check account requested or not
 
       account_data = single_serialize(account_info, Mammoth::CredentialAccountSerializer)
       render json: {
         data:{
-          account_data: account_data.merge(:is_requested => is_requested,:is_my_account => is_my_account, :is_followed => following),
+          account_data: account_data.merge(:is_requested => is_requested,:is_my_account => is_my_account, :is_followed => is_following),
           community_images_url: community_images,
           following_images_url: following_account_images,
           is_admin: is_admin,
