@@ -62,7 +62,7 @@ module Mammoth
     def create_statuses_by_batch_size(community_id)
       self.class.where(community_id: community_id).find_in_batches(batch_size: 100).each do |community_statuses|
         community_statuses.each do |community_status|
-          Mammoth::CommunityFilterKeyword.new.filter_statuses_by_keywords(community_id,community_status.status_id)
+          Mammoth::CommunityFilterKeyword.new.save_community_filter_keyword(community_id,community_status.status_id)
         end
       end
     end
