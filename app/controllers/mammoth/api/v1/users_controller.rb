@@ -80,43 +80,38 @@ module Mammoth::Api::V1
     def global_suggestion      
       #begin::search from other instance
       params[:limit] = 20
-      puts "******************************************************************************"
-      puts "*************global_suggestion***************"
-      puts "***************params[:limit]***************"
-      puts params[:limit]
       filtered_accounts = []
       if params[:words].present?
-        puts "***************account_searchable?***************"
-        puts account_searchable?
         filtered_accounts = perform_accounts_search! if account_searchable?
         @accounts = Account.where(id: filtered_accounts.pluck(:id)).order(id: :desc) 
-        puts "***************filtered_accounts***************"
-        puts filtered_accounts.inspect
       end
 
       unless filtered_accounts.any? || params[:words].present?
-        @accounts = Account.joins("LEFT JOIN users on accounts.id = users.account_id").where("
-                    users.role_id IS NULL").order(id: :desc)
-        
-        @accounts = @accounts.offset(params[:offset]) if params[:offset].present?
+        if params[:offset].present?
+          @accounts = Account.joins("LEFT JOIN users on accounts.id = users.account_id").where("
+            users.role_id IS NULL").order(id: :desc).offset(params[:offset]) 
+        else
+          @accounts = Account.joins("LEFT JOIN users on accounts.id = users.account_id").where("
+            users.role_id IS NULL").order(id: :desc).limit(20)
+        end
       end
       #end::search from other instance
 
-      #begin::blocked account post
-      blocked_accounts = Block.where(account_id: current_account.id).or(Block.where(target_account_id: current_account.id))
-      unless blocked_accounts.blank?
-        combined_block_account_ids = blocked_accounts.pluck(:account_id,:target_account_id).flatten
-        combined_block_account_ids.delete(current_account.id)
-        @accounts = @accounts.filter_blocked_accounts(combined_block_account_ids)
-      end
-      #end::blocked account post
+      # #begin::blocked account post
+      # blocked_accounts = Block.where(account_id: current_account.id).or(Block.where(target_account_id: current_account.id))
+      # unless blocked_accounts.blank?
+      #   combined_block_account_ids = blocked_accounts.pluck(:account_id,:target_account_id).flatten
+      #   combined_block_account_ids.delete(current_account.id)
+      #   @accounts = @accounts.filter_blocked_accounts(combined_block_account_ids)
+      # end
+      # #end::blocked account post
 
-      #begin::deactivated account post
-				deactivated_accounts = Account.joins(:user).where('users.is_active = ?', false)
-				unless deactivated_accounts.blank?
-          @accounts = @accounts.filter_blocked_accounts(deactivated_accounts.pluck(:id).map(&:to_i))
-				end
-			#end::deactivated account post
+      # #begin::deactivated account post
+			# 	deactivated_accounts = Account.joins(:user).where('users.is_active = ?', false)
+			# 	unless deactivated_accounts.blank?
+      #     @accounts = @accounts.filter_blocked_accounts(deactivated_accounts.pluck(:id).map(&:to_i))
+			# 	end
+			# #end::deactivated account post
 
       #begin::this code going to destroy soon
       if params[:max_id].present?
@@ -131,40 +126,50 @@ module Mammoth::Api::V1
         @accounts = @accounts.limit(params[:limit].to_i)
       end
 
-      account_followed = Follow.where(account_id: current_account).pluck(:target_account_id).map(&:to_i)
+      #account_followed = Follow.where(account_id: current_account).pluck(:target_account_id).map(&:to_i)
 
-      data   = []
-      @accounts.order(id: :desc).each do |account|
+      # data   = []
+      # @accounts.order(id: :desc).each do |account|
 
-        #begin::check account requested or not
-        is_requested = false
-        follow_request = FollowRequest.where(account_id: current_account.id, target_account_id: account.id)
-        is_requested = follow_request.present? ? true : false
-        #end::check account requested or not
+      #   #begin::check account requested or not
+      #   is_requested = false
+      #   follow_request = FollowRequest.where(account_id: current_account.id, target_account_id: account.id)
+      #   is_requested = follow_request.present? ? true : false
+      #   #end::check account requested or not
 
-        data << {
-          account_id: account.id.to_s,
-          domain: account.domain,
-          is_followed: account_followed.include?(account.id), 
-          is_requested: is_requested,
-          user_id: account.try(:user).try(:id).present? ? account.try(:user).try(:id) : nil ,
-          username: account.username,
-          display_name: account.display_name.presence || account.username,
-          email: account.try(:user).try(:email).present? ? account.try(:user).try(:email) : nil,
-          image_url: account.avatar.url,
-          bio: account.note,
-          acct: account.pretty_acct
-        }
-      end
+      #   data << {
+      #     account_id: account.id.to_s,
+      #     domain: account.domain,
+      #     is_followed: account_followed.include?(account.id), 
+      #     is_requested: is_requested,
+      #     user_id: account.try(:user).try(:id).present? ? account.try(:user).try(:id) : nil ,
+      #     username: account.username,
+      #     display_name: account.display_name.presence || account.username,
+      #     email: account.try(:user).try(:email).present? ? account.try(:user).try(:email) : nil,
+      #     image_url: account.avatar.url,
+      #     bio: account.note,
+      #     acct: account.pretty_acct
+      #   }
+      # end
       offset =  params[:offset].present? ?  params[:offset] : 0
-      render json: {
-        data: data,
-        meta: { 
-					left_suggession_count: left_seggession_count,
-          has_more_objects: left_seggession_count > 0 ? true : false,
-          offset: offset
-				}
-      }
+      # render json: {
+      #   data: data,
+      #   meta: { 
+			# 		left_suggession_count: left_seggession_count,
+      #     has_more_objects: left_seggession_count > 0 ? true : false,
+      #     offset: offset
+			# 	}
+      # }
+
+      render json: @accounts, root: 'data', 
+                                each_serializer: Mammoth::AccountSerializer, current_user: current_user, adapter: :json, 
+                                meta: { 
+                                  left_suggession_count: left_seggession_count,
+                                  has_more_objects: left_seggession_count > 0 ? true : false,
+                                  offset: offset
+                                }
+      
+      
     end
 
     def update
@@ -584,7 +589,7 @@ module Mammoth::Api::V1
       )
     end
 
-    def get_user_details_info(account_id, account_info)
+    def get_user_details_info(target_account_id, account_info)
       
       role_name = current_user_role
 
@@ -626,14 +631,24 @@ module Mammoth::Api::V1
 
       #begin::check account requested or not
       is_requested = false
-      follow_request = FollowRequest.where(account_id: current_account.id, target_account_id: account_id)
+      follow_request = Account.requested_map(target_account_id, current_account.id)
+
+      following = Account.following_map(target_account_id, current_account.id)
+      
+      # FollowRequest.where(account_id: current_account.id, target_account_id: target_account_id)
+      # following =Follow.where(account_id:  current_account.id , target_account_id: target_account_id)
+
+      puts "***************** fetch follow request: #{follow_request.inspect} *****************"
+      puts "***************** fetch follow: #{following.inspect} *****************"
+
       is_requested = follow_request.present? ? true : false
+      is_following = following.present? ? true : false
       #end::check account requested or not
 
       account_data = single_serialize(account_info, Mammoth::CredentialAccountSerializer)
       render json: {
         data:{
-          account_data: account_data.merge(:is_requested => is_requested,:is_my_account => is_my_account, :is_followed => account_followed_ids.include?(account_id.to_i)),
+          account_data: account_data.merge(:is_requested => is_requested,:is_my_account => is_my_account, :is_followed => is_following),
           community_images_url: community_images,
           following_images_url: following_account_images,
           is_admin: is_admin,
