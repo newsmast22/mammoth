@@ -80,10 +80,14 @@ module Mammoth::Api::V1
 		end
 
 		def get_community_details_profile
-			result = Mammoth::Community.get_community_info_details(current_user_role,current_user, params[:id])
-      render json: {
-        data: result
-      } 
+			if params[:id] == 'my_server_newmast'
+				@result = Mammoth::UserCommunitiesService.virtual_user_community_details
+			else 
+				@result = Mammoth::Community.get_community_info_details(current_user_role,current_user, params[:id])
+			end 
+		render json: {
+			data: @result
+		} 
 		end
 
 		def get_community_detail_statues

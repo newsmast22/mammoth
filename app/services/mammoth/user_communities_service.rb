@@ -69,6 +69,21 @@ class Mammoth::UserCommunitiesService < BaseService
     return @data
   end
 
+  def self.virtual_user_community_details
+    { 
+      community_followed_user_counts: nil,
+      community_name: 'My Server - Newsmast',
+      community_description:  "All posts from the user communities of Newsmast",
+      collection_name: 'My Server - Newsmast',
+      community_url: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/my_server_newsmast_cover_photos/newsmast_community_profile_photo.png",
+      community_header_url: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/my_server_newsmast_cover_photos/newsmast_community_cover_photo.png",
+      community_slug: "my_server_newmast",
+      is_joined: nil,
+      is_admin: nil,
+      is_virtual: true
+    }
+  end
+
   def virtual_community
     if @is_virtual == 'true' || @is_virtual.nil?
       @data.unshift( {
@@ -77,13 +92,13 @@ class Mammoth::UserCommunitiesService < BaseService
         is_primary: false,
         is_virtual: true,
         name: 'My Server - Newsmast',
-        slug: 'my-server-newsmast',
-        image_file_name: 'my-server-newsmast',
+        slug: 'my_server_newmast',
+        image_file_name: 'my_server_newmast',
         image_content_type: nil,
         image_file_size: nil,
         image_updated_at: Time.now,
         description: "All posts from the user communities of Newsmast",
-        image_url: "https://s3-eu-west-2.amazonaws.com/newsmast-staging/mammoth/communities/images/000/000/004/original/14a6c845a0e485ab.png",
+        image_url: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/my_server_newsmast_cover_photos/newsmast_community_profile_photo.png",
         collection_id: nil,
         followers: nil,
         created_at: Time.now,

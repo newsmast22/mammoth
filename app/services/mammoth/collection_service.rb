@@ -52,8 +52,8 @@ class Mammoth::CollectionService < BaseService
 		  community_count: all_collection_count,
 		  created_at: Time.now,
 		  updated_at: Time.now,
-          image_url: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/all_collection_community_cover_photos/all_collection_cover_photo.jpg",
-          collection_detail_image_url: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/all_collection_community_cover_photos/all_community_cover_photo.jpg",
+          image_url: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/all_collection_community_cover_photos/all_community_cover_photo.jpg",
+          collection_detail_image_url: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/all_collection_community_cover_photos/all_collection_cover_photo.jpg",
           description: "All posts from the communities of Newsmast and connected instances of Fediverse"
 		}
 	  

@@ -44,7 +44,7 @@ module Mammoth
       puts "#{@caller_name} timeline query processing time : #{format('%.4f', query_time.real)} seconds"
       status_ids = @result.map(&:id)
       @statuses_relation = Mammoth::Status.where(id: status_ids)
-      @statuses = @statuses_relation.filter_banned_statuses
+      # @statuses = @statuses_relation.filter_banned_statuses
       return @statuses
     end
   end
