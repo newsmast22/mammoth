@@ -173,6 +173,7 @@ module Mammoth::Api::V1
 				@user_community_setting = Mammoth::UserCommunitySetting.find_by(user_id: current_user.id)
       
 				if @user_community_setting.nil? || @user_community_setting.selected_filters["is_filter_turn_on"] == false 
+					@statuses = @statuses.filter_banned_statuses
 					before_limit_statuses = @statuses
 					@statuses = @statuses.limit(5)
 					return render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, current_user: current_user, adapter: :json, 
@@ -343,9 +344,9 @@ module Mammoth::Api::V1
 					@user_community_setting = Mammoth::UserCommunitySetting.find_by(user_id: current_user.id)
       
 					if @user_community_setting.nil? || @user_community_setting.selected_filters["is_filter_turn_on"] == false 
+						@statuses = @statuses.filter_banned_statuses
 						before_limit_statuses = @statuses
 						@statuses = @statuses.limit(5)
-
 					#@statuses = @statuses.page(params[:page]).per(5)
 						return render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, current_user: current_user, adapter: :json, 
 						meta: {
