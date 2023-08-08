@@ -42,6 +42,18 @@ module Mammoth
 
     end
 
+    def save_community_filter_keyword(community_id,status_id)
+      status = Mammoth::Status.where(id: status_id).last
+      if status.present?
+        content = status.text
+        unless content.empty?
+
+        # Community keywords check from status's text 
+        filter_statuses_by_community_keywords(content, status.id, community_id)
+        end
+      end
+    end
+
     after_create :create_community_filter_statuses
 
     after_update :update_community_filter_statuses 
