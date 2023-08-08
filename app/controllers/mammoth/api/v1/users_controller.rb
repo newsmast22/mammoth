@@ -589,7 +589,7 @@ module Mammoth::Api::V1
       )
     end
 
-    def get_user_details_info(account_id, account_info)
+    def get_user_details_info(target_account_id, account_info)
       
       role_name = current_user_role
 
@@ -631,14 +631,23 @@ module Mammoth::Api::V1
 
       #begin::check account requested or not
       is_requested = false
-      follow_request = FollowRequest.where(account_id: current_account.id, target_account_id: account_id)
+      follow_request = Account.requested_map(target_account_id, current_account.id)
+
+      following = Account.following_map(target_account_id, current_account.id)
+      
+      # FollowRequest.where(account_id: current_account.id, target_account_id: target_account_id)
+      # following =Follow.where(account_id:  current_account.id , target_account_id: target_account_id)
+
+      puts "***************** fetch follow request: #{follow_request.inspect} *****************"
+      puts "***************** fetch follow: #{following.insepct} *****************"
+
       is_requested = follow_request.present? ? true : false
       #end::check account requested or not
 
       account_data = single_serialize(account_info, Mammoth::CredentialAccountSerializer)
       render json: {
         data:{
-          account_data: account_data.merge(:is_requested => is_requested,:is_my_account => is_my_account, :is_followed => account_followed_ids.include?(account_id.to_i)),
+          account_data: account_data.merge(:is_requested => is_requested,:is_my_account => is_my_account, :is_followed => following),
           community_images_url: community_images,
           following_images_url: following_account_images,
           is_admin: is_admin,
