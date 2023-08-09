@@ -30,23 +30,28 @@ module Mammoth
             (selected_filters->'source_filter'->'selected_voices') AS selected_voices,
             (selected_filters->'source_filter'->'selected_media') AS selected_media,
             (selected_filters->'location_filter'->'selected_countries') AS selected_countries,
-            (selected_filters->'communities_filter'->'selected_communities') AS selected_communities
+            (selected_filters->'communities_filter'->'selected_communities') AS selected_communities,
+            (selected_filters->'is_filter_turn_on') AS is_filter_turn_on,
+            (selected_filters->'location_filter'->'is_location_filter_turn_on') AS is_location_filter_turn_on
           FROM mammoth_user_timeline_settings
-          WHERE user_id = :USR_ID ),
+          WHERE user_id = :USR_ID 
+          AND (selected_filters->>'is_filter_turn_on')::boolean = true),
         filtered_data AS (
           SELECT
             jsonb_array_elements_text(selected_contributor_roles)::integer AS contributor_role_ids,
             jsonb_array_elements_text(selected_voices)::integer AS voice_ids,
             jsonb_array_elements_text(selected_media)::integer AS media_ids,
             jsonb_array_elements_text(selected_countries) AS country_codes,
-            jsonb_array_elements_text(selected_communities)::integer AS community_ids
+            jsonb_array_elements_text(selected_communities)::integer AS community_ids,
+            jsonb_array_elements_text(is_location_filter_turn_on)::boolean AS is_location_filter_turn_on
           FROM selected_filters
         )
         SELECT accounts.id AS id
         FROM accounts
         WHERE 
           CASE
-            WHEN (SELECT COUNT(filtered_data.country_codes) FROM filtered_data ) > 0 THEN
+            WHEN (SELECT COUNT(filtered_data.country_codes) FROM filtered_data 
+            WHERE filtered_data.is_location_filter_turn_on = true ) > 0 THEN
               country = ANY (
                               SELECT country_codes
                               FROM filtered_data
