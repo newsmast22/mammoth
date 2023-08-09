@@ -42,7 +42,7 @@ class Mammoth::UserCommunitiesService < BaseService
 
       @data = @data.sort_by {|h| [h[:is_primary] ? 0 : 1,h[:slug]]}
 
-      if @params[:community_slug].present? && !(@params[:community_slug] == "all" || @params[:community_slug] == "my_server_newmast")
+      if @params[:community_slug].present? && !(@params[:community_slug] == "all" || @params[:community_slug] == "my_server_newsmast")
         new_community = Mammoth::Community.find_by(slug: @params[:community_slug])
         unless @data.any? { |obj| obj[:slug] == @params[:community_slug] }
           @data.prepend << {
@@ -75,7 +75,7 @@ class Mammoth::UserCommunitiesService < BaseService
     { 
       community_followed_user_counts: nil,
       community_name: 'My Server - Newsmast',
-      community_description:  "All posts from the communities of Newsmast",
+      community_description:  "All posts from the communities of Newsmast.",
       collection_name: 'My Server - Newsmast',
       community_url: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/my_server_newsmast_cover_photos/newsmast_community_profile_photo.png",
       community_header_url: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/my_server_newsmast_cover_photos/newsmast_community_cover_photo.png",
@@ -99,7 +99,7 @@ class Mammoth::UserCommunitiesService < BaseService
         image_content_type: nil,
         image_file_size: nil,
         image_updated_at: Time.now,
-        description: "All posts from the communities of Newsmast",
+        description: "All posts from the communities of Newsmast.",
         image_url: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/my_server_newsmast_cover_photos/newsmast_community_profile_photo.png",
         collection_id: nil,
         followers: nil,

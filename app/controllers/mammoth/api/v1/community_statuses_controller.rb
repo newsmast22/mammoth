@@ -80,7 +80,7 @@ module Mammoth::Api::V1
 		end
 
 		def get_community_details_profile
-			if params[:id] == 'my_server_newmast'
+			if params[:id] == 'my_server_newsmast'
 				@result = Mammoth::UserCommunitiesService.virtual_user_community_details
 			else 
 				@result = Mammoth::Community.get_community_info_details(current_user_role,current_user, params[:id])
@@ -441,11 +441,11 @@ module Mammoth::Api::V1
 		def get_community_statues
 			
 			#Begin::Create UserCommunitySetting
-      userCommunitySetting = Mammoth::UserCommunitySetting.where(user_id: current_user.id).last
-      unless userCommunitySetting.present?
-        create_userCommunitySetting()
-      end
-      #End:Create UserCommunitySetting
+			userCommunitySetting = Mammoth::UserCommunitySetting.where(user_id: current_user.id).last
+			unless userCommunitySetting.present?
+				create_userCommunitySetting()
+			end
+			#End:Create UserCommunitySetting
 
 			@user = Mammoth::User.find(current_user.id)
 			community = Mammoth::Community.find_by(slug: params[:id])
