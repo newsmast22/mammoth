@@ -54,7 +54,7 @@ class Mammoth::CollectionService < BaseService
 		  updated_at: Time.now,
           image_url: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/all_collection_community_cover_photos/all_community_cover_photo.jpg",
           collection_detail_image_url: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/all_collection_community_cover_photos/all_collection_cover_photo.jpg",
-          description: "All posts from the communities of Newsmast and connected instances of Fediverse"
+          description: "All posts from the communities of Newsmast and connected instances of Fediverse."
 		}
 	  
 		return data
@@ -77,7 +77,7 @@ class Mammoth::CollectionService < BaseService
 		  updated_at: Time.now,
           image_url: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/all_collection_community_cover_photos/all_collection_cover_photo.jpg",
           collection_detail_image_url: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/all_collection_community_cover_photos/all_community_cover_photo.jpg",
-          description: "All posts from the communities of Newsmast and connected instances of Fediverse"
+          description: "All posts from the communities of Newsmast and connected instances of Fediverse."
 		}
 	  
 		return data

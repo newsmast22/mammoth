@@ -24,8 +24,7 @@ module Mammoth
                       AND statuses.deleted_at IS NULL 
                       AND statuses.account_id NOT IN (#{@filter_block_delete_mute})
                       AND statuses.account_id IN (#{@filter_amplifier})
-                      ORDER BY statuses.created_at DESC 
-                      ;"
+                      ORDER BY statuses.created_at DESC;"
           return sql_query
         end
 
