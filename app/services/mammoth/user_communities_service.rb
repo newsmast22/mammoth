@@ -5,9 +5,11 @@ class Mammoth::UserCommunitiesService < BaseService
     @params.permit!
     if @params.include?(:is_virtual)
       @is_virtual = @params[:is_virtual]
+    elsif @params.include?(:community_slug)
+      @is_virtual = false
     else
       @is_virtual = nil
-    end  
+    end 
   end
 
   def get_user_communities
@@ -40,7 +42,7 @@ class Mammoth::UserCommunitiesService < BaseService
 
       @data = @data.sort_by {|h| [h[:is_primary] ? 0 : 1,h[:slug]]}
 
-      if @params[:community_slug].present?
+      if @params[:community_slug].present? && !(@params[:community_slug] == "all" || @params[:community_slug] == "my_server_newmast")
         new_community = Mammoth::Community.find_by(slug: @params[:community_slug])
         unless @data.any? { |obj| obj[:slug] == @params[:community_slug] }
           @data.prepend << {
@@ -63,7 +65,7 @@ class Mammoth::UserCommunitiesService < BaseService
           @data = @data.sort_by {|h| [h[:slug] == new_community.slug ? 0 : 1,h[:slug]]}
         end
       end
-      @data = @data.sort_by {|h| [h[:is_primary] ? 0 : 1,h[:slug]]}
+      #@data = @data.sort_by {|h| [h[:is_primary] ? 0 : 1,h[:slug]]}
       virtual_community
     end
     return @data
