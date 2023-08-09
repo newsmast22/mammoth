@@ -102,6 +102,11 @@ module Mammoth::Api::V1
 
 			@user = Mammoth::User.find(current_user.id)
 			community = Mammoth::Community.find_by(slug: params[:id])
+
+			# Fetch community admin by selected community to exlude muted/blocked
+			# A community can have admin (zero or more)
+			community_admins = User.joins("LEFT JOIN mammoth_communities_admins ON mammoth_communities_admins.user_id = users.id AND users.is_active = TRUE ").where("mammoth_communities_admins.community_id = #{community.id} OR users.id = #{current_user.id}")
+
 			#begin::check is community-admin
 			is_community_admin = false
 			user_community_admin = Mammoth::CommunityAdmin.where(user_id: @user.id, community_id: community.id).last
@@ -140,12 +145,12 @@ module Mammoth::Api::V1
 				#end::check is primary community country filter on/off
 	
 				#begin::muted account post
-				muted_accounts = Mute.where(account_id: current_account.id)
+				muted_accounts = Mute.where(account_id: community_admins.pluck(:account_id))
 				@statuses = @statuses.filter_mute_accounts(muted_accounts.pluck(:target_account_id).map(&:to_i)) unless muted_accounts.blank?
 				#end::muted account post
 
 				#begin::blocked account post
-				blocked_accounts = Block.where(account_id: current_account.id).or(Block.where(target_account_id: current_account.id))
+				blocked_accounts = Block.where(account_id: community_admins.pluck(:account_id)).or(Block.where(target_account_id: current_account.id))
 				unless blocked_accounts.blank?
 	
 					combined_block_account_ids = blocked_accounts.pluck(:account_id,:target_account_id).flatten
@@ -264,7 +269,7 @@ module Mammoth::Api::V1
 			@user = Mammoth::User.find(current_user.id)
 			community = Mammoth::Community.find_by(slug: params[:id])
 
-			community_admins = User.joins("INNER JOIN mammoth_communities_admins ON mammoth_communities_admins.user_id = users.id AND users.is_active = TRUE ").where("mammoth_communities_admins.community_id = #{community.id}")
+			community_admins = Mammoth::User.joins("INNER JOIN mammoth_communities_admins ON mammoth_communities_admins.user_id = users.id AND users.is_active = TRUE ").where("mammoth_communities_admins.community_id = #{community.id}")
 
 			unless community_admins.blank?
 
@@ -272,6 +277,7 @@ module Mammoth::Api::V1
 
 				@user = Mammoth::User.find(current_user.id)
 				community = Mammoth::Community.find_by(slug: params[:id])
+
 				#begin::check is community-admin
 				is_community_admin = false
 				user_community_admin= Mammoth::CommunityAdmin.where(user_id: @user.id, community_id: community.id).last
@@ -279,12 +285,14 @@ module Mammoth::Api::V1
 					is_community_admin = true
 				end
 				#end::check is community-admin
+
 				@user_communities = @user.user_communities
 				user_communities_ids  = @user_communities.pluck(:community_id).map(&:to_i)
 	
 				account_followed_ids = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
 	
 				community_statuses = Mammoth::CommunityStatus.where(community_id: community.id)
+
 				unless community_statuses.empty? || !community_admin_followed_account_ids.any?
 					account_followed_ids.push(current_account.id)
 					community_statues_ids= community_statuses.pluck(:status_id).map(&:to_i)
@@ -296,7 +304,7 @@ module Mammoth::Api::V1
 								account_ids: community_admin_followed_account_ids, reply: false,max_id: params[:max_id] )
 
 					@statuses = @statuses.filter_with_community_status_ids(community_statues_ids)
-          			@statuses = @statuses.filter_banned_statuses
+          @statuses = @statuses.filter_banned_statuses
 					#begin::check is primary community country filter on/off [only for end-user]
 					unless is_community_admin
 						primary_user_community = Mammoth::UserCommunity.find_by(user_id: current_user.id,is_primary: true)
@@ -311,12 +319,17 @@ module Mammoth::Api::V1
 					#end::check is primary community country filter on/off
 		
 					#begin::muted account post
-					muted_accounts = Mute.where(account_id: current_account.id)
+
+					#Combine current user and community admin
+
+					community_admins = community_admins + [@user]
+
+					muted_accounts = Mute.where(account_id: community_admins.pluck(:account_id))
 					@statuses = @statuses.filter_mute_accounts(muted_accounts.pluck(:target_account_id).map(&:to_i)) unless muted_accounts.blank?
 					#end::muted account post
 
 					#begin::blocked account post
-					blocked_accounts = Block.where(account_id: current_account.id).or(Block.where(target_account_id: current_account.id))
+					blocked_accounts = Block.where(account_id: community_admins.pluck(:account_id)).or(Block.where(target_account_id: current_account.id))
 					unless blocked_accounts.blank?
 		
 						combined_block_account_ids = blocked_accounts.pluck(:account_id,:target_account_id).flatten
