@@ -42,7 +42,7 @@ class Mammoth::UserCommunitiesService < BaseService
 
       @data = @data.sort_by {|h| [h[:is_primary] ? 0 : 1,h[:slug]]}
 
-      if @params[:community_slug].present? && !(@params[:community_slug] == "all" || @params[:community_slug] == "my_server_newsmast")
+      if @params[:community_slug].present? && !(@params[:community_slug] == "all" || @params[:community_slug] == "newsmast.social")
         new_community = Mammoth::Community.find_by(slug: @params[:community_slug])
         unless @data.any? { |obj| obj[:slug] == @params[:community_slug] }
           @data.prepend << {
@@ -74,12 +74,12 @@ class Mammoth::UserCommunitiesService < BaseService
   def self.virtual_user_community_details
     { 
       community_followed_user_counts: nil,
-      community_name: 'My Server - Newsmast',
+      community_name: 'Newsmast.social',
       community_description:  "All posts from the communities of Newsmast.",
-      collection_name: 'My Server - Newsmast',
+      collection_name: 'Newsmast.social',
       community_url: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/my_server_newsmast_cover_photos/newsmast_community_profile_photo.png",
       community_header_url: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/my_server_newsmast_cover_photos/newsmast_community_cover_photo.png",
-      community_slug: "my_server_newsmast",
+      community_slug: "newsmast.social",
       is_joined: nil,
       is_admin: nil,
       is_virtual: true
@@ -93,9 +93,9 @@ class Mammoth::UserCommunitiesService < BaseService
         user_id: @user.id.to_s,
         is_primary: false,
         is_virtual: true,
-        name: 'My Server - Newsmast',
-        slug: 'my_server_newsmast',
-        image_file_name: 'my_server_newsmast',
+        name: 'Newsmast.social',
+        slug: 'newsmast.social',
+        image_file_name: 'newsmast.social',
         image_content_type: nil,
         image_file_size: nil,
         image_updated_at: Time.now,
