@@ -42,9 +42,10 @@ module Mammoth
         @result = Mammoth::Status.find_by_sql([@sql_query, { ACC_ID: @current_account.id,  MAX_ID: @max_id, USR_ID: @current_user.id }])
       end 
       puts "#{@current_account.username} - (#{@current_account.id}) #{@caller_name} timeline query processing time : #{format('%.4f', query_time.real)} seconds"
-      status_ids = @result.map(&:status_id)
+      status_ids = @result.map(&:id)
       @statuses_relation = Mammoth::Status.where(id: status_ids)
-      return @statuses_relation
+      @statuses = @statuses_relation.filter_banned_statuses.limit(5)
+      return @statuses
     end
   end
 end
