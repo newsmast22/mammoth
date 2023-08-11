@@ -2,7 +2,7 @@ module Mammoth
   class CommunityFilterKeyword < ApplicationRecord
     belongs_to :community, class_name: "Mammoth::Community", optional: true
     belongs_to :account, class_name: "Account"
-    has_many :community_filter_statuses , class_name: "Mammoth::CommunityFilterStatus"
+    has_many :community_filter_statuses , class_name: "Mammoth::CommunityFilterStatus", dependent: :destroy
 
     validates :keyword, uniqueness: { :if => :community_id?, :scope => :community_id}
 
@@ -19,8 +19,18 @@ module Mammoth
 
       community_filter_keywords = Mammoth::CommunityFilterKeyword.where("
         mammoth_community_filter_keywords.account_id = :account_id AND mammoth_community_filter_keywords.community_id = :community_id #{query_string}",
-        account_id: account_id, community_id: community_id, max_id: max_id).limit(100)
+        account_id: account_id, community_id: community_id, max_id: max_id).order(id: :desc).limit(100)
 
+    end
+
+    def self.has_more_objects(account_id:,community_id:,community_filter_keyword_id:)
+      Mammoth::CommunityFilterKeyword
+      .where("
+            mammoth_community_filter_keywords.account_id = :account_id
+            AND mammoth_community_filter_keywords.community_id = :community_id
+            AND id < :community_filter_keyword_id",
+            account_id: account_id, community_id: community_id, community_filter_keyword_id: community_filter_keyword_id) 
+       .exists?
     end
 
     def filter_statuses_by_keywords(community_id,status_id) 

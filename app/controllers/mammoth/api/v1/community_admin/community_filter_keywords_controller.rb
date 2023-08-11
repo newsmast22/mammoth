@@ -48,15 +48,17 @@ module Mammoth::Api::V1::CommunityAdmin
     def return_format_json 
 
       unless @community_filter_keywords.empty?
-        before_limit_statuses = @community_filter_keywords
-        @community_filter_keywords = @community_filter_keywords.order(created_at: :desc).limit(5)
+        @community_filter_keywords = @community_filter_keywords.order(id: :desc).limit(5)
+
+        
+        more_records_available = Mammoth::CommunityFilterKeyword.has_more_objects(account_id: current_account.id, community_id: @community.id, community_filter_keyword_id: @community_filter_keywords.last.id)
+
         render json: @community_filter_keywords, root: 'data', 
         each_serializer: Mammoth::CommunityFilterKeywordSerializer, current_user: current_user, adapter: :json, 
         meta: {
           pagination:
           { 
-            total_objects: before_limit_statuses.size,
-            has_more_objects: 5 <= before_limit_statuses.size ? true : false
+            has_more_objects:  more_records_available
           } 
         }
       else
@@ -65,8 +67,7 @@ module Mammoth::Api::V1::CommunityAdmin
           meta: {
           pagination:
           { 
-          total_objects: 0,
-          has_more_objects: false
+            has_more_objects: false
           } 
           }
         }
