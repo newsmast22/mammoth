@@ -9,7 +9,7 @@ module Mammoth
       @current_user = current_user
       @userTimeLineSetting = Mammoth::UserTimelineSetting.where(user_id: @current_user.id).last
       create_user_timeline_setting
-      @query_service = Mammoth::DbQueries::Service::TimelineServiceQuery.new(@max_id)
+      @query_service = Mammoth::DbQueries::Service::TimelineServiceNew.new(@max_id,@current_user,@current_account)
     end
 
     def call
@@ -22,13 +22,13 @@ module Mammoth
     def get_query
       case @caller_name 
       when "primary"
-        @sql_query = @query_service.primary_timeline_query
+        @statuses = @query_service.primary_timeline
       when "my_community"
-        @sql_query = @query_service.my_community_timeline_query
+        @statuses = @query_service.my_community_timeline
       when "federated"
-        @sql_query = @query_service.federated_timeline_query
+        @statuses = @query_service.federated_timeline
       when "newsmast"
-        @sql_query = @query_service.newsmast_timeline_query
+        @statuses = @query_service.newsmast_timeline
       end
     end
 
@@ -37,14 +37,15 @@ module Mammoth
     end
 
     def prepare_result
-      get_query
       query_time = Benchmark.measure do
-        @result = Mammoth::Status.find_by_sql([@sql_query, { ACC_ID: @current_account.id,  MAX_ID: @max_id, USR_ID: @current_user.id }])
+        get_query
       end 
-      puts "#{@current_account.username} - (#{@current_account.id}) #{@caller_name} timeline query processing time : #{format('%.4f', query_time.real)} seconds"
-      status_ids = @result.map(&:id)
-      @statuses_relation = Mammoth::Status.where(id: status_ids)
-      @statuses = @statuses_relation.filter_banned_statuses.limit(5)
+      puts "#{@current_account.username} - (#{@current_account.id}) #{@caller_name} 
+              timeline process time : #{format('%.4f', query_time.real)} seconds"
+
+      if !(@statuses.nil? || @statuses.count == 0)
+        @statuses = Mammoth::Status.where(id: @statuses.pluck(:id))
+      end
       return @statuses
     end
   end

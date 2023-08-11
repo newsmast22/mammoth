@@ -43,22 +43,23 @@ module Mammoth
     end
 
     def selected_filters_for_user
-      if is_location_filter_turn_on? && is_selected_countries_present?
-        @selected_countries = @selected_filters["location_filter"]["selected_countries"]
+      if is_filter_turn_on?
+        if is_location_filter_turn_on? && is_selected_countries_present?
+          @selected_countries = @selected_filters["location_filter"]["selected_countries"]
+        end
+
+        if is_selected_contributor_role_persent?
+          @selected_contributor_role = @selected_filters["source_filter"]["selected_contributor_role"]
+        end
+
+        if is_selected_voices_present?
+          @selected_voices = @selected_filters["source_filter"]["selected_voices"]
+        end 
+
+        if is_selected_media_present?
+          @selected_media = @selected_filters["source_filter"]["selected_media"]
+        end
       end
-
-      if is_selected_contributor_role_persent?
-        @selected_contributor_role = @selected_filters["source_filter"]["selected_contributor_role"]
-      end
-
-      if is_selected_voices_present?
-        @selected_voices = @selected_filters["source_filter"]["selected_voices"]
-      end 
-
-      if is_selected_media_present?
-        @selected_media = @selected_filters["source_filter"]["selected_media"]
-      end
-
       @selected_filter_usr = OpenStruct.new(selected_countries: @selected_countries, 
                               selected_contributor_role: @selected_contributor_role, 
                               selected_voices: @selected_voices, 
