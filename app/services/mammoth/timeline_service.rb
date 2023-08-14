@@ -4,9 +4,9 @@ module Mammoth
     attr_reader :statuses
   
     def initialize(current_account, max_id, current_user)
-      #ActiveRecord::Base.connected_to(role: :reading) do 
-        #puts "********** DB Host Swithcing in Timeline 1************"
-        #puts ActiveRecord::Base.connection_db_config.database
+      ActiveRecord::Base.connected_to(role: :reading) do 
+        puts "********** DB Host Swithcing in Timeline 1************"
+        puts ActiveRecord::Base.connection_db_config.database
         #ActiveRecord::Base.establish_connection(ActiveRecord::Base.configurations['primary_replica'])
         #puts ActiveRecord::Base.connection_db_config.database
         @current_account = current_account
@@ -15,7 +15,7 @@ module Mammoth
         @userTimeLineSetting = Mammoth::UserTimelineSetting.where(user_id: @current_user.id).last
         create_user_timeline_setting
         @query_service = Mammoth::DbQueries::Service::TimelineServiceNew.new(@max_id,@current_user,@current_account)
-      #end
+      end
     end
 
     def call
