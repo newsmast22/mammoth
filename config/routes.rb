@@ -70,10 +70,12 @@ Mammoth::Engine.routes.draw do
       resources :primany_timelines
 
       namespace :timeline do
-        get 'all', to: 'timelines#primary'
+        get 'all_old', to: 'timelines#all_old'
+        get 'all', to: 'timelines#all'
         get 'newsmast', to: 'timelines#newsmast'
         get 'federated', to: 'timelines#federated'
         get 'my_community', to: 'timelines#my_community'
+       
       end
 
       resources :following_timelines do

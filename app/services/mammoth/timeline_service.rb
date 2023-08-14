@@ -21,14 +21,16 @@ module Mammoth
 
     def get_query
       case @caller_name 
-      when "primary"
-        @statuses = @query_service.primary_timeline
+      when "all"
+        @statuses = @query_service.all_new
       when "my_community"
         @statuses = @query_service.my_community_timeline
       when "federated"
         @statuses = @query_service.federated_timeline
       when "newsmast"
         @statuses = @query_service.newsmast_timeline
+      when "all_old"
+        @statuses = @query_service.all_old
       end
     end
 
@@ -40,12 +42,8 @@ module Mammoth
       query_time = Benchmark.measure do
         get_query
       end 
-      puts "#{@current_account.username} - (#{@current_account.id}) #{@caller_name} 
-              timeline process time : #{format('%.4f', query_time.real)} seconds"
-
-      if !(@statuses.nil? || @statuses.count == 0)
-        @statuses = Mammoth::Status.where(id: @statuses.pluck(:id))
-      end
+      puts "#{@current_account.username} - (#{@current_account.id}) #{@caller_name} timeline process time : #{format('%.4f', query_time.real)} seconds"
+ 
       return @statuses
     end
   end
