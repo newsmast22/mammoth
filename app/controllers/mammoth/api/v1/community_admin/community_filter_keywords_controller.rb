@@ -50,7 +50,6 @@ module Mammoth::Api::V1::CommunityAdmin
       unless @community_filter_keywords.empty?
         @community_filter_keywords = @community_filter_keywords.order(id: :desc).limit(5)
 
-        
         more_records_available = Mammoth::CommunityFilterKeyword.has_more_objects(account_id: current_account.id, community_id: @community.id, community_filter_keyword_id: @community_filter_keywords.last.id)
 
         render json: @community_filter_keywords, root: 'data', 

@@ -5,7 +5,7 @@ class Mammoth::CollectionService < BaseService
       if @params.include?(:is_virtual)
         @is_virtual = @params[:is_virtual]
       else
-        @is_virtual = nil
+        @is_virtual = false
       end  
     end
     
@@ -42,9 +42,9 @@ class Mammoth::CollectionService < BaseService
 		data = {
 		  id: Mammoth::Collection.count + 1,
 		  position: nil,
-          name: 'All',
-          slug: 'all',
-          is_virtual: true,
+      name: 'All',
+      slug: 'all',
+      is_virtual: true,
 		  image_file_name: nil,
 		  image_content_type: nil,
 		  image_file_size: nil,
@@ -52,9 +52,9 @@ class Mammoth::CollectionService < BaseService
 		  community_count: all_collection_count,
 		  created_at: Time.now,
 		  updated_at: Time.now,
-          image_url: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/all_collection_community_cover_photos/all_community_cover_photo.jpg",
-          collection_detail_image_url: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/all_collection_community_cover_photos/all_collection_cover_photo.jpg",
-          description: "All posts from the communities of Newsmast and connected instances of Fediverse."
+      image_url: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/all_collection_community_cover_photos/all_community_cover_photo.jpg",
+      collection_detail_image_url: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/all_collection_community_cover_photos/all_collection_cover_photo.jpg",
+      description: "All posts from the communities of Newsmast and connected instances of Fediverse."
 		}
 	  
 		return data
@@ -65,9 +65,9 @@ class Mammoth::CollectionService < BaseService
 		data = {
 		  id: Mammoth::Collection.count + 1,
 		  position: nil,
-          name: 'All',
-          slug: 'all',
-          is_virtual: true,
+      name: 'All',
+      slug: 'all',
+      is_virtual: true,
 		  image_file_name: nil,
 		  image_content_type: nil,
 		  image_file_size: nil,
@@ -75,9 +75,9 @@ class Mammoth::CollectionService < BaseService
 		  community_count: all_collection_count,
 		  created_at: Time.now,
 		  updated_at: Time.now,
-          image_url: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/all_collection_community_cover_photos/all_collection_cover_photo.jpg",
-          collection_detail_image_url: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/all_collection_community_cover_photos/all_community_cover_photo.jpg",
-          description: "All posts from the communities of Newsmast and connected instances of Fediverse."
+      image_url: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/all_collection_community_cover_photos/all_collection_cover_photo.jpg",
+      collection_detail_image_url: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/all_collection_community_cover_photos/all_community_cover_photo.jpg",
+      description: "All posts from the communities of Newsmast and connected instances of Fediverse."
 		}
 	  
 		return data

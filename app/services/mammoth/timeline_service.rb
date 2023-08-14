@@ -4,12 +4,14 @@ module Mammoth
     attr_reader :statuses
   
     def initialize(current_account, max_id, current_user)
-      @current_account = current_account
-      @max_id = max_id
-      @current_user = current_user
-      @userTimeLineSetting = Mammoth::UserTimelineSetting.where(user_id: @current_user.id).last
-      create_user_timeline_setting
-      @query_service = Mammoth::DbQueries::Service::TimelineServiceNew.new(@max_id,@current_user,@current_account)
+      ActiveRecord::Base.connected_to(role: :reading) do 
+        @current_account = current_account
+        @max_id = max_id
+        @current_user = current_user
+        @userTimeLineSetting = Mammoth::UserTimelineSetting.where(user_id: @current_user.id).last
+        create_user_timeline_setting
+        @query_service = Mammoth::DbQueries::Service::TimelineServiceNew.new(@max_id,@current_user,@current_account)
+      end
     end
 
     def call
