@@ -8,7 +8,7 @@ class Mammoth::UserCommunitiesService < BaseService
     elsif @params.include?(:community_slug)
       @is_virtual = false
     else
-      @is_virtual = nil
+      @is_virtual = false
     end 
   end
 
