@@ -14,7 +14,7 @@ module Mammoth::Api::V1
       #condition: Intial start with limit
       @user  = Mammoth::User.find(current_user.id)
 
-      @users = Mammoth::User.joins(:user_communities).where.not(id: @user.id).where(user_communities: {community_id: @user.communities.ids}).distinct.order(created_at: :desc)
+      @users = Mammoth::User.joins(:user_communities).where.not(id: @user.id).where(user_communities: {community_id: @user.communities.ids}).distinct.order(id: :desc)
 
       if params[:max_id].present?
         @users = @users.where("users.account_id < #{params[:max_id]}")
@@ -77,99 +77,26 @@ module Mammoth::Api::V1
       }
     end
 
-    def global_suggestion      
-      #begin::search from other instance
-      params[:limit] = 20
-      filtered_accounts = []
-      if params[:words].present?
-        filtered_accounts = perform_accounts_search! if account_searchable?
-        @accounts = Account.where(id: filtered_accounts.pluck(:id)).order(id: :desc) 
-      end
+    def global_suggestion  
 
-      unless filtered_accounts.any? || params[:words].present?
-        if params[:offset].present?
-          @accounts = Account.joins("LEFT JOIN users on accounts.id = users.account_id").where("
-            users.role_id IS NULL").order(id: :desc).offset(params[:offset]) 
-        else
-          @accounts = Account.joins("LEFT JOIN users on accounts.id = users.account_id").where("
-            users.role_id IS NULL").order(id: :desc).limit(20)
-        end
-      end
-      #end::search from other instance
+      # Assign limit = 5 as 6 if limit is nil
+      # Limit always plus one 
+      # Addition plus one to get has_more_object
 
-      # #begin::blocked account post
-      # blocked_accounts = Block.where(account_id: current_account.id).or(Block.where(target_account_id: current_account.id))
-      # unless blocked_accounts.blank?
-      #   combined_block_account_ids = blocked_accounts.pluck(:account_id,:target_account_id).flatten
-      #   combined_block_account_ids.delete(current_account.id)
-      #   @accounts = @accounts.filter_blocked_accounts(combined_block_account_ids)
-      # end
-      # #end::blocked account post
+      limit = params[:limit].present? ? params[:limit].to_i + 1 : 6
+      offset = params[:offset].present? ? params[:offset] : 0
+      keywords = params[:words].present? ? params[:words] : nil
 
-      # #begin::deactivated account post
-			# 	deactivated_accounts = Account.joins(:user).where('users.is_active = ?', false)
-			# 	unless deactivated_accounts.blank?
-      #     @accounts = @accounts.filter_blocked_accounts(deactivated_accounts.pluck(:id).map(&:to_i))
-			# 	end
-			# #end::deactivated account post
+      default_limit = limit - 1
 
-      #begin::this code going to destroy soon
-      if params[:max_id].present?
-        @accounts = @accounts.where("accounts.id < #{params[:max_id]}")
-      end
-      #end::this code going to destroy soon
+      @accounts = Mammoth::User.search_global_users(limit , offset, keywords, current_account)  
 
-
-      left_seggession_count = 0
-      if params[:limit].present? 
-        left_seggession_count = @accounts.size - params[:limit].to_i <= 0 ? 0 : @accounts.size - params[:limit].to_i
-        @accounts = @accounts.limit(params[:limit].to_i)
-      end
-
-      #account_followed = Follow.where(account_id: current_account).pluck(:target_account_id).map(&:to_i)
-
-      # data   = []
-      # @accounts.order(id: :desc).each do |account|
-
-      #   #begin::check account requested or not
-      #   is_requested = false
-      #   follow_request = FollowRequest.where(account_id: current_account.id, target_account_id: account.id)
-      #   is_requested = follow_request.present? ? true : false
-      #   #end::check account requested or not
-
-      #   data << {
-      #     account_id: account.id.to_s,
-      #     domain: account.domain,
-      #     is_followed: account_followed.include?(account.id), 
-      #     is_requested: is_requested,
-      #     user_id: account.try(:user).try(:id).present? ? account.try(:user).try(:id) : nil ,
-      #     username: account.username,
-      #     display_name: account.display_name.presence || account.username,
-      #     email: account.try(:user).try(:email).present? ? account.try(:user).try(:email) : nil,
-      #     image_url: account.avatar.url,
-      #     bio: account.note,
-      #     acct: account.pretty_acct
-      #   }
-      # end
-      offset =  params[:offset].present? ?  params[:offset] : 0
-      # render json: {
-      #   data: data,
-      #   meta: { 
-			# 		left_suggession_count: left_seggession_count,
-      #     has_more_objects: left_seggession_count > 0 ? true : false,
-      #     offset: offset
-			# 	}
-      # }
-
-      render json: @accounts, root: 'data', 
-                                each_serializer: Mammoth::AccountSerializer, current_user: current_user, adapter: :json, 
-                                meta: { 
-                                  left_suggession_count: left_seggession_count,
-                                  has_more_objects: left_seggession_count > 0 ? true : false,
-                                  offset: offset
-                                }
-      
-      
+      render json:  @accounts.take(default_limit), root: 'data', 
+                    each_serializer: Mammoth::AccountSerializer, current_user: current_user, adapter: :json, 
+                    meta: { 
+                    has_more_objects: @accounts.size > default_limit ? true : false,
+                    offset: offset
+                    }
     end
 
     def update
@@ -786,7 +713,7 @@ module Mammoth::Api::V1
       AccountSearchService.new.call(
         params[:words],
         current_account,
-        limit: 20 ,
+        limit: params[:limit].present? ? params[:limit] : 5 ,
         resolve: true,
         offset: params[:offset].present? ? params[:offset] : 0
       )

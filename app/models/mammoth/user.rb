@@ -67,5 +67,54 @@ module Mammoth
 
       return @selected_filter_usr
     end
+
+    def self.search_global_users(limit , offset, keywords, current_account)
+
+      # Assign limit = 5 as 6 if limit is nil
+      # Limit always plus one 
+      # Addition plus one to get has_more_object
+      @search_limit =  limit
+      @search_offset = offset.nil? ? 0 : offset
+      @search_keywords = keywords
+      @current_account = current_account
+
+      #begin::search from other instance
+      filtered_accounts = []
+      unless @search_keywords.nil?
+        filtered_accounts = perform_accounts_search! if account_searchable?
+        @accounts = Account.where(id: filtered_accounts.pluck(:id)).order(id: :desc) 
+      end
+
+      unless filtered_accounts.any? || !@search_keywords.nil?
+        if @search_offset.nil?
+          @accounts = Account.joins("LEFT JOIN users on accounts.id = users.account_id").where("
+            users.role_id IS NULL").order(id: :desc).offset(@search_offset) 
+        else
+          @accounts = Account.joins("LEFT JOIN users on accounts.id = users.account_id").where("
+            users.role_id IS NULL").order(id: :desc).limit(@search_limit)
+        end
+      end
+      #end::search from other instance
+
+      @accounts
+
+    end
+
+    private
+
+    def self.account_searchable?
+      !(@search_keywords.start_with?('#') || (@search_keywords.include?('@') && @search_keywords.include?(' ')))
+    end
+
+    def self.perform_accounts_search!
+      AccountSearchService.new.call(
+        @search_keywords,
+        @current_account,
+        limit: @search_limit,
+        resolve: true,
+        offset: @search_offset
+      )
+    end
+
   end
 end
