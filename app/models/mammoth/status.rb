@@ -172,7 +172,8 @@ module Mammoth
             .where.not(mammoth_communities: { slug: "breaking_news" })
             .where(community_users: { user_id: user_id })
             .where(deleted_at: nil)
-            .limit(5)    
+            .filter_statuses_by_timeline_setting(user_id)
+            .limit(5)
     }
 
     scope :filter_with_max_id, -> (max_id) {
@@ -186,10 +187,8 @@ module Mammoth
 
     }
 
-    
-
     scope :filter_statuses_by_timeline_setting, ->(user_id) {
-      user = Mammoth::User.where(id: user_id).take
+      user = Mammoth::User.find(user_id)
       selected_filters = user.selected_filters_for_user
     
       if selected_filters.present?
@@ -197,24 +196,29 @@ module Mammoth
         selected_contributor_role = selected_filters.selected_contributor_role
         selected_voices = selected_filters.selected_voices
         selected_media = selected_filters.selected_media
-    
-        filtered_accounts = Mammoth::Account.all # Initialize with all accounts
         
         if selected_countries.present?
-          filtered_accounts = filtered_accounts.filter_timeline_with_countries(selected_countries)
-        elsif selected_contributor_role.present?
-          filtered_accounts = filtered_accounts.filter_timeline_with_contributor_role(selected_contributor_role)
-        elsif selected_voices.present?
-          filtered_accounts = filtered_accounts.filter_timeline_with_voice(selected_voices)
-        elsif selected_media.present?
-          filtered_accounts = filtered_accounts.filter_timeline_with_media(selected_media)
+          filter_timeline_with_countries(selected_countries)
+        end 
+
+        if selected_contributor_role.present?
+          filter_timeline_with_contributor_role(selected_contributor_role)
+        end 
+ 
+        if selected_voices.present?
+          filter_timeline_with_voice(selected_voices)
         end
-        joins(:account).merge(filtered_accounts)
-      else
-        all # Return all statuses if no filters are selected
+
+        if selected_media.present?
+          filter_timeline_with_media(selected_media)
+        end
       end
     }
-    
+    scope :filter_timeline_with_countries,->(country_alpah2_name) { joins(:account).where(account: { country: country_alpah2_name }) }
+    scope :filter_timeline_with_contributor_role, ->(id) { joins(:account).where("accounts.about_me_title_option_ids @> ARRAY[?]::integer[]", id) }
+    scope :filter_timeline_with_voice,->(id) { joins(:account).where("accounts.about_me_title_option_ids && ARRAY[?]::integer[]", id) }
+    scope :filter_timeline_with_media,->(id) { joins(:account).where("accounts.about_me_title_option_ids && ARRAY[?]::integer[]", id) }
+
     scope :filter_with_words, ->(words) {where("LOWER(statuses.text) like '%#{words}%'")}
     scope :filter_banned_statuses, -> { left_joins(:community_filter_statuses).where(community_filter_statuses: { id: nil }).order(id: :desc) }
   end

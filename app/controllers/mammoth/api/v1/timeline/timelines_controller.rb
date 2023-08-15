@@ -26,11 +26,6 @@ module Mammoth::Api::V1::Timeline
       format_json
     end
 
-    def all_old
-      @statuses = @timeline_service.call
-      format_json
-    end
-
     private 
 
     def set_max_id

@@ -11,7 +11,16 @@ module Mammoth
         def my_community_timeline 
           ActiveRecord::Base.connected_to(role: :reading) do 
             @excluded_ids = Mammoth::Status.get_block_mute_inactive_acc_id(@acc_id)
-            @statuses = Mammoth::Status.my_community_timeline(@user_id, @max_id, @excluded_ids)
+            @statuses = Mammoth::Status.includes(
+                                                  :reblog, 
+                                                  :media_attachments, 
+                                                  :active_mentions, 
+                                                  :tags, 
+                                                  :preloadable_poll, 
+                                                  :status_stat, 
+                                                  :conversation,
+                                                  account: [:user, :account_stat], 
+                                                ).my_community_timeline(@user_id, @max_id, @excluded_ids)
           end
           return @statuses
         end
@@ -19,7 +28,16 @@ module Mammoth
         def all_timeline
           ActiveRecord::Base.connected_to(role: :reading) do 
             @excluded_ids = Mammoth::Status.get_block_mute_inactive_acc_id(@acc_id)
-            @statuses = Mammoth::Status.all_timeline(@max_id, @excluded_ids)
+            @statuses = Mammoth::Status.includes(
+                                                  :reblog, 
+                                                  :media_attachments, 
+                                                  :active_mentions, 
+                                                  :tags, 
+                                                  :preloadable_poll, 
+                                                  :status_stat, 
+                                                  :conversation,
+                                                  account: [:user, :account_stat], 
+                                                ).all_timeline(@max_id, @excluded_ids)
           end
           return @statuses
         end
@@ -27,7 +45,16 @@ module Mammoth
         def newsmast_timeline 
           ActiveRecord::Base.connected_to(role: :reading) do 
             @excluded_ids = Mammoth::Status.get_block_mute_inactive_acc_id(@acc_id)
-            @statuses = Mammoth::Status.newsmast_timeline(@max_id, @excluded_ids)
+            @statuses = Mammoth::Status.includes(
+                                                :reblog, 
+                                                :media_attachments, 
+                                                :active_mentions, 
+                                                :tags, 
+                                                :preloadable_poll, 
+                                                :status_stat, 
+                                                :conversation,
+                                                account: [:user, :account_stat], 
+                                              ).newsmast_timeline(@max_id, @excluded_ids)
           end
           return @statuses
         end
@@ -35,7 +62,16 @@ module Mammoth
         def federated_timeline 
           ActiveRecord::Base.connected_to(role: :reading) do 
             @excluded_ids = Mammoth::Status.get_block_mute_inactive_acc_id(@acc_id)
-            @statuses = Mammoth::Status.federated_timeline(@max_id)
+            @statuses = Mammoth::Status.includes(
+                                                :reblog, 
+                                                :media_attachments, 
+                                                :active_mentions, 
+                                                :tags, 
+                                                :preloadable_poll, 
+                                                :status_stat, 
+                                                :conversation,
+                                                account: [:user, :account_stat], 
+                                              ).federated_timeline(@max_id)
           end
           return @statuses
         end
