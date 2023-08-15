@@ -82,16 +82,16 @@ module Mammoth
       filtered_accounts = []
       unless @search_keywords.nil?
         filtered_accounts = perform_accounts_search! if account_searchable?
-        @accounts = Account.where(id: filtered_accounts.pluck(:id)).order(id: :desc) 
+        @accounts = Account.where.not(id: @current_account.id).where(id: filtered_accounts.pluck(:id)).order(id: :desc) 
       end
 
       unless filtered_accounts.any? || !@search_keywords.nil?
         if @search_offset.nil?
           @accounts = Account.joins("LEFT JOIN users on accounts.id = users.account_id").where("
-            users.role_id IS NULL").order(id: :desc).offset(@search_offset) 
+            users.role_id IS NULL AND accounts.id != #{@current_account.id}").order(id: :desc).offset(@search_offset) 
         else
           @accounts = Account.joins("LEFT JOIN users on accounts.id = users.account_id").where("
-            users.role_id IS NULL").order(id: :desc).limit(@search_limit)
+            users.role_id IS NULL AND accounts.id != #{@current_account.id}").order(id: :desc).limit(@search_limit)
         end
       end
       #end::search from other instance
