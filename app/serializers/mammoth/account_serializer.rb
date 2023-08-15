@@ -58,7 +58,7 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
   end
 
   def image_url
-    object.avatar.url
+    object.avatar.url&.remove('mammoth/')
   end
 
   def bio 

@@ -557,7 +557,6 @@ module Mammoth::Api::V1
       #end::check community admin & communnity_slug
 
       #begin::check account requested or not
-      is_requested = false
       follow_request = Account.requested_map(target_account_id, current_account.id)
 
       following = Account.following_map(target_account_id, current_account.id)
