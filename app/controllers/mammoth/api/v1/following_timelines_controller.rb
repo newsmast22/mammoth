@@ -17,7 +17,7 @@ module Mammoth::Api::V1
       end
       #End:Create UserTimeLineSetting
 
-      #ActiveRecord::Base.connected_to(role: :reading) do
+      #ActiveRecord::Base.connected_to(role: :reading) do 
         start_time = Time.now
 
         followed_account_ids = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
