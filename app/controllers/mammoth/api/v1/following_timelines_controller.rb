@@ -17,80 +17,93 @@ module Mammoth::Api::V1
       end
       #End:Create UserTimeLineSetting
 
-      start_time = Time.now
+      #ActiveRecord::Base.connected_to(role: :reading) do 
+        start_time = Time.now
 
-      followed_account_ids = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
-      followed_tag_ids = TagFollow.where(account_id: current_account.id).pluck(:tag_id).map(&:to_i)
-      
-      ##exclude_community = Mammoth::Community.where(slug: "breaking_news").last
-
-      #user_followed_community_ids = Mammoth::UserCommunity.where(user_id: current_user.id).pluck(:community_id).map(&:to_i)
-
-      # community_statuses_ids = []
-      # if user_followed_community_ids.any?
-      #   community_statuses = Mammoth::CommunityStatus.where(community_id: user_followed_community_ids)
-      #   community_statuses = community_statuses.filter_out_breaking_news(exclude_community.id) if exclude_community.present?
+        followed_account_ids = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
+        followed_tag_ids = TagFollow.where(account_id: current_account.id).pluck(:tag_id).map(&:to_i)
         
-      #   community_statuses_ids = community_statuses.pluck(:status_id).map(&:to_i)
-      # end
-      
-      query_string = "statuses.id < :max_id AND" if params[:max_id].present?
-      #community_statuses_query = "OR (statuses.id IN (:community_statues_ids))" if community_statuses_ids.any?
+        ##exclude_community = Mammoth::Community.where(slug: "breaking_news").last
 
-      # filtered_followed_statuses = Mammoth::Status.joins('
-      #                                               LEFT JOIN statuses_tags ON statuses_tags.status_id = statuses.id 
-      #                                               LEFT JOIN tags ON tags.id = statuses_tags.tag_id'
-      #                                             )
-      #                                             .where("#{query_string}
-      #                                               ((
-      #                                                 (tags.id IN (:tag_ids) AND account_id != :account_id)
-      #                                                 OR 
-      #                                                 account_id IN (:account_ids)
-      #                                               ) #{community_statuses_query}
-      #                                                 AND 
-      #                                                 (reply = FALSE AND statuses.community_feed_id IS NULL AND statuses.group_id IS NULL))
-      #                                               ", 
-      #                                               tag_ids: followed_tag_ids, account_id: current_account.id, account_ids: followed_account_ids, max_id: params[:max_id], community_statues_ids: community_statuses_ids
-      #                                             )
+        #user_followed_community_ids = Mammoth::UserCommunity.where(user_id: current_user.id).pluck(:community_id).map(&:to_i)
 
-      filtered_followed_statuses = Mammoth::Status.joins('
-                                                    LEFT JOIN statuses_tags ON statuses_tags.status_id = statuses.id 
-                                                    LEFT JOIN tags ON tags.id = statuses_tags.tag_id'
-                                                  )
-                                                  .where("#{query_string}
-                                                    ((
-                                                      (tags.id IN (:tag_ids) AND account_id != :account_id)
-                                                      OR 
-                                                      account_id IN (:account_ids)
+        # community_statuses_ids = []
+        # if user_followed_community_ids.any?
+        #   community_statuses = Mammoth::CommunityStatus.where(community_id: user_followed_community_ids)
+        #   community_statuses = community_statuses.filter_out_breaking_news(exclude_community.id) if exclude_community.present?
+          
+        #   community_statuses_ids = community_statuses.pluck(:status_id).map(&:to_i)
+        # end
+        
+        query_string = "statuses.id < :max_id AND" if params[:max_id].present?
+        #community_statuses_query = "OR (statuses.id IN (:community_statues_ids))" if community_statuses_ids.any?
+
+        # filtered_followed_statuses = Mammoth::Status.joins('
+        #                                               LEFT JOIN statuses_tags ON statuses_tags.status_id = statuses.id 
+        #                                               LEFT JOIN tags ON tags.id = statuses_tags.tag_id'
+        #                                             )
+        #                                             .where("#{query_string}
+        #                                               ((
+        #                                                 (tags.id IN (:tag_ids) AND account_id != :account_id)
+        #                                                 OR 
+        #                                                 account_id IN (:account_ids)
+        #                                               ) #{community_statuses_query}
+        #                                                 AND 
+        #                                                 (reply = FALSE AND statuses.community_feed_id IS NULL AND statuses.group_id IS NULL))
+        #                                               ", 
+        #                                               tag_ids: followed_tag_ids, account_id: current_account.id, account_ids: followed_account_ids, max_id: params[:max_id], community_statues_ids: community_statuses_ids
+        #                                             )
+
+        filtered_followed_statuses = Mammoth::Status.joins('
+                                                      LEFT JOIN statuses_tags ON statuses_tags.status_id = statuses.id 
+                                                      LEFT JOIN tags ON tags.id = statuses_tags.tag_id'
                                                     )
-                                                      AND 
-                                                      (reply = FALSE ))
-                                                    ", 
-                                                    tag_ids: followed_tag_ids, account_id: current_account.id, account_ids: followed_account_ids, max_id: params[:max_id]
-                                                  )                                            
-      
-      unless filtered_followed_statuses.blank?
-        #Begin::Filter
-        fetch_following_filter_timeline(filtered_followed_statuses)
-        # End::Filter
-        @statuses = @statuses.filter_banned_statuses
+                                                    .where("#{query_string}
+                                                      ((
+                                                        (tags.id IN (:tag_ids) AND account_id != :account_id)
+                                                        OR 
+                                                        account_id IN (:account_ids)
+                                                      )
+                                                        AND 
+                                                        (reply = FALSE ))
+                                                      ", 
+                                                      tag_ids: followed_tag_ids, account_id: current_account.id, account_ids: followed_account_ids, max_id: params[:max_id]
+                                                    )                                            
+        
+        unless filtered_followed_statuses.blank?
+          #Begin::Filter
+          fetch_following_filter_timeline(filtered_followed_statuses)
+          # End::Filter
+          @statuses = @statuses.filter_banned_statuses
 
-        end_time = Time.now
-        processing_time = end_time - start_time
-        puts " Following Timeline Processing time: #{format('%.4f', processing_time)} seconds"
+          end_time = Time.now
+          processing_time = end_time - start_time
+          puts " Following Timeline Processing time: #{format('%.4f', processing_time)} seconds"
 
-        unless @statuses.empty?
-          before_limit_statuses = @statuses
-          @statuses = @statuses.order(created_at: :desc).limit(5)
-          render json: @statuses, root: 'data', 
-                                  each_serializer: Mammoth::StatusSerializer, current_user: current_user, adapter: :json, 
-                                  meta: {
-                                    pagination:
-                                    { 
-                                      total_objects: before_limit_statuses.size,
-                                      has_more_objects: 5 <= before_limit_statuses.size ? true : false
-                                    } 
-                                  }
+          unless @statuses.empty?
+            before_limit_statuses = @statuses
+            @statuses = @statuses.order(created_at: :desc).limit(5)
+            render json: @statuses, root: 'data', 
+                                    each_serializer: Mammoth::StatusSerializer, current_user: current_user, adapter: :json, 
+                                    meta: {
+                                      pagination:
+                                      { 
+                                        total_objects: before_limit_statuses.size,
+                                        has_more_objects: 5 <= before_limit_statuses.size ? true : false
+                                      } 
+                                    }
+          else
+            render json: {
+              data: [],
+              meta: {
+                pagination:
+                { 
+                  total_objects: 0,
+                  has_more_objects: false
+                } 
+              }
+            }
+          end
         else
           render json: {
             data: [],
@@ -100,21 +113,11 @@ module Mammoth::Api::V1
                 total_objects: 0,
                 has_more_objects: false
               } 
-            }
           }
-        end
-      else
-        render json: {
-          data: [],
-          meta: {
-            pagination:
-            { 
-              total_objects: 0,
-              has_more_objects: false
-            } 
         }
-      }
-      end
+        end
+      #end
+
     end
 
     private
