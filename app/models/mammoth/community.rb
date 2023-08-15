@@ -7,6 +7,7 @@ module Mammoth
     has_and_belongs_to_many :statuses, class_name: "Mammoth::Status"
     has_and_belongs_to_many :users, class_name: "Mammoth::User"
     belongs_to :collection, class_name: "Mammoth::Collection"
+    has_many :community_users, class_name: "Mammoth::UserCommunity"
 
 
   	IMAGE_LIMIT = 15.megabytes

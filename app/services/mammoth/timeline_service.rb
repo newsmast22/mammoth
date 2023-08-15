@@ -24,15 +24,13 @@ module Mammoth
     def get_query
       case @caller_name 
       when "all"
-        @statuses = @query_service.all_new
+        @statuses = @query_service.all_timeline
       when "my_community"
         @statuses = @query_service.my_community_timeline
       when "federated"
         @statuses = @query_service.federated_timeline
       when "newsmast"
         @statuses = @query_service.newsmast_timeline
-      when "all_old"
-        @statuses = @query_service.all_old
       end
     end
 

@@ -9,7 +9,8 @@ module Mammoth
     has_and_belongs_to_many :tags,class_name: "Mammoth::Tag"
     has_many :community_filter_statuses, class_name: "Mammoth::CommunityFilterStatus"
     has_many :communities_statuses, class_name: "Mammoth::CommunityStatus"
-    
+    has_many :community_users, through: :communities
+
     scope :filter_with_community_status_ids, ->(ids) { where(id: ids,reply: false) }
 
     scope :filter_with_community_status_ids_without_rss, ->(ids) { where(id: ids,reply: false,community_feed_id: nil,group_id: nil) }
@@ -100,52 +101,47 @@ module Mammoth
           where.not(account_id: excluded_account_ids)
     }
 
-    scope :newsmast_timeline, -> (max_id) {
-      condition_query = if max_id.nil?
-        "statuses.id > ?"
-      else
-        "statuses.id < ?"
-      end
-
-      where(condition_query, max_id || 0)
-      .where(local: true)
-      .where(deleted_at: nil)
-      .select("statuses.id, statuses.account_id")
-    }
-
-    scope :federated_timeline, -> (max_id) {
-      condition_query = if max_id.nil?
-        "statuses.id > ?"
-      else
-        "statuses.id < ?"
-      end
-
-       where(condition_query, max_id || 0)
-      .where(local: false)
-      .where(deleted_at: nil)
-      .select("statuses.id, statuses.account_id")
-    }
-
-    scope :primary_timeline, -> {
-        joins("JOIN mammoth_communities_statuses ON statuses.id = mammoth_communities_statuses.status_id")
-        .joins("JOIN mammoth_communities ON mammoth_communities_statuses.community_id = mammoth_communities.id")
-        .where.not("mammoth_communities.slug" => "breaking_news")
-        .where("statuses.reply = FALSE")
-        .where("statuses.community_feed_id IS NULL")
-        .where("statuses.group_id IS NULL")
-        .where("statuses.deleted_at IS NULL")
-        .select("statuses.id, statuses.account_id")            
-    }
-
-    scope :primary_timeline_new, -> (max_id, excluded_ids=[]) {
+    scope :newsmast_timeline, -> (max_id, excluded_ids=[]) {
       condition_query = if max_id.nil?
         "statuses.id > 0"
       else
         "statuses.id < :max_id"
       end
 
-      joins(communities_statuses: :community)
-      .left_joins(:community_filter_statuses)
+      left_joins(:community_filter_statuses)
+      .where(community_filter_statuses: { id: nil })
+      .where(condition_query, max_id: max_id || 0)
+      .where.not(id: excluded_ids)
+      .where(local: true)
+      .where(deleted_at: nil)
+      .limit(5)
+    }
+
+    scope :federated_timeline, -> (max_id, excluded_ids=[]) {
+      condition_query = if max_id.nil?
+        "statuses.id > 0"
+      else
+        "statuses.id < :max_id"
+      end
+
+      left_joins(:community_filter_statuses)
+      .where(community_filter_statuses: { id: nil })
+      .where(condition_query, max_id: max_id || 0)
+      .where.not(id: excluded_ids)
+      .where(local: false)
+      .where(deleted_at: nil)
+      .limit(5)
+    }
+
+    scope :all_timeline, -> (max_id, excluded_ids=[]) {
+      condition_query = if max_id.nil?
+        "statuses.id > 0"
+      else
+        "statuses.id < :max_id"
+      end
+
+        joins(communities_statuses: :community)
+        .left_joins(:community_filter_statuses)
         .where(community_filter_statuses: { id: nil })
         .where(condition_query, max_id: max_id || 0)
         .where.not(id: excluded_ids)
@@ -157,24 +153,26 @@ module Mammoth
         .limit(5)
     }
 
-    scope :my_community_timeline, -> (user_id, max_id) {
-      condition_query = if max_id.nil?
-        "statuses.id > ?"
-      else
-        "statuses.id < ?"
-      end
+    scope :my_community_timeline, -> (user_id, max_id, excluded_ids=[]) {
+            condition_query = if max_id.nil?
+              "statuses.id > 0"
+            else
+              "statuses.id < :max_id"
+            end 
 
-            joins("JOIN mammoth_communities_statuses AS commu_status ON statuses.id = commu_status.status_id")
-            .joins("JOIN mammoth_communities AS commu ON commu_status.community_id = commu.id")
-            .joins("JOIN mammoth_communities_users AS commu_usr ON commu_usr.community_id = commu.id")
-            .where(condition_query, max_id || 0)
-            .where("statuses.reply = FALSE")
-            .where("statuses.community_feed_id IS NULL")
-            .where("statuses.group_id IS NULL")
-            .where.not("commu.slug" => "breaking_news")
-            .where("commu_usr.user_id" => user_id)
-            .where("statuses.deleted_at IS NULL")
-            .select("statuses.id, statuses.account_id")            
+            joins(communities_statuses: :community)
+            .joins(community_users: :community)
+            .left_joins(:community_filter_statuses)
+            .where(community_filter_statuses: { id: nil })
+            .where(condition_query, max_id: max_id || 0)
+            .where.not(id: excluded_ids)
+            .where(reply: false)
+            .where(community_feed_id: nil)
+            .where(group_id: nil)
+            .where.not(mammoth_communities: { slug: "breaking_news" })
+            .where(community_users: { user_id: user_id })
+            .where(deleted_at: nil)
+            .limit(5)    
     }
 
     scope :filter_with_max_id, -> (max_id) {
