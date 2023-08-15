@@ -235,7 +235,7 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
   end
 
   def avatar
-    full_asset_url(object.suspended? ? object.avatar.default_url : object.avatar_original_url)
+    full_asset_url(object.suspended? ? object.avatar.default_url : object.avatar_original_url)&.remove('mammoth/')
   end
 
   def avatar_static
@@ -243,7 +243,7 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
   end
 
   def header
-    full_asset_url(object.suspended? ? object.header.default_url : object.header_original_url)
+    full_asset_url(object.suspended? ? object.header.default_url : object.header_original_url)&.remove('mammoth/')
   end
 
   def header_static
