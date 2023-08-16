@@ -20,8 +20,8 @@ module Mammoth
     private 
 
     def get_query
-      case @caller_name 
-        ActiveRecord::Base.connected_to(role: :reading) do 
+      ActiveRecord::Base.connected_to(role: :reading) do 
+        case @caller_name 
           when "all"
             @statuses = @query_service.all_timeline
           when "my_community"
@@ -34,8 +34,8 @@ module Mammoth
             @statuses = @query_service.following_timeline
           when "index"
             @statuses = @query_service.following_timeline
-          end
         end
+      end
     end
 
     def create_user_timeline_setting
