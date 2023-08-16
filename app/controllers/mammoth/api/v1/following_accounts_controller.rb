@@ -8,33 +8,25 @@ module Mammoth::Api::V1
 
     def index
 
-      #begin::custom following accounts for user
-      following_account = Follow.where(account_id: @account.id)
-      pagination_max_query = "AND accounts.id < :max_id" if params[:max_id].present?
-      accounts = Account.where("
-        accounts.id IN (:following_account_ids) AND accounts.id != #{current_account.id} #{pagination_max_query}",
-        following_account_ids: following_account.pluck(:target_account_id) , max_id: params[:max_id]
-      ).order(id: :desc)
+      pagination_query = params[:max_id].present? ? "AND accounts.id < #{params[:max_id]}" : " "
+      accounts = Mammoth::Account.following_accouts(params[:account_id],current_account.id, pagination_query)
+
       before_limit_account = accounts
       accounts = accounts.limit(10)
-      return render json: accounts,root: 'data', each_serializer: Mammoth::AccountSerializer, current_user: current_user, adapter: :json, 
+      render json: accounts,root: 'data', each_serializer: Mammoth::AccountSerializer, current_user: current_user, adapter: :json, 
 					meta: {
 						pagination:
 						{ 
-							total_objects: before_limit_account.size,
+							total_objects: nil,
 							has_more_objects: 10 <= before_limit_account.size ? true : false
 						} 
 					}
-      #end::custom following accounts for user
-
-      # @accounts = load_accounts
-      # render json: @accounts, current_user: current_user,each_serializer: Mammoth::AccountSerializer
     end
 
     private
 
     def set_account
-      @account = Account.find(params[:account_id])
+      @account =  Mammoth::Account.find(params[:account_id])
     end
 
     def load_accounts

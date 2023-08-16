@@ -190,11 +190,6 @@ module Mammoth
       .where(group_id: nil)
     }
 
-    scope :filter_banned_statuses, -> {
-      left_joins(:community_filter_statuses)
-      .where(community_filter_statuses: { id: nil })
-    }
-
     scope :filter_statuses_by_timeline_setting, ->(user_id) {
       user = Mammoth::User.find(user_id)
       selected_filters = user.selected_filters_for_user
