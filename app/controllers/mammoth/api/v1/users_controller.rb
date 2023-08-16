@@ -95,7 +95,7 @@ module Mammoth::Api::V1
                     each_serializer: Mammoth::AccountSerializer, current_user: current_user, adapter: :json, 
                     meta: { 
                     has_more_objects: @accounts.size > default_limit ? true : false,
-                    offset: offset
+                    offset: offset.to_i
                     }
     end
 

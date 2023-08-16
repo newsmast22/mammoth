@@ -86,7 +86,7 @@ module Mammoth
       end
 
       unless filtered_accounts.any? || !@search_keywords.nil?
-        if @search_offset.nil?
+        unless @search_offset.nil?
           @accounts = Account.joins("LEFT JOIN users on accounts.id = users.account_id").where("
             users.role_id IS NULL AND accounts.id != #{@current_account.id}").order(id: :desc).offset(@search_offset) 
         else
