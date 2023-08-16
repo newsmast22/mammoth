@@ -5,6 +5,7 @@ module Mammoth
     belongs_to :voice, class_name: "Mammoth::Voice",  optional: true
     belongs_to :contributor_role, class_name: "Mammoth::ContributorRole",  optional: true
     belongs_to :subtitle, class_name: "Mammoth::Subtitle",  optional: true
+    has_many :follows
     has_many :blocks
     has_many :mutes
 

@@ -75,6 +75,7 @@ Mammoth::Engine.routes.draw do
         get 'newsmast', to: 'timelines#newsmast'
         get 'federated', to: 'timelines#federated'
         get 'my_community', to: 'timelines#my_community'
+        get 'following', to: 'timelines#following'
        
       end
 

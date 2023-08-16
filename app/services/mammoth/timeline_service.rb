@@ -31,6 +31,8 @@ module Mammoth
         @statuses = @query_service.federated_timeline
       when "newsmast"
         @statuses = @query_service.newsmast_timeline
+      when "following"
+        @statuses = @query_service.following_timeline
       end
     end
 

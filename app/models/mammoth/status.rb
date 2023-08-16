@@ -10,6 +10,9 @@ module Mammoth
     has_many :community_filter_statuses, class_name: "Mammoth::CommunityFilterStatus"
     has_many :communities_statuses, class_name: "Mammoth::CommunityStatus"
     has_many :community_users, through: :communities
+    has_many :follows, through: :account 
+    has_many :status_tags, class_name: "Mammoth::StatusTag"
+    has_many :tag_followed, through: :status_tags
 
     scope :filter_with_community_status_ids, ->(ids) { where(id: ids,reply: false) }
 
@@ -48,18 +51,16 @@ module Mammoth
         .where("users.is_active = ?", false)
         .pluck("accounts.id")
 
-      status_id = joins(:community_filter_statuses).select(:status_id)
-
       excluded_account_ids = (blocked_account_ids + muted_account_ids + inactive_account_ids).uniq
       excluded_account_ids.delete(account_id)
       
-      where(account_id: excluded_account_ids).pluck(:id)
+      where(account_id: excluded_account_ids).pluck(:account_id)
     }
 
-    scope :excluded_account_ids, -> (account_id) {
+    scope :filter_block_mute_inactive_statuses, -> (account_id) {
       blocked_account_ids = joins(account: :blocks)
-      .where("blocks.target_account_id = :account_id OR blocks.account_id = :account_id", account_id: account_id)
-      .pluck("blocks.account_id, blocks.target_account_id")
+        .where("blocks.target_account_id = :account_id OR blocks.account_id = :account_id", account_id: account_id)
+        .pluck("blocks.account_id, blocks.target_account_id")
 
       muted_account_ids = joins(account: :mutes)
         .where("mutes.account_id = :account_id", account_id: account_id)
@@ -69,10 +70,10 @@ module Mammoth
         .where("users.is_active = ?", false)
         .pluck("accounts.id")
 
-      excluded_ids = (blocked_account_ids + muted_account_ids + inactive_account_ids).uniq
+      excluded_account_ids = (blocked_account_ids + muted_account_ids + inactive_account_ids).uniq
+      excluded_account_ids.delete(account_id)
       
-      excluded_ids.delete(account_id)
-      excluded_ids
+      where.not(account_id: excluded_account_ids)
     }
 
     scope :blocked_account_ids, -> (account_id) {
@@ -102,15 +103,9 @@ module Mammoth
     }
 
     scope :newsmast_timeline, -> (max_id, excluded_ids=[]) {
-      condition_query = if max_id.nil?
-        "statuses.id > 0"
-      else
-        "statuses.id < :max_id"
-      end
-
-      left_joins(:community_filter_statuses)
-      .where(community_filter_statuses: { id: nil })
-      .where(condition_query, max_id: max_id || 0)
+    
+      filter_banned_statuses
+      .filter_with_max_id(max_id)
       .where.not(id: excluded_ids)
       .where(local: true)
       .where(deleted_at: nil)
@@ -118,15 +113,9 @@ module Mammoth
     }
 
     scope :federated_timeline, -> (max_id, excluded_ids=[]) {
-      condition_query = if max_id.nil?
-        "statuses.id > 0"
-      else
-        "statuses.id < :max_id"
-      end
-
-      left_joins(:community_filter_statuses)
-      .where(community_filter_statuses: { id: nil })
-      .where(condition_query, max_id: max_id || 0)
+     
+      filter_banned_statuses
+      .filter_with_max_id(max_id)
       .where.not(id: excluded_ids)
       .where(local: false)
       .where(deleted_at: nil)
@@ -134,41 +123,25 @@ module Mammoth
     }
 
     scope :all_timeline, -> (max_id, excluded_ids=[]) {
-      condition_query = if max_id.nil?
-        "statuses.id > 0"
-      else
-        "statuses.id < :max_id"
-      end
-
+      
         joins(communities_statuses: :community)
-        .left_joins(:community_filter_statuses)
-        .where(community_filter_statuses: { id: nil })
-        .where(condition_query, max_id: max_id || 0)
+        .filter_banned_statuses
+        .filter_with_max_id(max_id)
         .where.not(id: excluded_ids)
         .where.not(mammoth_communities: { slug: "breaking_news" })
-        .where(reply: false)
-        .where(community_feed_id: nil)
-        .where(group_id: nil)
+        .filter_statuses_without_rss
         .where(deleted_at: nil)
         .limit(5)
     }
 
     scope :my_community_timeline, -> (user_id, max_id, excluded_ids=[]) {
-            condition_query = if max_id.nil?
-              "statuses.id > 0"
-            else
-              "statuses.id < :max_id"
-            end 
-
+           
             joins(communities_statuses: :community)
             .joins(community_users: :community)
-            .left_joins(:community_filter_statuses)
-            .where(community_filter_statuses: { id: nil })
-            .where(condition_query, max_id: max_id || 0)
+            .filter_banned_statuses
+            .filter_with_max_id(max_id)
             .where.not(id: excluded_ids)
-            .where(reply: false)
-            .where(community_feed_id: nil)
-            .where(group_id: nil)
+            .filter_statuses_without_rss
             .where.not(mammoth_communities: { slug: "breaking_news" })
             .where(community_users: { user_id: user_id })
             .where(deleted_at: nil)
@@ -176,15 +149,35 @@ module Mammoth
             .limit(5)
     }
 
+    scope :following_timeline, -> (user_id, acc_id, max_id, excluded_ids) {
+      left_joins(:follows)
+      .left_joins(:tag_followed)
+      .where("(follows.account_id = :acc_id OR tag_follows.account_id = :acc_id)", acc_id: acc_id)
+      .filter_banned_statuses
+      .filter_with_max_id(max_id)
+      .filter_statuses_by_timeline_setting(user_id)
+      .filter_block_mute_inactive_statuses(acc_id)
+      .limit(5)
+    }
+
     scope :filter_with_max_id, -> (max_id) {
-
       condition_query = if max_id.nil?
-        "statuses.id > ?"
+        "statuses.id > 0"
       else
-        "statuses.id < ?"
+        "statuses.id < :max_id"
       end
-      where(condition_query, max_id || 0)
+      where(condition_query, max_id: max_id || 0)
+    }
 
+    scope :filter_statuses_without_rss, -> {
+      where(reply: false)
+      .where(community_feed_id: nil)
+      .where(group_id: nil)
+    }
+
+    scope :filter_banned_statuses, -> {
+      left_joins(:community_filter_statuses)
+      .where(community_filter_statuses: { id: nil })
     }
 
     scope :filter_statuses_by_timeline_setting, ->(user_id) {

@@ -1,8 +1,8 @@
 module Mammoth::Api::V1::Timeline
   class TimelinesController < Api::BaseController
     before_action :require_user!
-    before_action :set_max_id, only: [:all, :federated, :newsmast, :my_community, :all_old] 
-    before_action :create_service, only: [:all, :federated, :newsmast, :my_community, :all_old] 
+    before_action :set_max_id, only: [:all, :federated, :newsmast, :my_community, :all_old, :following] 
+    before_action :create_service, only: [:all, :federated, :newsmast, :my_community, :all_old, :following] 
     before_action :create_policy, only: [:create]
     before_action -> { doorkeeper_authorize! :read , :write}
 
@@ -22,6 +22,11 @@ module Mammoth::Api::V1::Timeline
     end
 
     def newsmast
+      @statuses = @timeline_service.call
+      format_json
+    end
+
+    def following
       @statuses = @timeline_service.call
       format_json
     end
