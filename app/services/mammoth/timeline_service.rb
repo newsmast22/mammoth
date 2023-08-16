@@ -20,27 +20,28 @@ module Mammoth
     private 
 
     def get_query
-      ActiveRecord::Base.connected_to(role: :reading) do 
-        case @caller_name 
-          when "all"
-            @statuses = @query_service.all_timeline
-          when "my_community"
-            @statuses = @query_service.my_community_timeline
-          when "federated"
-            @statuses = @query_service.federated_timeline
-          when "newsmast"
-            @statuses = @query_service.newsmast_timeline
-          when "following"
-            @statuses = @query_service.following_timeline
-          when "index"
-            @statuses = @query_service.following_timeline
-          end
+      ActiveRecord::Base.connected_to(role: :reading) do
+        case @caller_name
+        when "all"
+          @statuses = @query_service.all_timeline
+        when "my_community"
+          @statuses = @query_service.my_community_timeline
+        when "federated"
+          @statuses = @query_service.federated_timeline
+        when "newsmast"
+          @statuses = @query_service.newsmast_timeline
+        when "following"
+          @statuses = @query_service.following_timeline
+        when "index"
+          @statuses = @query_service.following_timeline
         end
       end
     end
+    
+    
 
     def create_user_timeline_setting
-      if check_filter_setting.present? 
+      if @userTimeLineSetting.nil?
         @userTimeLineSetting.check_filter_setting 
       end
     end

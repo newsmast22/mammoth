@@ -165,13 +165,13 @@ module Mammoth
     }
 
     scope :following_timeline, -> (user_id, acc_id, max_id) {
-     
+      
       filter_following_accounts(acc_id)
       .filter_banned_statuses
       .filter_with_max_id(max_id)
       .filter_statuses_by_timeline_setting(user_id)
       .filter_block_mute_inactive_statuses(acc_id)
-      .filter_statuses_without_rss
+      .where(reply: false)
       .limit(5)
     }
 
