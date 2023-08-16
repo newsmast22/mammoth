@@ -12,13 +12,11 @@ module Mammoth::Api::V1
 
     def suggestion
       #condition: Intial start with limit
+      offset = params[:offset].present? ? params[:offset] : 0
+
       @user  = Mammoth::User.find(current_user.id)
 
-      @users = Mammoth::User.joins(:user_communities).where.not(id: @user.id).where(user_communities: {community_id: @user.communities.ids}).distinct.order(id: :desc)
-
-      if params[:max_id].present?
-        @users = @users.where("users.account_id < #{params[:max_id]}")
-      end
+      @users = Mammoth::User.joins(:user_communities).where.not(id: @user.id).where(user_communities: {community_id: @user.communities.ids}).distinct.order('users.account_id desc').limit(params[:limit].to_i + 10).offset(offset)
 
       #begin::blocked account post
       blocked_accounts = Block.where(account_id: current_account.id).or(Block.where(target_account_id: current_account.id))
@@ -46,35 +44,14 @@ module Mammoth::Api::V1
         
       account_followed = Follow.where(account_id: current_account).pluck(:target_account_id).map(&:to_i)
 
-      data   = []
-      @users.each do |user|
+      accounts = Account.where(id: @users.pluck(:account_id).map(&:to_i))
 
-        #begin::check account requested or not
-        is_requested = false
-        follow_request = FollowRequest.where(account_id: current_account.id, target_account_id: user.account.id)
-        is_requested = follow_request.present? ? true : false
-        #end::check account requested or not
-
-        data << {
-          account_id: user.account_id.to_s,
-          is_followed: account_followed.include?(user.account_id), 
-          is_requested: is_requested,
-          user_id: user.id.to_s,
-          username: user.account.username,
-          display_name: user.account.display_name.presence || user.account.username,
-          email: user.email,
-          image_url: user.account.avatar.url,
-          bio: user.account.note,
-          acct: user.account.pretty_acct
-        }
-      end
-      render json: {
-        data: data,
-        meta: { 
-					left_suggession_count: left_seggession_count,
-          has_more_objects: left_seggession_count > 0 ? true : false
-				}
-      }
+      render json: accounts, root: 'data', 
+                    each_serializer: Mammoth::AccountSerializer, current_user: current_user, adapter: :json, 
+                    meta: { 
+                        has_more_objects: left_seggession_count > 0 ? true : false,
+                        offset: offset.to_i
+                    }
     end
 
     def global_suggestion  
@@ -95,7 +72,7 @@ module Mammoth::Api::V1
                     each_serializer: Mammoth::AccountSerializer, current_user: current_user, adapter: :json, 
                     meta: { 
                     has_more_objects: @accounts.size > default_limit ? true : false,
-                    offset: offset
+                    offset: offset.to_i
                     }
     end
 
