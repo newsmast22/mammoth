@@ -57,6 +57,20 @@ module Mammoth
       where(account_id: excluded_account_ids).pluck(:account_id)
     }
 
+    scope :filter_following_accounts, -> (account_id) {
+      follow_acc_ids = joins(:follows)
+                      .where("follows.account_id = :account_id", account_id: account_id)
+                      .pluck("follows.target_account_id")
+
+      tag_acc_ids = joins(:tag_followed)
+                    .where("tag_follows.account_id = :account_id", account_id: account_id)
+                    .pluck("statuses.account_id")
+
+      excluded_account_ids = (follow_acc_ids + tag_acc_ids).uniq
+      excluded_account_ids.delete(account_id)
+      where(account_id: excluded_account_ids)
+    }
+
     scope :filter_block_mute_inactive_statuses, -> (account_id) {
       blocked_account_ids = joins(account: :blocks)
         .where("blocks.target_account_id = :account_id OR blocks.account_id = :account_id", account_id: account_id)
@@ -97,9 +111,8 @@ module Mammoth
     }
 
     scope :filter_block_mute_inactive_acc_id, ->(account_id) {
-        
-          excluded_account_ids = excluded_account_ids(account_id)
-          where.not(account_id: excluded_account_ids)
+      excluded_account_ids = excluded_account_ids(account_id)
+      where.not(account_id: excluded_account_ids)
     }
 
     scope :newsmast_timeline, -> (max_id, excluded_ids=[]) {
@@ -150,9 +163,8 @@ module Mammoth
     }
 
     scope :following_timeline, -> (user_id, acc_id, max_id, excluded_ids) {
-      left_joins(:follows)
-      .left_joins(:tag_followed)
-      .where("(follows.account_id = :acc_id OR tag_follows.account_id = :acc_id)", acc_id: acc_id)
+     
+      filter_following_accounts(acc_id)
       .filter_banned_statuses
       .filter_with_max_id(max_id)
       .filter_statuses_by_timeline_setting(user_id)
