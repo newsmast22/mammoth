@@ -162,7 +162,7 @@ module Mammoth
             .limit(5)
     }
 
-    scope :following_timeline, -> (user_id, acc_id, max_id, excluded_ids) {
+    scope :following_timeline, -> (user_id, acc_id, max_id) {
      
       filter_following_accounts(acc_id)
       .filter_banned_statuses

@@ -9,7 +9,6 @@ module Mammoth
         end
 
         def following_timeline 
-          @excluded_ids = Mammoth::Status.get_block_mute_inactive_acc_id(@acc_id)
           @statuses = Mammoth::Status.includes(
                                                 :reblog, 
                                                 :media_attachments, 
@@ -19,7 +18,7 @@ module Mammoth
                                                 :status_stat, 
                                                 :conversation,
                                                 account: [:user, :account_stat], 
-                                              ).following_timeline(@user_id, @acc_id, @max_id, @excluded_ids)
+                                              ).following_timeline(@user_id, @acc_id, @max_id)
        
           return @statuses
         end

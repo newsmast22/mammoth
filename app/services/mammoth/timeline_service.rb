@@ -33,6 +33,8 @@ module Mammoth
         @statuses = @query_service.newsmast_timeline
       when "following"
         @statuses = @query_service.following_timeline
+      when "index"
+        @statuses = @query_service.following_timeline
       end
     end
 
