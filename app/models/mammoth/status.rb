@@ -122,6 +122,7 @@ module Mammoth
       .where.not(id: excluded_ids)
       .where(local: true)
       .where(deleted_at: nil)
+      .where(reply: false)
       .limit(5)
     }
 
@@ -132,34 +133,35 @@ module Mammoth
       .where.not(id: excluded_ids)
       .where(local: false)
       .where(deleted_at: nil)
+      .where(reply: false)
       .limit(5)
     }
 
     scope :all_timeline, -> (max_id, excluded_ids=[]) {
       
-        joins(communities_statuses: :community)
-        .filter_banned_statuses
-        .filter_with_max_id(max_id)
-        .where.not(id: excluded_ids)
-        .where.not(mammoth_communities: { slug: "breaking_news" })
-        .filter_statuses_without_rss
-        .where(deleted_at: nil)
-        .limit(5)
+      joins(communities_statuses: :community)
+      .filter_banned_statuses
+      .filter_with_max_id(max_id)
+      .where.not(id: excluded_ids)
+      .where.not(mammoth_communities: { slug: "breaking_news" })
+      .filter_statuses_without_rss
+      .where(deleted_at: nil)
+      .limit(5)
     }
 
     scope :my_community_timeline, -> (user_id, max_id, excluded_ids=[]) {
            
-            joins(communities_statuses: :community)
-            .joins(community_users: :community)
-            .filter_banned_statuses
-            .filter_with_max_id(max_id)
-            .where.not(id: excluded_ids)
-            .filter_statuses_without_rss
-            .where.not(mammoth_communities: { slug: "breaking_news" })
-            .where(community_users: { user_id: user_id })
-            .where(deleted_at: nil)
-            .filter_statuses_by_timeline_setting(user_id)
-            .limit(5)
+      joins(communities_statuses: :community)
+      .joins(community_users: :community)
+      .filter_banned_statuses
+      .filter_with_max_id(max_id)
+      .where.not(id: excluded_ids)
+      .filter_statuses_without_rss
+      .where.not(mammoth_communities: { slug: "breaking_news" })
+      .where(community_users: { user_id: user_id })
+      .where(deleted_at: nil)
+      .filter_statuses_by_timeline_setting(user_id)
+      .limit(5)
     }
 
     scope :following_timeline, -> (user_id, acc_id, max_id) {
@@ -169,6 +171,7 @@ module Mammoth
       .filter_with_max_id(max_id)
       .filter_statuses_by_timeline_setting(user_id)
       .filter_block_mute_inactive_statuses(acc_id)
+      .filter_statuses_without_rss
       .limit(5)
     }
 

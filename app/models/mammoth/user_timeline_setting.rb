@@ -4,7 +4,8 @@ module Mammoth
     belongs_to :user,class_name: "Mammoth::User"
 
     def check_attribute?
-      selected_filters.dig('location_filter').nil? || selected_filters.dig('source_filter').nil? || selected_filters.dig('communities_filter').nil?
+      (selected_filters.dig('location_filter').nil? || selected_filters.dig('source_filter').nil? 
+      || selected_filters.dig('communities_filter').nil?) 
     end
 
     def check_filter_setting
