@@ -140,7 +140,10 @@ Mammoth::Engine.routes.draw do
       resources :user_community_settings
 
       resources :following_accounts, only: :index
+
       resources :follower_accounts, only: :index
+
+      resources :following_tags, only: :index
 
       resources :notification_tokens, only: :create
 
