@@ -13,6 +13,15 @@ module Mammoth
     scope :filter_with_words, ->(words) { joins(:account).where("LOWER(users.email) like '%#{words}%' OR LOWER(users.phone) like '%#{words}%' OR LOWER(accounts.username) like '%#{words}%' OR LOWER(accounts.display_name) like '%#{words}%'") }
     scope :filter_blocked_accounts,->(account_ids) {where.not(account_id: account_ids)}
 
+    def primary_user_community
+      primary_user_community = user_communities.where(user_id: self.id, is_primary: true).last
+      return primary_user_community
+    end
+
+    def is_community_admin(commu_id)
+      community_admins.where(user_id: self.id, community_id: commu_id).last.present?
+    end
+
     def is_community_filter_turn_on?
       @user_community_setting = user_community_settings.last
       if @user_community_setting

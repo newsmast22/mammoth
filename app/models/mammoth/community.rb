@@ -8,6 +8,7 @@ module Mammoth
     has_and_belongs_to_many :users, class_name: "Mammoth::User"
     belongs_to :collection, class_name: "Mammoth::Collection"
     has_many :community_users, class_name: "Mammoth::UserCommunity"
+    has_many :community_admins, class_name: "Mammoth::CommunityAdmin"
 
 
   	IMAGE_LIMIT = 15.megabytes
@@ -64,9 +65,17 @@ module Mammoth
       self.image_file_name = name if name.present?
     end
 
+    def get_community_admins
+      community_admins.joins(:user)
+      .where(community_id: self.id)
+      .where(users: { is_active: true })
+      .pluck('users.account_id')
+    end
+
     def image_data=(data)
       self.image = {data: data} if data.present?
     end
+
 
     has_attached_file :header,
     styles: THUMBNAIL_STYLES

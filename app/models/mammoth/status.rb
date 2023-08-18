@@ -10,7 +10,7 @@ module Mammoth
     has_many :community_filter_statuses, class_name: "Mammoth::CommunityFilterStatus"
     has_many :communities_statuses, class_name: "Mammoth::CommunityStatus"
     has_many :community_users, through: :communities
-    has_many :follows, through: :account 
+    has_many :follows, through: :account, foreign_key: :account_id
     has_many :status_tags, class_name: "Mammoth::StatusTag"
     has_many :tag_followed, through: :status_tags
 
@@ -71,6 +71,36 @@ module Mammoth
       where(account_id: excluded_account_ids)
     }
 
+    scope :filter_with_commu_admin_acc_ids, -> (account_ids) {
+      follow_acc_ids = joins(:follows)
+                      .where("follows.account_id IN (:account_ids)", account_ids: account_ids)
+                      .pluck("follows.target_account_id")
+
+      where(account_id: follow_acc_ids)
+    }
+
+    scope :filter_block_mute_inactive_statuses_by_acc_ids, -> (current_user_acc_id, admin_acc_ids) {
+      
+      blocked_account_ids = joins(account: :blocks)
+        .where("blocks.target_account_id IN (:account_ids) OR blocks.account_id IN (:account_ids)", account_ids: admin_acc_ids)
+        .pluck("blocks.account_id, blocks.target_account_id")
+
+      muted_account_ids = joins(account: :mutes)
+        .where("mutes.account_id IN (:account_ids)", account_ids: admin_acc_ids)
+        .pluck("mutes.target_account_id")
+
+      inactive_account_ids = joins(account: :user)
+        .where("users.is_active = ?", false)
+        .pluck("accounts.id")
+
+      excluded_account_ids = (blocked_account_ids + muted_account_ids + inactive_account_ids).uniq
+      excluded_account_ids.delete(current_user_acc_id)
+      
+      where.not(account_id: excluded_account_ids)
+    }
+
+   
+
     scope :filter_block_mute_inactive_statuses, -> (account_id) {
       blocked_account_ids = joins(account: :blocks)
         .where("blocks.target_account_id = :account_id OR blocks.account_id = :account_id", account_id: account_id)
@@ -100,15 +130,41 @@ module Mammoth
       joins(account: :mutes)
         .where("mutes.account_id = :account_id", account_id: account_id)
         .pluck("mutes.target_account_id")
-
     }
 
-    scope :user_community_all_timeline, ->(max_id, acc_ids=[], user_id, community_slug) {
+    scope :filter_with_primary_timeline_logic, ->(account, user, community) {
+      if !user.is_community_admin(community.id)
+        primary_user_community = user.primary_user_community
+        if primary_user_community.present?
+          if primary_user_community.community_id == community.id && community.is_country_filtering && community.is_country_filter_on
+            filter_timeline_with_countries(account.country)
+          end
+        end
+      end
+    }
+  
+    scope :user_community_recommended_timeline, ->(max_id, account, user, community) {
+      
       joins(communities_statuses: :community)
       .filter_with_max_id(max_id)
-      .filter_block_mute_inactive_statuses(acc_ids)
-      .filter_statuses_by_community_timeline_setting(user_id)
-      .where(mammoth_communities: { slug: community_slug })
+      .filter_block_mute_inactive_statuses_by_acc_ids(account.id, community.get_community_admins)
+      .filter_statuses_by_community_timeline_setting(user.id)
+      .filter_with_primary_timeline_logic(account, user, community)
+      .where(mammoth_communities: { slug: community.slug })
+      .where(deleted_at: nil)
+      .where(reply: false)
+      .filter_with_commu_admin_acc_ids(community.get_community_admins)
+      .filter_banned_statuses
+      .limit(5)
+    }
+
+    scope :user_community_all_timeline, ->(max_id, account, user, community) {
+      joins(communities_statuses: :community)
+      .filter_with_max_id(max_id)
+      .filter_block_mute_inactive_statuses_by_acc_ids(account.id, community.get_community_admins) 
+      .filter_statuses_by_community_timeline_setting(user.id)
+      .filter_with_primary_timeline_logic(account, user, community)
+      .where(mammoth_communities: { slug: community.slug })
       .where(deleted_at: nil)
       .where(reply: false)
       .filter_banned_statuses
@@ -130,7 +186,6 @@ module Mammoth
         joins(account: :user)
         .where("users.is_active = ?", false)
         .pluck("accounts.id")
-    
     }
 
     scope :filter_block_mute_inactive_acc_id, ->(account_id) {
@@ -216,6 +271,7 @@ module Mammoth
     }
      
     scope :common_filter_by_selected_filters, ->(selected_filters) {
+
       if selected_filters.present?
         selected_countries = selected_filters.selected_countries
         selected_contributor_role = selected_filters.selected_contributor_role
