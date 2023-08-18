@@ -2,6 +2,8 @@ module Mammoth::Api::V1
   class FollowingAccountsController < Api::BaseController
     before_action -> { authorize_if_got_token! :read, :'read:accounts' }
     before_action :set_account
+    before_action :require_user!
+
     #after_action :insert_pagination_headers
 
     FOLLOWING_ACCOUNTS_LIMIT = 10
@@ -20,7 +22,7 @@ module Mammoth::Api::V1
 						{ 
 							total_objects: nil,
 							has_more_objects: accounts.size > default_limit ? true : false,
-              offset: params[:offset].to_i
+              offset: offset.to_i
 						} 
 					}
     end
