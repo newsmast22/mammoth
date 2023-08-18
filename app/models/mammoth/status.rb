@@ -102,6 +102,29 @@ module Mammoth
         .pluck("mutes.target_account_id")
 
     }
+
+    scope :user_community_all_timeline, ->(max_id, acc_ids=[], user_id, community_slug) {
+      joins(communities_statuses: :community)
+      .filter_with_max_id(max_id)
+      .filter_block_mute_inactive_statuses(acc_ids)
+      .filter_statuses_by_community_timeline_setting(user_id)
+      .where(mammoth_communities: { slug: community_slug })
+      .where(deleted_at: nil)
+      .where(reply: false)
+      .filter_banned_statuses
+      .limit(5)
+    }
+
+    scope :all_timeline, -> (max_id, excluded_ids=[]) {
+      joins(communities_statuses: :community)
+      .filter_banned_statuses
+      .filter_with_max_id(max_id)
+      .where.not(id: excluded_ids)
+      .where.not(mammoth_communities: { slug: "breaking_news" })
+      .filter_statuses_without_rss
+      .where(deleted_at: nil)
+      .limit(5)
+    }
   
     scope :inactive_account_ids, -> {
         joins(account: :user)
@@ -137,17 +160,7 @@ module Mammoth
       .limit(5)
     }
 
-    scope :all_timeline, -> (max_id, excluded_ids=[]) {
-      
-      joins(communities_statuses: :community)
-      .filter_banned_statuses
-      .filter_with_max_id(max_id)
-      .where.not(id: excluded_ids)
-      .where.not(mammoth_communities: { slug: "breaking_news" })
-      .filter_statuses_without_rss
-      .where(deleted_at: nil)
-      .limit(5)
-    }
+   
 
     scope :my_community_timeline, -> (user_id, max_id, excluded_ids=[]) {
            
@@ -190,10 +203,19 @@ module Mammoth
       .where(group_id: nil)
     }
 
+    scope :filter_statuses_by_community_timeline_setting, ->(user_id){
+      user = Mammoth::User.find(user_id)
+      selected_filters = user.selected_user_community_filter
+      common_filter_by_selected_filters(selected_filters)
+    }
+
     scope :filter_statuses_by_timeline_setting, ->(user_id) {
       user = Mammoth::User.find(user_id)
       selected_filters = user.selected_filters_for_user
-    
+      common_filter_by_selected_filters(selected_filters)
+    }
+     
+    scope :common_filter_by_selected_filters, ->(selected_filters) {
       if selected_filters.present?
         selected_countries = selected_filters.selected_countries
         selected_contributor_role = selected_filters.selected_contributor_role

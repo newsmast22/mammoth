@@ -76,9 +76,14 @@ Mammoth::Engine.routes.draw do
         get 'federated', to: 'timelines#federated'
         get 'my_community', to: 'timelines#my_community'
         get 'following', to: 'timelines#following'
-       
       end
 
+      namespace :timeline do
+        get 'community_all', to: 'community_timelines#all'
+        get 'community_recommended', to: 'community_timelines#recommended'
+      end
+
+      
       resources :following_timelines do
         collection do
           get 'get_following_timelines' => 'following_timelines#get_following_timelines', as: 'get_following_timelines'
