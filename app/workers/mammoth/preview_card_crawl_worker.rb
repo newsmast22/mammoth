@@ -13,6 +13,13 @@ module Mammoth
     def perform
       return if Sidekiq::Queue.new('preview_card_crawler_schedule').size >= MAX_PULL_SIZE
 
+      workers = Sidekiq::Workers.new
+      if workers.count > 0
+        workers.each do |process_id, thread_id, worker|
+          return worker['queue'] == 'preview_card_crawler_schedule'
+        end
+      end
+
       PreviewCard.where(image_file_name: nil).where("retry_count < 3").find_in_batches(batch_size: 100).each do |preview_cards|
         preview_cards.each do |preview_card|
           url = preview_card.url
