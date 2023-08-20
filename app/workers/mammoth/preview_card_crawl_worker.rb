@@ -16,7 +16,7 @@ module Mammoth
       workers = Sidekiq::Workers.new
       if workers.count > 0
         workers.each do |process_id, thread_id, worker|
-          return worker['queue'] == 'preview_card_crawler_schedule'
+          return if worker['queue'] == 'preview_card_crawler_schedule'
         end
       end
 
