@@ -8,10 +8,10 @@ module Mammoth
     # If there are enormous records left to crawl images,
     # dispatching many jobs every five minutes will overwhelm the server, 
     # so only enqueue when the queue is empty.
-    MAX_PULL_SIZE = 0
+    MAX_PULL_SIZE = 1
     
     def perform
-      return if Sidekiq::Queue.new('preview_card_crawler_schedule').size == MAX_PULL_SIZE
+      return if Sidekiq::Queue.new('preview_card_crawler_schedule').size >= MAX_PULL_SIZE
 
       PreviewCard.where(image_file_name: nil).where("retry_count < 3").find_in_batches(batch_size: 100).each do |preview_cards|
         preview_cards.each do |preview_card|
