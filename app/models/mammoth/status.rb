@@ -7,8 +7,6 @@ module Mammoth
     belongs_to :community_feed, inverse_of: :statuses
     belongs_to :account, class_name: "Mammoth::Account"
     has_and_belongs_to_many :tags,class_name: "Mammoth::Tag"
-    has_many :community_filter_statuses, class_name: "Mammoth::CommunityFilterStatus"
-    has_many :communities_statuses, class_name: "Mammoth::CommunityStatus"
     has_many :community_users, through: :communities
     has_many :follows, through: :account, foreign_key: :account_id
     has_many :status_tags, class_name: "Mammoth::StatusTag"
@@ -22,7 +20,6 @@ module Mammoth
     scope :filter_followed_accounts,->(account_ids) {where(account_id: account_ids, reply: false)}
     scope :filter_with_status_ids, ->(status_ids,current_account_id) { where(id: status_ids, reply: false).where.not(account_id: current_account_id) }
     scope :filter_without_community_status_ids, ->(status_ids) { where.not(id: status_ids).where(reply: false) }
-
 
     scope :filter_is_only_for_followers, ->(account_ids) { where(is_only_for_followers: false).or(where(is_only_for_followers: true, account_id: account_ids)) }
     scope :filter_is_only_for_followers_community_statuses, ->(status_ids,account_ids) { where(id: status_ids, reply: false,is_only_for_followers: false).or(where(is_only_for_followers: true, account_id: account_ids,reply: false)) }
