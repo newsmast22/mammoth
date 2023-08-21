@@ -2,13 +2,12 @@ PATH
   remote: .
   specs:
     mammoth (0.1.0)
-      aws-sdk-comprehend (~> 1.73)
-      aws-sdk-translate (~> 1.57)
       byebug
       feedjira
       httparty
       link_thumbnailer
       rails (~> 6.1)
+      will_paginate (~> 3.1.7)
 
 GEM
   remote: https://rubygems.org/
@@ -76,21 +75,6 @@ GEM
       public_suffix (>= 2.0.2, < 6.0)
     ansi (1.5.0)
     ast (2.4.2)
-    aws-eventstream (1.2.0)
-    aws-partitions (1.792.0)
-    aws-sdk-comprehend (1.73.0)
-      aws-sdk-core (~> 3, >= 3.177.0)
-      aws-sigv4 (~> 1.1)
-    aws-sdk-core (3.179.0)
-      aws-eventstream (~> 1, >= 1.0.2)
-      aws-partitions (~> 1, >= 1.651.0)
-      aws-sigv4 (~> 1.5)
-      jmespath (~> 1, >= 1.6.1)
-    aws-sdk-translate (1.57.0)
-      aws-sdk-core (~> 3, >= 3.177.0)
-      aws-sigv4 (~> 1.1)
-    aws-sigv4 (1.6.0)
-      aws-eventstream (~> 1, >= 1.0.2)
     builder (3.2.4)
     byebug (11.1.3)
     concurrent-ruby (1.2.2)
@@ -118,7 +102,6 @@ GEM
       typhoeus (~> 1.0)
     image_size (2.1.2)
     iso8601 (0.13.0)
-    jmespath (1.6.2)
     json (2.6.3)
     link_thumbnailer (3.4.0)
       activesupport (>= 3.0)
@@ -228,6 +211,7 @@ GEM
     websocket-driver (0.7.5)
       websocket-extensions (>= 0.1.0)
     websocket-extensions (0.1.5)
+    will_paginate (3.1.8)
     zeitwerk (2.6.8)
 
 PLATFORMS
@@ -238,6 +222,7 @@ DEPENDENCIES
   mammoth!
   rake (~> 13.0)
   rspec (~> 3.0)
+  will_paginate (~> 3.1.7)
 
 BUNDLED WITH
    2.3.17

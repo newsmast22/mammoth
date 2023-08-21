@@ -20,6 +20,7 @@ module Mammoth::Api::V1::Timeline
     def set_max_id
       @max_id = params[:max_id]
       @community_slug = params[:id]
+      @page_no = params[:page_no]
       @current_community = Mammoth::Community.find_by(slug: @community_slug)
     end
 
@@ -49,7 +50,8 @@ module Mammoth::Api::V1::Timeline
     end
 
     def create_service
-      @timeline_service = Mammoth::CommunityTimelineService.new(current_account, @max_id, current_user, @current_community)
+      
+      @timeline_service = Mammoth::CommunityTimelineService.new(current_account, @max_id, current_user, @current_community, @page_no)
     end
   end 
 end

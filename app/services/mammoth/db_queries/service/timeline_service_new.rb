@@ -2,10 +2,11 @@ module Mammoth
   module DbQueries
     module Service
       class TimelineServiceNew
-        def initialize(max_id,current_user,current_account)
+        def initialize(max_id,current_user,current_account, page_no)
           @max_id = max_id
           @user_id = current_user.id
           @acc_id = current_account.id
+          @page_no = page_no
         end
 
         def following_timeline 
@@ -18,13 +19,14 @@ module Mammoth
                                                 :status_stat, 
                                                 :conversation,
                                                 account: [:user, :account_stat], 
-                                              ).following_timeline(@user_id, @acc_id, @max_id)
+                                              ).following_timeline(@user_id, @acc_id, @max_id, @page_no)
        
           return @statuses
         end
 
         def my_community_timeline 
           @excluded_ids = Mammoth::Status.get_block_mute_inactive_acc_id(@acc_id)
+        
           @statuses = Mammoth::Status.includes(
                                                 :reblog, 
                                                 :media_attachments, 
@@ -34,7 +36,7 @@ module Mammoth
                                                 :status_stat, 
                                                 :conversation,
                                                 account: [:user, :account_stat], 
-                                              ).my_community_timeline(@user_id, @max_id, @excluded_ids)
+                                              ).my_community_timeline(@user_id, @max_id, @excluded_ids, @page_no)
         
           return @statuses
         end
@@ -50,7 +52,7 @@ module Mammoth
                                                 :status_stat, 
                                                 :conversation,
                                                 account: [:user, :account_stat], 
-                                              ).all_timeline(@max_id, @excluded_ids)
+                                              ).all_timeline(@max_id, @excluded_ids, @page_no)
           return @statuses
         end
 
@@ -65,7 +67,7 @@ module Mammoth
                                               :status_stat, 
                                               :conversation,
                                               account: [:user, :account_stat], 
-                                            ).newsmast_timeline(@max_id, @excluded_ids)
+                                            ).newsmast_timeline(@max_id, @excluded_ids, @page_no)
           return @statuses
         end
 
@@ -80,7 +82,7 @@ module Mammoth
                                               :status_stat, 
                                               :conversation,
                                               account: [:user, :account_stat], 
-                                            ).federated_timeline(@max_id)
+                                            ).federated_timeline(@max_id, @excluded_ids, @page_no)
           return @statuses
         end
       end 
