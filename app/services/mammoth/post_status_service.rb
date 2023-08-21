@@ -71,25 +71,6 @@ class Mammoth::PostStatusService < BaseService
 
     ApplicationRecord.transaction do
       @status = @account.statuses.create!(status_attributes)
-
-      unless @community_id.nil?
-        @community_status = Mammoth::CommunityStatus.new()
-        @community_status.status_id = @status.id
-        @community_status.community_id = @community_id
-        @community_status.save
-      end
-      
-      # Mammoth::Custom::Begin
-      # To check text contains filtered keywords 
-      # If keywords contains, save record in community filter statuses
-      create_status_json = {
-        'community_id' => @community_id,
-        'is_status_create' => true,
-        'status_id' => @status.id
-      }
-
-      Mammoth::CommunityFilterStatusesCreateWorker.perform_async(create_status_json)
-      # Mammoth::Custom::End
     end
   end
 

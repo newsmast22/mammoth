@@ -7,7 +7,11 @@ module Mammoth
     def perform(params = {})
 
       if params['is_status_create'] == true
-        Mammoth::CommunityFilterKeyword.new.filter_statuses_by_keywords(params['community_id'],params['status_id'])
+
+        params['community_id'].each do |community_id|
+          Mammoth::CommunityFilterKeyword.new.filter_statuses_by_keywords(community_id, params['status_id'])
+        end
+        
       else
         # This is only call when community filter keyword when create records
         # Only need to fetch & create status when community keyword create/update

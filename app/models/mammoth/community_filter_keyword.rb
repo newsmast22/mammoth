@@ -6,9 +6,16 @@ module Mammoth
 
     validates :keyword, uniqueness: { :if => :community_id?, :scope => :community_id}
 
-    scope :by_community, ->(community_id) { where(community_id: community_id) }
+    scope :by_community, ->(community_id) { 
+            where(community_id: community_id) 
+    }
+
+    scope :without_community, -> { 
+             where(community_id: nil)
+    }
+
     scope :ilike_any_keyword, ->(content_words) {
-      where('LOWER(keyword) ILIKE ANY (ARRAY[?])', content_words.map { |word| "#{word.downcase}" })
+            where('LOWER(keyword) ILIKE ANY (ARRAY[?])', content_words.map { |word| "#{word.downcase}" })
     }
 
     def self.get_all_community_filter_keywords(account_id:, community_id:, max_id:)
@@ -96,7 +103,7 @@ module Mammoth
     def filter_statuses_by_global_keywords(content, status_id)
 
       content_words = content.downcase.split(/\W+/)
-      @community_filter_Keywords = self.class.ilike_any_keyword(content_words)
+      @community_filter_Keywords = self.class.without_community.ilike_any_keyword(content_words)
       create_matched_keywords_status(status_id)
 
     end

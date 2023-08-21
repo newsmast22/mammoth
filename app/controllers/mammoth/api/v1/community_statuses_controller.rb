@@ -716,6 +716,46 @@ module Mammoth::Api::V1
 
 		def save_statuses(selected_communities)
 
+			image_data_array = save_media_attachments()
+			@status = Mammoth::PostStatusService.new.call(
+				current_user.account,
+				text: community_status_params[:status],
+				thread: @thread,
+				media_ids: image_data_array,
+				sensitive: community_status_params[:sensitive],
+				spoiler_text: community_status_params[:spoiler_text],
+				visibility: community_status_params[:visibility],
+				language: community_status_params[:language],
+				scheduled_at: community_status_params[:scheduled_at],
+				application: doorkeeper_token.application,
+				poll: community_status_params[:poll],
+				idempotency: request.headers['Idempotency-Key'],
+				with_rate_limit: true,
+				is_only_for_followers: community_status_params[:is_only_for_followers],
+				is_meta_preview: community_status_params[:is_meta_preview],
+			) 
+
+			if selected_communities.any?
+
+				# Create mulitple selected communities
+				selected_communities.each do |community_id|
+					Mammoth::CommunityStatus.find_or_create_by(status_id: @status.id, community_id: community_id)
+				end
+
+				# To check text contains filtered keywords 
+				# If keywords contains, save record in community filter statuses
+				create_status_json = {
+					'community_id' => selected_communities,
+					'is_status_create' => true,
+					'status_id' => @status.id
+				}
+
+				Mammoth::CommunityFilterStatusesCreateWorker.perform_async(create_status_json)
+			end
+
+		end
+
+		def save_media_attachments()
 			# Assuming `base64_data` contains the Base64-encoded file
 			image_data_array = []
 			unless community_status_params[:image_data].nil? || community_status_params[:image_data] == ""
@@ -731,62 +771,7 @@ module Mammoth::Api::V1
 				@media_attachment = current_account.media_attachments.create!(media_attachment_params)
 				image_data_array << @media_attachment.id
 			end
-
-			## loop selected_communities
-			if selected_communities.any?
-				group_id = nil
-				selected_communities.each_with_index do |community_id,index|
-
-					@status = Mammoth::PostStatusService.new.call(
-						current_user.account,
-						text: community_status_params[:status],
-						thread: @thread,
-						media_ids: image_data_array,
-						sensitive: community_status_params[:sensitive],
-						spoiler_text: community_status_params[:spoiler_text],
-						visibility: community_status_params[:visibility],
-						language: community_status_params[:language],
-						scheduled_at: community_status_params[:scheduled_at],
-						application: doorkeeper_token.application,
-						poll: community_status_params[:poll],
-						idempotency: request.headers['Idempotency-Key'],
-						with_rate_limit: true,
-						is_only_for_followers: community_status_params[:is_only_for_followers],
-						is_meta_preview: community_status_params[:is_meta_preview],
-						group_id: group_id,
-						community_id: community_id
-					) 
-					if index == 0
-						group_id = @status.id
-					end
-				end
-			else
-				## not selected community
-				@status = Mammoth::PostStatusService.new.call(
-					current_user.account,
-					text: community_status_params[:status],
-					thread: @thread,
-					media_ids: image_data_array,
-					sensitive: community_status_params[:sensitive],
-					spoiler_text: community_status_params[:spoiler_text],
-					visibility: community_status_params[:visibility],
-					language: community_status_params[:language],
-					scheduled_at: community_status_params[:scheduled_at],
-					application: doorkeeper_token.application,
-					poll: community_status_params[:poll],
-					idempotency: request.headers['Idempotency-Key'],
-					with_rate_limit: true,
-					is_only_for_followers: community_status_params[:is_only_for_followers],
-					is_meta_preview: community_status_params[:is_meta_preview],
-					community_id: nil
-				)
-			end
-		
-			# Delete temp stored files
-			if image_data_array.any?
-				File.delete("#{Time.now.utc.strftime('%m%d%Y%H%M')}.png")
-			end
-			
+			return image_data_array	
 		end
 
   end
