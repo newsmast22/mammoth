@@ -20,7 +20,7 @@ module Mammoth
         end
       end
 
-      PreviewCard.where(image_file_name: nil).where("retry_count < 3").find_in_batches(batch_size: 100).each do |preview_cards|
+      PreviewCard.where(image_file_name: nil).where("retry_count < 3").order(created_at: :desc).find_in_batches(batch_size: 100).each do |preview_cards|
         preview_cards.each do |preview_card|
           url = preview_card.url
           if image_url=get_image_url(url)
