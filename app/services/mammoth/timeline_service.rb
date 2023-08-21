@@ -3,15 +3,13 @@ module Mammoth
   class TimelineService < BaseService
     attr_reader :statuses
   
-    def initialize(current_account, max_id, current_user, page_no)
+    def initialize(current_account, max_id, current_user)
       @current_account = current_account
       @max_id = max_id
       @current_user = current_user
       @userTimeLineSetting = Mammoth::UserTimelineSetting.where(user_id: @current_user.id).last
       create_user_timeline_setting
-      @page_no = page_no
-      
-      @query_service = Mammoth::DbQueries::Service::TimelineServiceNew.new(@max_id, @current_user, @current_account, @page_no)
+      @query_service = Mammoth::DbQueries::Service::TimelineServiceNew.new(@max_id,@current_user,@current_account)
     end
 
     def call

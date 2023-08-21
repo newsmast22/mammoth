@@ -1,15 +1,14 @@
 require 'benchmark'
 module Mammoth
   class CommunityTimelineService < BaseService
-    def initialize(current_account, max_id, current_user, current_community, page_no)
+    def initialize(current_account, max_id, current_user, current_community)
       @current_account = current_account
       @max_id = max_id
       @current_user = current_user
       @current_community = current_community
       @userCommunitySetting = Mammoth::UserCommunitySetting.where(user_id: @current_user.id).last
       create_user_community_setting  
-      @page_no = page_no
-      @query_service = Mammoth::DbQueries::Service::UserCommunityServiceQuery.new(@max_id, @current_user, @current_account, @current_community, @page_no)
+      @query_service = Mammoth::DbQueries::Service::UserCommunityServiceQuery.new(@max_id, @current_user, @current_account, @current_community)
     end
 
     def call
