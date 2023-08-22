@@ -74,6 +74,7 @@ module Mammoth
                       .where("follows.account_id IN (:account_ids)", account_ids: account_ids)
                       .pluck("follows.target_account_id")
 
+
       where(account_id: follow_acc_ids)
     }
 
@@ -163,7 +164,7 @@ module Mammoth
       .filter_block_mute_inactive_statuses_by_acc_ids(account.id, community.get_community_admins) 
       .filter_statuses_by_community_timeline_setting(user.id)
       .filter_with_primary_timeline_logic(account, user, community)
-      .where("mammoth_communities.slug = :community_slug OR mammoth_communities.id IS NULL", community_slug: community.slug)
+      .where("mammoth_communities.slug = :community_slug", community_slug: community.slug)
       .where(deleted_at: nil)
       .where(reply: false)
       .filter_banned_statuses
@@ -223,6 +224,7 @@ module Mammoth
     scope :my_community_timeline, -> (user_id, max_id, excluded_ids=[]) {
            
       joins(communities_statuses: :community)
+       .filter_banned_statuses
       .joins(community_users: :community)
       .filter_with_max_id(max_id)
       .where.not(id: excluded_ids)
@@ -231,18 +233,17 @@ module Mammoth
       .where(community_users: { user_id: user_id })
       .where(deleted_at: nil)
       .filter_statuses_by_timeline_setting(user_id)
-      .filter_banned_statuses
       .order(id: :desc)
       .limit(5)
     }
 
     scope :following_timeline, -> (user_id, acc_id, max_id) {
       filter_following_accounts(acc_id)
+      .filter_banned_statuses
       .filter_with_max_id(max_id)
       .filter_statuses_by_timeline_setting(user_id)
       .filter_block_mute_inactive_statuses(acc_id)
       .where(reply: false)
-      .filter_banned_statuses
       .order(id: :desc)
       .limit(5)
     }
