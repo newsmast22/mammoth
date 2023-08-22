@@ -72,9 +72,8 @@ module Mammoth
 
       follow_acc_ids = joins(:follows)
                       .where("follows.account_id IN (:account_ids)", account_ids: account_ids)
-                      .pluck("follows.target_account_id")
-
-
+                      .pluck("follows.target_account_id").uniq
+      byebug
       where(account_id: follow_acc_ids)
     }
 
@@ -144,7 +143,7 @@ module Mammoth
   
     scope :user_community_recommended_timeline, ->(max_id, account, user, community) {
       
-      joins(communities_statuses: :community)
+      left_joins(communities_statuses: :community)
       .filter_with_max_id(max_id)
       .filter_block_mute_inactive_statuses_by_acc_ids(account.id, community.get_community_admins)
       .filter_statuses_by_community_timeline_setting(user.id)
@@ -249,7 +248,7 @@ module Mammoth
     }
 
     scope :filter_with_max_id, -> (max_id) {
-      condition_query = if max_id.nil?
+      condition_query = if max_id.nil? || !max_id.present? || !max_id.is_a?(Integer)
         "statuses.id > 0"
       else
         "statuses.id < :max_id"
