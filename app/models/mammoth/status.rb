@@ -77,13 +77,13 @@ module Mammoth
     }
 
     scope :filter_block_mute_inactive_statuses_by_acc_ids, -> (current_user_acc_id, admin_acc_ids) {
-      
-      blocked_account_ids = joins(account: :blocks)
-        .where("blocks.target_account_id IN (:account_ids) OR blocks.account_id IN (:account_ids)", account_ids: admin_acc_ids)
+        acc_ids = admin_acc_ids.push(current_user_acc_id)
+        blocked_account_ids = joins(account: :blocks)
+        .where("blocks.target_account_id IN (:account_ids) OR blocks.account_id IN (:account_ids)", account_ids: acc_ids)
         .pluck("blocks.account_id, blocks.target_account_id")
 
       muted_account_ids = joins(account: :mutes)
-        .where("mutes.account_id IN (:account_ids)", account_ids: admin_acc_ids)
+        .where("mutes.account_id IN (:account_ids)", account_ids: acc_ids)
         .pluck("mutes.target_account_id")
 
       inactive_account_ids = joins(account: :user)
@@ -91,7 +91,7 @@ module Mammoth
         .pluck("accounts.id")
 
       excluded_account_ids = (blocked_account_ids + muted_account_ids + inactive_account_ids).uniq
-      excluded_account_ids.delete(current_user_acc_id)
+      excluded_account_ids.delete(acc_ids)
       
       where.not(account_id: excluded_account_ids)
     }
@@ -147,7 +147,7 @@ module Mammoth
       .filter_block_mute_inactive_statuses_by_acc_ids(account.id, community.get_community_admins)
       .filter_statuses_by_community_timeline_setting(user.id)
       .filter_with_primary_timeline_logic(account, user, community)
-      .where(mammoth_communities: { slug: community.slug })
+      .where("mammoth_communities.slug = :community_slug OR mammoth_communities.id IS NULL", community_slug: community.slug)
       .where(deleted_at: nil)
       .where(reply: false)
       .filter_with_commu_admin_acc_ids(community.get_community_admins)
@@ -161,7 +161,7 @@ module Mammoth
       .filter_block_mute_inactive_statuses_by_acc_ids(account.id, community.get_community_admins) 
       .filter_statuses_by_community_timeline_setting(user.id)
       .filter_with_primary_timeline_logic(account, user, community)
-      .where(mammoth_communities: { slug: community.slug })
+      .where("mammoth_communities.slug = :community_slug OR mammoth_communities.id IS NULL", community_slug: community.slug)
       .where(deleted_at: nil)
       .where(reply: false)
       .filter_banned_statuses
