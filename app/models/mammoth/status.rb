@@ -69,6 +69,7 @@ module Mammoth
     }
 
     scope :filter_with_commu_admin_acc_ids, -> (account_ids) {
+
       follow_acc_ids = joins(:follows)
                       .where("follows.account_id IN (:account_ids)", account_ids: account_ids)
                       .pluck("follows.target_account_id")
@@ -152,6 +153,7 @@ module Mammoth
       .where(reply: false)
       .filter_with_commu_admin_acc_ids(community.get_community_admins)
       .filter_banned_statuses
+      .order(id: :desc)
       .limit(5)
     }
 
@@ -165,6 +167,7 @@ module Mammoth
       .where(deleted_at: nil)
       .where(reply: false)
       .filter_banned_statuses
+      .order(id: :desc)
       .limit(5)
     }
 
@@ -176,6 +179,7 @@ module Mammoth
       .where.not(mammoth_communities: { slug: "breaking_news" })
       .filter_statuses_without_rss
       .where(deleted_at: nil)
+      .order(id: :desc)
       .limit(5)
     }
   
@@ -198,6 +202,7 @@ module Mammoth
       .where(local: true)
       .where(deleted_at: nil)
       .where(reply: false)
+      .order(id: :desc)
       .limit(5)
     }
 
@@ -209,6 +214,7 @@ module Mammoth
       .where(local: false)
       .where(deleted_at: nil)
       .where(reply: false)
+      .order(id: :desc)
       .limit(5)
     }
 
@@ -218,7 +224,6 @@ module Mammoth
            
       joins(communities_statuses: :community)
       .joins(community_users: :community)
-      .filter_banned_statuses
       .filter_with_max_id(max_id)
       .where.not(id: excluded_ids)
       .filter_statuses_without_rss
@@ -226,17 +231,19 @@ module Mammoth
       .where(community_users: { user_id: user_id })
       .where(deleted_at: nil)
       .filter_statuses_by_timeline_setting(user_id)
+      .filter_banned_statuses
+      .order(id: :desc)
       .limit(5)
     }
 
     scope :following_timeline, -> (user_id, acc_id, max_id) {
-      
       filter_following_accounts(acc_id)
-      .filter_banned_statuses
       .filter_with_max_id(max_id)
       .filter_statuses_by_timeline_setting(user_id)
       .filter_block_mute_inactive_statuses(acc_id)
       .where(reply: false)
+      .filter_banned_statuses
+      .order(id: :desc)
       .limit(5)
     }
 

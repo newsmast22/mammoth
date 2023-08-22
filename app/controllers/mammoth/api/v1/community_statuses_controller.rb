@@ -735,6 +735,12 @@ module Mammoth::Api::V1
 				is_meta_preview: community_status_params[:is_meta_preview],
 			) 
 
+			if image_data_array.any?
+
+				File.delete("#{Time.now.utc.strftime('%m%d%Y%H%M')}.png")
+		
+			end
+
 			if selected_communities.any?
 
 				# Create mulitple selected communities
