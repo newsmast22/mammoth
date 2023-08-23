@@ -35,10 +35,11 @@ module Mammoth::Api::V1::Timeline
 
     def set_max_id
       @max_id = params[:max_id]
+      @page_no = params[:page_no]
     end
 
     def format_json
-      unless @statuses.empty?
+      unless  @statuses.nil? || @statuses.empty? 
         render json: @statuses, root: 'data', 
                                 each_serializer: Mammoth::StatusSerializer, current_user: current_user, adapter: :json, 
                                 meta: {
@@ -63,7 +64,7 @@ module Mammoth::Api::V1::Timeline
     end
 
     def create_service
-      @timeline_service = Mammoth::TimelineService.new(current_account, @max_id, current_user)
+      @timeline_service = Mammoth::TimelineService.new(current_account, @max_id, current_user, @page_no)
     end
 
     def create_policy
