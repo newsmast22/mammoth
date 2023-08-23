@@ -39,7 +39,7 @@ module Mammoth
     
     def create_user_community_setting
       if @userCommunitySetting.nil?
-        @userCommunitySetting.check_filter_setting 
+        Mammoth::UserCommunitySetting.create_userTimelineSetting(@current_user)
       end
     end
   end

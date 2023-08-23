@@ -73,6 +73,7 @@ module Mammoth
       follow_acc_ids = joins(:follows)
                       .where("follows.account_id IN (:account_ids)", account_ids: account_ids)
                       .pluck("follows.target_account_id").uniq
+                      
       where(account_id: follow_acc_ids)
     }
 

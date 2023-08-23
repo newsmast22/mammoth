@@ -41,8 +41,8 @@ module Mammoth
     
 
     def create_user_timeline_setting
-      if !@userTimeLineSetting.nil?
-        @userTimeLineSetting.check_filter_setting 
+      if @userTimeLineSetting.nil? 
+        Mammoth::UserTimelineSetting.create_userTimelineSetting(@current_user)
       end
     end
 

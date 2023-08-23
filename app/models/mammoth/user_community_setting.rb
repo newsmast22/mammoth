@@ -3,23 +3,17 @@ module Mammoth
     self.table_name = 'mammoth_user_community_settings'
     belongs_to :user, class_name: "Mammoth::User"
 
-    def check_attribute?
+    def self.check_attribute(selected_filters)
       selected_filters.dig('location_filter').nil? || selected_filters.dig('source_filter').nil? || selected_filters.dig('communities_filter').nil?
     end
 
-    def check_filter_setting
-      if check_attribute? 
-        create_userTimelineSetting
-      end
-    end
-
-    def create_userTimelineSetting
-      userCommunitySettings = Mammoth::UserCommunitySetting.where(user_id: self.user_id)
+    def self.create_userTimelineSetting(user)
+      userCommunitySettings = Mammoth::UserCommunitySetting.where(user_id: user.id)
       userCommunitySettings.destroy_all
       Mammoth::UserCommunitySetting.create!(
-        user_id: self.user_id,
+        user_id: user.id,
         selected_filters: {
-          default_country: self.user.account.country,
+          default_country: user.account.country,
           location_filter: {
             selected_countries: [],
             is_location_filter_turn_on: true
