@@ -225,7 +225,7 @@ module Mammoth
      
       if page_no.nil? || !page_no.present? || !page_no.is_a?(Integer)
         filter_with_max_id(max_id)
-        order(id: :desc)
+        .order(id: :desc)
         .select('statuses.id') 
         .distinct
         .limit(5)
@@ -245,7 +245,7 @@ module Mammoth
         "statuses.id < :max_id"
       end
       
-      where(condition_query, max_id: max_id || 0)
+      where(condition_query, max_id: max_id.to_i || 0 )
     }
 
     scope :filter_statuses_without_rss, -> {
