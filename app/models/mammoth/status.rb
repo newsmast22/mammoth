@@ -70,10 +70,8 @@ module Mammoth
 
     scope :filter_with_commu_admin_acc_ids, -> (account_ids) {
 
-      follow_acc_ids = joins(:follows)
-                      .where("follows.account_id IN (:account_ids)", account_ids: account_ids)
-                      .pluck("follows.target_account_id").uniq
-                      
+      follow_acc_ids = account_followed_ids = Follow.where(account_id: account_ids).pluck(:target_account_id).map(&:to_i).uniq 
+                        
       where(account_id: follow_acc_ids)
     }
 
@@ -143,16 +141,15 @@ module Mammoth
   
     scope :user_community_recommended_timeline, ->(max_id, account, user, community, page_no=nil) {
       
-      left_joins(communities_statuses: :community)
+      left_joins(:communities_statuses)
+      .filter_with_commu_admin_acc_ids(community.get_community_admins)
       .filter_block_mute_inactive_statuses_by_acc_ids(account.id, community.get_community_admins)
       .filter_statuses_by_community_timeline_setting(user.id)
       .filter_with_primary_timeline_logic(account, user, community)
-      .where("mammoth_communities.slug = :community_slug OR mammoth_communities.id IS NULL", community_slug: community.slug)
+      .where("mammoth_communities_statuses.community_id = :community_id OR mammoth_communities_statuses.id IS NULL", community_id: community.id)
       .where(deleted_at: nil)
       .where(reply: false)
-      .filter_with_commu_admin_acc_ids(community.get_community_admins)
       .filter_banned_statuses
-      .order(id: :desc)
       .pagination(page_no, max_id)
     }
 
@@ -165,7 +162,6 @@ module Mammoth
       .where(deleted_at: nil)
       .where(reply: false)
       .filter_banned_statuses
-      .order(id: :desc)
       .pagination(page_no, max_id)
     }
                        
@@ -176,7 +172,6 @@ module Mammoth
       .where.not(mammoth_communities: { slug: "breaking_news" })
       .filter_statuses_without_rss
       .where(deleted_at: nil)
-      .order(id: :desc)
       .pagination(page_no, max_id)
     }
   
@@ -190,7 +185,6 @@ module Mammoth
       .where(local: true)
       .where(deleted_at: nil)
       .where(reply: false)
-      .order(id: :desc)
       .pagination(page_no, max_id)
     }
 
@@ -201,7 +195,6 @@ module Mammoth
       .where(local: false)
       .where(deleted_at: nil)
       .where(reply: false)
-      .order(id: :desc)
       .pagination(page_no, max_id)
     }
                                 
@@ -216,7 +209,6 @@ module Mammoth
       .where(community_users: { user_id: user_id })
       .where(deleted_at: nil)
       .filter_statuses_by_timeline_setting(user_id)
-      .order(id: :desc)
       .pagination(page_no, max_id)
     }
                                 
@@ -226,7 +218,6 @@ module Mammoth
       .filter_statuses_by_timeline_setting(user_id)
       .filter_block_mute_inactive_statuses(acc_id)
       .where(reply: false)
-      .order(id: :desc)
       .pagination(page_no, max_id)
     }
 
@@ -234,11 +225,13 @@ module Mammoth
      
       if page_no.nil? || !page_no.present? || !page_no.is_a?(Integer)
         filter_with_max_id(max_id)
+        order(id: :desc)
         .select('statuses.id') 
         .distinct
         .limit(5)
       else 
-        select('statuses.id') 
+        order(id: :desc)
+        .select('statuses.id') 
         .distinct
         paginate(page: page_no, per_page: 5)
       end

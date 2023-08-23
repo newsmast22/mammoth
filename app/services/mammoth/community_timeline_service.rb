@@ -5,11 +5,10 @@ module Mammoth
       @current_account = current_account
       @max_id = max_id
       @current_user = current_user
-      @current_community = current_community
       @page_no = page_no
       @userCommunitySetting = Mammoth::UserCommunitySetting.where(user_id: @current_user.id).last
       create_user_community_setting  
-      @query_service = Mammoth::DbQueries::Service::UserCommunityServiceQuery.new(@max_id, @current_user, @current_account, @current_community, @page_no)
+      @query_service = Mammoth::DbQueries::Service::UserCommunityServiceQuery.new(@max_id, @current_user, @current_account, current_community, @page_no)
     end
 
     def call
