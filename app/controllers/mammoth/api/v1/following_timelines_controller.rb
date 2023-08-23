@@ -14,6 +14,7 @@ module Mammoth::Api::V1
 
     def set_max_id
       @max_id = params[:max_id]
+      @page_no = params[:page_no]
     end
 
     def format_json
@@ -42,7 +43,7 @@ module Mammoth::Api::V1
     end
 
     def create_service
-      @timeline_service = Mammoth::TimelineService.new(current_account, @max_id, current_user)
+      @timeline_service = Mammoth::TimelineService.new(current_account, @max_id, current_user,@page_no)
     end
 
     def create_policy

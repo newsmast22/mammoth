@@ -15,22 +15,9 @@ module Mammoth
 
         def all_timeline  
           if @community_slug
-            @statuses = Mammoth::Status.includes( :reblog, 
-                                                  :media_attachments, 
-                                                  :active_mentions, 
-                                                  :tags, 
-                                                  :preloadable_poll, 
-                                                  :status_stat, 
-                                                  :conversation,
-                                                  account: [:user, :account_stat]
-                                                ).user_community_all_timeline(@max_id, @account, @user, @community, @page_no)
-          end                             
-          return @statuses
-        end
-
-        def recommended_timeline 
-          if @community_slug
-            @statuses = Mammoth::Status.includes( :reblog, 
+            @statuses = Mammoth::Status.user_community_all_timeline(@max_id, @account, @user, @community, @page_no)
+            @statuses =  Mammoth::Status.includes(
+                                                  :reblog, 
                                                   :media_attachments, 
                                                   :active_mentions, 
                                                   :tags, 
@@ -38,7 +25,24 @@ module Mammoth
                                                   :status_stat, 
                                                   :conversation,
                                                   account: [:user, :account_stat], 
-                                                ).user_community_recommended_timeline(@max_id, @account, @user, @community, @page_no)
+                                                ).where(id: @statuses.pluck(:id))
+          end                             
+          return @statuses
+        end
+
+        def recommended_timeline 
+          if @community_slug
+            @statuses = Mammoth::Status.user_community_recommended_timeline(@max_id, @account, @user, @community, @page_no)
+            @statuses =  Mammoth::Status.includes(
+                                                  :reblog, 
+                                                  :media_attachments, 
+                                                  :active_mentions, 
+                                                  :tags, 
+                                                  :preloadable_poll, 
+                                                  :status_stat, 
+                                                  :conversation,
+                                                  account: [:user, :account_stat], 
+                                                ).where(id: @statuses.pluck(:id))
           end
           return @statuses
         end

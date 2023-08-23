@@ -52,7 +52,6 @@ module Mammoth
         get_query
       end 
       puts "#{@current_account.username} - (#{@current_account.id}) #{@caller_name} timeline process time : #{format('%.4f', query_time.real)} seconds"
- 
       return @statuses
     end
   end

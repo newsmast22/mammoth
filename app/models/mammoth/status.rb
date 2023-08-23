@@ -57,11 +57,11 @@ module Mammoth
     scope :filter_following_accounts, -> (account_id) {
       follow_acc_ids = joins(:follows)
                       .where("follows.account_id = :account_id", account_id: account_id)
-                      .pluck("follows.target_account_id")
+                      .pluck("follows.target_account_id").uniq
 
       tag_acc_ids = joins(:tag_followed)
                     .where("tag_follows.account_id = :account_id", account_id: account_id)
-                    .pluck("statuses.account_id")
+                    .pluck("statuses.account_id").uniq
 
       excluded_account_ids = (follow_acc_ids + tag_acc_ids).uniq
       excluded_account_ids.delete(account_id)
@@ -185,6 +185,7 @@ module Mammoth
     scope :newsmast_timeline, -> (max_id, excluded_ids=[], page_no=nil) {
     
       filter_banned_statuses
+      .where(is_rss_content: false)
       .where.not(id: excluded_ids)
       .where(local: true)
       .where(deleted_at: nil)
@@ -207,7 +208,7 @@ module Mammoth
     scope :my_community_timeline, -> (user_id, max_id, excluded_ids=[], page_no=nil) {
            
       joins(communities_statuses: :community)
-       .filter_banned_statuses
+      .filter_banned_statuses
       .joins(community_users: :community)
       .where.not(id: excluded_ids)
       .filter_statuses_without_rss
@@ -230,22 +231,27 @@ module Mammoth
     }
 
     scope :pagination, ->(page_no, max_id) {
+     
       if page_no.nil? || !page_no.present? || !page_no.is_a?(Integer)
         filter_with_max_id(max_id)
+        .select('statuses.id') 
         .distinct
         .limit(5)
       else 
-        distinct
-        .paginate(page: page_no, per_page: 5)
+        select('statuses.id') 
+        .distinct
+        paginate(page: page_no, per_page: 5)
       end
     }
 
     scope :filter_with_max_id, -> (max_id) {
-      condition_query = if max_id.nil? || !max_id.present? || !max_id.is_a?(Integer)
+      
+      condition_query = if max_id.nil? || !max_id.present? 
         "statuses.id > 0"
       else
         "statuses.id < :max_id"
       end
+      
       where(condition_query, max_id: max_id || 0)
     }
 
@@ -308,7 +314,8 @@ module Mammoth
     scope :filter_timeline_with_media,->(id) { joins(:account).where("accounts.about_me_title_option_ids && ARRAY[?]::integer[]", id) }
 
     scope :filter_with_words, ->(words) {where("LOWER(statuses.text) like '%#{words}%'")}
-    scope :filter_banned_statuses, -> { left_joins(:community_filter_statuses).where(community_filter_statuses: { id: nil }).order(id: :desc) }
+    scope :filter_banned_statuses, -> { left_joins(:community_filter_statuses)
+                                        .where(community_filter_statuses: { id: nil }) }
   end
 
 
