@@ -200,21 +200,31 @@ module Mammoth
     }
 
     scope :user_profile_timeline, -> (account_id, max_id = nil , page_no = nil ) {
-        query =  left_joins(:status_pins)
-                    .filter_block_mute_inactive_statuses(account_id)
-                    .where(account_id: account_id)
-                    .where(deleted_at: nil)
-                    .where(reply: false)
-
-      if max_id.nil?
-        query = query.order(Arel.sql('(CASE WHEN status_pins.id IS NOT NULL THEN 0 ELSE 1 END) DESC, statuses.id DESC'))
-                      .limit(5)
-      else 
-        query = query.where(status_pins: { id: nil } ).pagination(page_no, max_id)
-      end
-      
-      query
+      left_joins(:status_pins)
+      .filter_block_mute_inactive_statuses(account_id)
+      .where(account_id: account_id)
+      .where(deleted_at: nil)
+      .where(reply: false)
+      .pin_statuses_fileter(max_id)
     }
+
+    scope :pin_statuses_fileter, -> (max_id = nil) {
+      if max_id.nil?
+        joins(
+          "LEFT JOIN status_pins on statuses.id = status_pins.status_id"
+          ).reorder(
+            Arel.sql('(case when status_pins.created_at is not null then 1 else 0 end) desc, statuses.id desc')
+          ).limit(5)
+      else 
+        where(status_pins: { id: nil } )
+              .filter_with_max_id(max_id)
+              .order(id: :desc)
+              .distinct
+              .limit(5)
+      end
+    }
+
+
                                 
     scope :my_community_timeline, -> (user_id, max_id, excluded_ids=[], page_no=nil) {
            

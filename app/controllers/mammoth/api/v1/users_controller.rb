@@ -305,17 +305,7 @@ module Mammoth::Api::V1
     def get_profile_detail_statuses_by_account
       account = Account.find(params[:id])
       statuses = Mammoth::Status.user_profile_timeline(account.id, params[:max_id] , page_no = nil )
-      statuses = Mammoth::Status.includes(
-                                            :reblog, 
-                                            :media_attachments, 
-                                            :active_mentions, 
-                                            :tags, 
-                                            :preloadable_poll, 
-                                            :status_stat, 
-                                            :conversation,
-                                            account: [:user, :account_stat], 
-                                          ).where(id: statuses.pluck(:id))
-
+    
       render json: statuses,root: 'statuses_data', each_serializer: Mammoth::StatusSerializer,adapter: :json,
       meta:{
         pagination:
