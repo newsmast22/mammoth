@@ -200,17 +200,16 @@ module Mammoth
     }
 
     scope :user_profile_timeline, -> (account_id, max_id = nil , page_no = nil ) {
-      query = left_joins(:status_pins)
-                  .filter_block_mute_inactive_statuses(account_id)
-                  .where(account_id: account_id)
-                  .where(deleted_at: nil)
-                  .where(reply: false)
-                  .order(id: :desc)
+        query =  left_joins(:status_pins)
+                    .filter_block_mute_inactive_statuses(account_id)
+                    .where(account_id: account_id)
+                    .where(deleted_at: nil)
+                    .where(reply: false)
 
       if max_id.nil?
         query = query.order(Arel.sql('CASE WHEN status_pins.id IS NOT NULL THEN 0 ELSE 1 END, statuses.id DESC')).limit(5)
       else 
-        query = query.pagination(page_no, max_id)
+        query = query.where(status_pins: { id: nil } ).pagination(page_no, max_id)
       end
       
       query
