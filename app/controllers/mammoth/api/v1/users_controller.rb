@@ -303,8 +303,8 @@ module Mammoth::Api::V1
     end
 
     def get_profile_detail_statuses_by_account
-   
-      statuses = Mammoth::Status.user_profile_timeline(current_account.id, params[:max_id] , page_no = nil )
+      account = Account.find(params[:id])
+      statuses = Mammoth::Status.user_profile_timeline(account.id, params[:max_id] , page_no = nil )
       statuses = Mammoth::Status.includes(
                                             :reblog, 
                                             :media_attachments, 

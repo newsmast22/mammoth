@@ -207,7 +207,8 @@ module Mammoth
                     .where(reply: false)
 
       if max_id.nil?
-        query = query.order(Arel.sql('CASE WHEN status_pins.id IS NOT NULL THEN 0 ELSE 1 END, statuses.id DESC')).limit(5)
+        query = query.order(Arel.sql('(CASE WHEN status_pins.id IS NOT NULL THEN 0 ELSE 1 END) DESC, statuses.id DESC'))
+                      .limit(5)
       else 
         query = query.where(status_pins: { id: nil } ).pagination(page_no, max_id)
       end
