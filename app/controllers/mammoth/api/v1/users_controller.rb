@@ -71,8 +71,8 @@ module Mammoth::Api::V1
       render json:  @accounts.take(default_limit), root: 'data', 
                     each_serializer: Mammoth::AccountSerializer, current_user: current_user, adapter: :json, 
                     meta: { 
-                    has_more_objects: @accounts.size > default_limit ? true : false,
-                    offset: offset.to_i
+                      has_more_objects: @accounts.size > default_limit ? true : false,
+                      offset: offset.to_i
                     }
     end
 
@@ -303,8 +303,28 @@ module Mammoth::Api::V1
     end
 
     def get_profile_detail_statuses_by_account
-      account = Account.find(params[:id])
-      get_user_details_statuses(params[:id], account)
+   
+      statuses = Mammoth::Status.user_profile_timeline(current_account.id, params[:max_id] , page_no = nil )
+      statuses = Mammoth::Status.includes(
+                                            :reblog, 
+                                            :media_attachments, 
+                                            :active_mentions, 
+                                            :tags, 
+                                            :preloadable_poll, 
+                                            :status_stat, 
+                                            :conversation,
+                                            account: [:user, :account_stat], 
+                                          ).where(id: statuses.pluck(:id))
+
+      render json: statuses,root: 'statuses_data', each_serializer: Mammoth::StatusSerializer,adapter: :json,
+      meta:{
+        pagination:
+          { 
+            total_objects: nil,
+            has_more_objects: 5 <= statuses.size ? true : false
+          } 
+      }
+  
     end
 
     def show
@@ -562,6 +582,8 @@ module Mammoth::Api::V1
                 statuses.reply = :reply AND statuses.account_id = :account_id #{query_string}",
                 reply: false, account_id: account_id, max_id: params[:max_id]
                 )      
+
+            
           
       #begin::muted account post
       muted_accounts = Mute.where(account_id: current_account.id)

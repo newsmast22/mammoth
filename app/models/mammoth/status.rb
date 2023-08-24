@@ -10,6 +10,7 @@ module Mammoth
     has_many :community_users, through: :communities
     has_many :follows, through: :account, foreign_key: :account_id
     has_many :status_tags, class_name: "Mammoth::StatusTag"
+    has_many :status_pins
     has_many :tag_followed, through: :status_tags
 
     scope :filter_with_community_status_ids, ->(ids) { where(id: ids,reply: false) }
@@ -197,6 +198,23 @@ module Mammoth
       .where(reply: false)
       .pagination(page_no, max_id)
     }
+
+    scope :user_profile_timeline, -> (account_id, max_id = nil , page_no = nil ) {
+      query = left_joins(:status_pins)
+                  .filter_block_mute_inactive_statuses(account_id)
+                  .where(account_id: account_id)
+                  .where(deleted_at: nil)
+                  .where(reply: false)
+                  .order(id: :desc)
+
+      if max_id.nil?
+        query = query.order(Arel.sql('CASE WHEN status_pins.id IS NOT NULL THEN 0 ELSE 1 END, statuses.id DESC')).limit(5)
+      else 
+        query = query.pagination(page_no, max_id)
+      end
+      
+      query
+    }
                                 
     scope :my_community_timeline, -> (user_id, max_id, excluded_ids=[], page_no=nil) {
            
@@ -221,7 +239,7 @@ module Mammoth
       .pagination(page_no, max_id)
     }
 
-    scope :pagination, ->(page_no, max_id) {
+    scope :pagination, ->( page_no = nil, max_id ) {
      
       if page_no.nil? || !page_no.present? || !page_no.is_a?(Integer)
         filter_with_max_id(max_id)
