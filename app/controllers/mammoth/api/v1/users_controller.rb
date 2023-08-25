@@ -303,9 +303,14 @@ module Mammoth::Api::V1
     end
 
     def get_profile_detail_statuses_by_account
+      
+      if params[:max_id].present?
+        params[:max_id] = Mammoth::Status.new.check_pinned_status(params[:max_id], current_account.id)
+      end
+
       account = Account.find(params[:id])
       statuses = Mammoth::Status.user_profile_timeline(account.id, params[:max_id] , page_no = nil )
-    
+
       render json: statuses,root: 'statuses_data', each_serializer: Mammoth::StatusSerializer,adapter: :json,
       meta:{
         pagination:
