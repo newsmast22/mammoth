@@ -304,7 +304,7 @@ module Mammoth::Api::V1
 
     def get_profile_detail_statuses_by_account
       
-      if params[:max_id].present?
+      if !params[:max_id].nil? || params[:max_id].present? 
         params[:max_id] = Mammoth::Status.new.check_pinned_status(params[:max_id], current_account.id)
       end
 

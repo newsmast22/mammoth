@@ -209,7 +209,7 @@ module Mammoth
     }
 
     scope :pin_statuses_fileter, -> (max_id = nil) {
-      if max_id.nil?
+      if max_id.nil? || !max.present? || max_id === ""
         joins(
           "LEFT JOIN status_pins on statuses.id = status_pins.status_id"
           ).reorder(
