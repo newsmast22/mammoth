@@ -205,7 +205,6 @@ class Mammoth::StatusSerializer < ActiveModel::Serializer
       instance_options[:relationships].pins_map[object.id] || false
     else
       current_user.account.pinned?(object) 
-      #object.account.pinned?(object)
     end
   end
 
