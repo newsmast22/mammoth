@@ -134,7 +134,7 @@ module Mammoth
         primary_user_community = user.primary_user_community
         if primary_user_community.present?
           if primary_user_community.community_id == community.id && community.is_country_filtering && community.is_country_filter_on
-            filter_timeline_with_countries(account.country)
+            with_countries(account.country)
           end
         end
       end
@@ -303,43 +303,49 @@ module Mammoth
       user = Mammoth::User.find(user_id)
       selected_filters = user.selected_filters_for_user
       common_filter_by_selected_filters(selected_filters)
+      
     }
      
     scope :common_filter_by_selected_filters, ->(selected_filters) {
-      if selected_filters.present?
-        selected_countries = selected_filters.selected_countries
-        selected_contributor_role = selected_filters.selected_contributor_role
-        selected_voices = selected_filters.selected_voices
-        selected_media = selected_filters.selected_media
-        
-        if selected_countries.present?
-          filter_timeline_with_countries(selected_countries)
-        end 
-
-        if selected_contributor_role.present?
-          filter_timeline_with_contributor_role(selected_contributor_role)
-        end 
- 
-        if selected_voices.present?
-          filter_timeline_with_voice(selected_voices)
-        end
-
-        if selected_media.present?
-          filter_timeline_with_media(selected_media)
-        end
-      end
+      return self if selected_filters.blank?
+    
+      selected_countries = selected_filters.selected_countries
+      selected_contributor_role = selected_filters.selected_contributor_role
+      selected_voices = selected_filters.selected_voices
+      selected_media = selected_filters.selected_media
+    
+        with_countries(selected_countries)
+        .with_contributor_role(selected_contributor_role)
+        .with_voice(selected_voices)
+        .with_media(selected_media)
     }
-    scope :filter_timeline_with_countries,->(country_alpah2_name) { joins(:account).where(account: { country: country_alpah2_name }) }
-    scope :filter_timeline_with_contributor_role, ->(id) { joins(:account).where("accounts.about_me_title_option_ids @> ARRAY[?]::integer[]", id) }
-    scope :filter_timeline_with_voice,->(id) { joins(:account).where("accounts.about_me_title_option_ids && ARRAY[?]::integer[]", id) }
-    scope :filter_timeline_with_media,->(id) { joins(:account).where("accounts.about_me_title_option_ids && ARRAY[?]::integer[]", id) }
+    
+    scope :with_countries, ->(country_alpha2_name) {
+      return self if country_alpha2_name.blank?
+      joins(:account).where(accounts: { country: country_alpha2_name })
+    }
+    
+    scope :with_contributor_role, ->(id) {
+      return self if id.blank?
+      joins(:account).where("accounts.about_me_title_option_ids @> ARRAY[?]::integer[]", id)
+    }
+    
+    scope :with_voice, ->(id) {
+      return self if id.blank?
+      joins(:account).where("accounts.about_me_title_option_ids && ARRAY[?]::integer[]", id)
+    }
+    
+    scope :with_media, ->(id) {
+      return self if id.blank?
+      joins(:account).where("accounts.about_me_title_option_ids && ARRAY[?]::integer[]", id)
+    }
+    
+    scope :filter_with_words, ->(words) {
+      return self if words.blank?
+      where("LOWER(statuses.text) like '%#{words}%'")
+    }
 
-    scope :filter_with_words, ->(words) {where("LOWER(statuses.text) like '%#{words}%'")}
     scope :filter_banned_statuses, -> { left_joins(:community_filter_statuses)
                                         .where(community_filter_statuses: { id: nil }) }
   end
-
-
-
-  
 end
