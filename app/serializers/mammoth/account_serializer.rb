@@ -227,7 +227,7 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
   end
 
   def note
-    object.suspended? ? '' : object.note
+    object.suspended? ? '' : account_bio_format(object)
   end
 
   def url
