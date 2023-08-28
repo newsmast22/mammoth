@@ -209,11 +209,11 @@ module Mammoth
     }
 
     scope :pin_statuses_fileter, -> (max_id = nil) {
-      if max_id.nil?
+      if max_id.nil? || !max.present? || max_id === ""
         joins(
           "LEFT JOIN status_pins on statuses.id = status_pins.status_id"
           ).reorder(
-            Arel.sql('(case when status_pins.created_at is not null then 1 else 0 end) desc, statuses.id desc')
+            Arel.sql('(case when status_pins.created_at is not null then 1 else 0 end) desc, status_pins.created_at desc, statuses.id desc')
           ).limit(5)
       else 
         where(status_pins: { id: nil } )
@@ -223,9 +223,7 @@ module Mammoth
               .limit(5)
       end
     }
-
-
-                                
+                       
     scope :my_community_timeline, -> (user_id, max_id, excluded_ids=[], page_no=nil) {
            
       joins(communities_statuses: :community)
@@ -267,6 +265,19 @@ module Mammoth
 
     scope :filter_with_max_id, -> (max_id) {
       
+      condition_query = if max_id.nil? || !max_id.present? 
+        "statuses.id > 0"
+      else
+        "statuses.id < :max_id"
+      end
+      
+      where(condition_query, max_id: max_id.to_i || 0 )
+    }
+
+    # Filter without pinned status with max_id
+    # Excluded Pinnes Statuses in profile deatils timeline when paginate 
+    # Edited: MKK 
+    scope :filter_without_pin_with_max_id, -> (max_id) {
       condition_query = if max_id.nil? || !max_id.present? 
         "statuses.id > 0"
       else
@@ -347,5 +358,21 @@ module Mammoth
 
     scope :filter_banned_statuses, -> { left_joins(:community_filter_statuses)
                                         .where(community_filter_statuses: { id: nil }) }
+
+    def check_pinned_status(status_id, account_id)
+
+      if StatusPin.exists?(status_id: status_id, account_id: account_id)
+         status_id = Mammoth::Status.joins(
+            "LEFT JOIN status_pins on statuses.id = status_pins.status_id"
+          ).where(
+            "status_pins.status_id IS NULL AND statuses.account_id = ? ", account_id
+          ).order(
+            "statuses.id desc"
+          ).first.try(:id)
+
+      end
+      status_id
+    end
+
   end
 end
