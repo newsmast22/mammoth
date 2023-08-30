@@ -62,7 +62,11 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
   end
 
   def bio 
-    object.suspended? ? '' : object.note
+    if instance_options && instance_options[:data] && instance_options[:data][:do_not_format_note]
+      object.suspended? ? '' : object.note
+    else
+      object.suspended? ? '' : account_bio_format(object)
+    end
   end
 
   def account_id
@@ -227,7 +231,11 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
   end
 
   def note
-    object.suspended? ? '' : object.note
+    if instance_options && instance_options[:data] && instance_options[:data][:do_not_format_note]
+      object.suspended? ? '' : object.note
+    else
+      object.suspended? ? '' : account_bio_format(object)
+    end
   end
 
   def url

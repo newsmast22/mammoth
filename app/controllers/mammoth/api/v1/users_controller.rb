@@ -358,7 +358,11 @@ module Mammoth::Api::V1
       end
       #end::check community admin & communnity_slug
 
-      render json: @account,root: 'data', serializer: Mammoth::CredentialAccountSerializer,adapter: :json,
+      data = {
+        do_not_format_note: true
+      }
+
+      render json: @account,root: 'data', serializer: Mammoth::CredentialAccountSerializer, data: data ,adapter: :json,
       meta:{
         community_images_url: community_images,
         following_images_url: following_account_images,

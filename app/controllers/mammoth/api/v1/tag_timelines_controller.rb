@@ -5,7 +5,7 @@ module Mammoth::Api::V1
 		before_action -> { doorkeeper_authorize! :read , :write}
 
     def show
-      if params[:id].present?
+      if params[:id].present? && @tag.present?
         query_string = "AND statuses.id < :max_id" if params[:max_id].present?
 
         @statuses = @tag.statuses.where("
@@ -52,21 +52,6 @@ module Mammoth::Api::V1
           #begin::muted account post
           muted_accounts = Mute.where(account_id: current_account.id)
           @statuses = @statuses.filter_mute_accounts(muted_accounts.pluck(:target_account_id).map(&:to_i)) unless muted_accounts.blank?
-          #end::muted account post
-          # @statuses = @statuses.order(created_at: :desc).page(params[:page]).per(5)
-          # render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer,current_user: current_user, adapter: :json, 
-          # meta: { 
-          #   tag_name: tag.display_name,
-          #   following: tagFollow.pluck(:account_id).map(&:to_i).include?(current_account.id),
-          #   post_count: Mammoth::StatusTag.where(tag_id: tag.id).count,
-          #   following_count: tagFollow.count,
-          #   pagination:
-          #     { 
-          #       total_pages: @statuses.total_pages,
-          #       total_objects: @statuses.total_count,
-          #       current_page: @statuses.current_page
-          #     } 
-          #   }
 
           before_limit_statuses = @statuses
           @statuses = @statuses.order(created_at: :desc).limit(5)
@@ -78,7 +63,7 @@ module Mammoth::Api::V1
             following_count: tagFollow.count,
             pagination:
               { 
-                total_objects: before_limit_statuses.size,
+                total_objects: nil,
                 has_more_objects: 5 <= before_limit_statuses.size ? true : false
               } 
             }
