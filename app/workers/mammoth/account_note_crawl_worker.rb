@@ -4,12 +4,10 @@ module Mammoth
     include ActionView::Helpers::TextHelper
     require 'nokogiri'
     require 'uri'
-    sidekiq_options queue: 'custom_account_note_crawl', retry: true, dead: true
+    sidekiq_options queue: 'custom_account_note_crawl', retry: false, dead: true
 
     def perform(account_id)
       @account_data = Account.where(id: account_id).last 
-
-      #@account_data = Account.where(id: 110933295158683851).last 
       
       if @account_data.try(:note).present? 
         check_hashtag
