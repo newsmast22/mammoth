@@ -141,18 +141,10 @@ module Mammoth
         end
       end
     }
-
-    scope :filter_statuses_with_user_and_commu, ->(account, commu) {
-      joins(:communities_statuses)
-        .joins("JOIN follows ON statuses.account_id = follows.target_account_id")
-        .where(follows: { account_id: account.id })
-        .where(communities_statuses: { community_id: commu.id })
-    }
   
     scope :user_community_recommended_timeline, ->(max_id, account, user, community, page_no=nil) {
       
       left_joins(:communities_statuses)
-      .union(filter_statuses_with_user_and_commu(account, community))
       .filter_with_commu_admin_acc_ids(community.get_community_admins)
       .filter_block_mute_inactive_statuses_by_acc_ids(account.id, community.get_community_admins)
       .filter_statuses_by_community_timeline_setting(user.id)
