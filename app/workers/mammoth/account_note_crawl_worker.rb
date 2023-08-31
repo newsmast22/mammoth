@@ -3,8 +3,7 @@ module Mammoth
     include Sidekiq::Worker
     include ActionView::Helpers::TextHelper
     require 'nokogiri'
-
-
+    require 'uri'
     sidekiq_options queue: 'custom_account_note_crawl', retry: true, dead: true
 
     def perform(account_id)
@@ -37,8 +36,14 @@ module Mammoth
       doc = Nokogiri::HTML.parse(@account_data.try(:note))
       href_values = doc.css('a.u-url.mention').map { |a| a['href'] }
 
-      # account = account_from_uri(tag['href'])
-      # account = ActivityPub::FetchRemoteAccountService.new.call(tag['href'], request_id: @options[:request_id]) if account.nil?
+      href_values.each do |href_value|
+        uri = URI.parse(href_value)
+        domain = uri.host
+        username = uri.path.split('/').last
+        url = "https://#{domain}/users/#{username[1..-1]}"
+        account = ActivityPub::TagManager.instance.uri_to_resource(url, Account)
+        account = ActivityPub::FetchRemoteAccountService.new.call(url, request_id: true) if account.nil?
+      end
     end
 
   end
