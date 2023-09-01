@@ -82,9 +82,13 @@ module Mammoth
      
       acc_ids = admin_acc_ids.push(current_user_acc_id)
 
-      joins(account: :blocks)
-      .where("statuses.account_id IN (:account_ids) OR blocks.target_account_id IS NULL", account_ids: acc_ids)
-      .where('blocks.target_account_id IS NULL OR blocks.target_account_id NOT IN (:account_ids)', account_ids: acc_ids)
+      blocked_account_ids = joins(account: :blocks)
+            .where("blocks.target_account_id IN (:account_ids) OR blocks.account_id IN (:account_ids)", account_ids: acc_ids)
+            .pluck("blocks.account_id, blocks.target_account_id")
+
+      # joins(account: :blocks)
+      # .where("statuses.account_id IN (:account_ids) OR blocks.target_account_id IS NULL", account_ids: acc_ids)
+      # .where('blocks.target_account_id IS NULL OR blocks.target_account_id NOT IN (:account_ids)', account_ids: acc_ids)
       
 
       muted_account_ids = joins(account: :mutes)
@@ -95,7 +99,7 @@ module Mammoth
         .where("users.is_active = ?", false)
         .pluck("accounts.id")
 
-      excluded_account_ids = ( muted_account_ids + inactive_account_ids).uniq
+      excluded_account_ids = ( blocked_account_ids + muted_account_ids + inactive_account_ids).uniq
       excluded_account_ids.delete(acc_ids)
       
       where.not(account_id: excluded_account_ids)
