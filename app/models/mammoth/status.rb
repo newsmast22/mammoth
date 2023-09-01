@@ -152,9 +152,9 @@ module Mammoth
     scope :filter_statuses_with_community_admin_logic, ->(community) {
       Mammoth::Status.left_joins(:communities_statuses)
         .filter_statuses_with_followed_acc_ids(community.get_community_admins)
-        .where(communities_statuses: {community_id: community.id})
-        .or(where.not(communities_statuses: {id: nil}))
+        .where(communities_statuses: { community_id: [community.id, nil] })
     }
+    
 
     # Scope to filter statuses with current user logic
     scope :filter_statuses_with_current_user_logic, ->(account, community) {
@@ -165,25 +165,23 @@ module Mammoth
 
     # Combined scope for user_community_recommended_timeline
     scope :user_community_recommended_timeline, ->(max_id, account, user, community, page_no = nil) {
-      
       filter_statuses_with_community_admin_logic(community)
-        .or(filter_statuses_with_current_user_logic(account, community))
-        .filter_block_mute_inactive_statuses_by_acc_ids(account.id, community.get_community_admins)
-        .filter_statuses_by_community_timeline_setting(user.id)
-        .filter_with_primary_timeline_logic(account, user, community)
-        .where(deleted_at: nil)
-        .where(reply: false)
-        .filter_banned_statuses
-        .pagination(page_no, max_id)
+      .or(filter_statuses_with_current_user_logic(account, community))
+      .filter_block_mute_inactive_statuses_by_acc_ids(account.id, community.get_community_admins)
+      .filter_statuses_by_community_timeline_setting(user.id)
+      .filter_with_primary_timeline_logic(account, user, community)
+      .where(deleted_at: nil)
+      .where(reply: false)
+      .filter_banned_statuses
+      .pagination(page_no, max_id)
     }
 
 
     scope :user_community_all_timeline, ->(max_id, account, user, community, page_no=nil) {
-      joins(communities_statuses: :community)
+      filter_statuses_with_community_admin_logic(community)
       .filter_block_mute_inactive_statuses_by_acc_ids(account.id, community.get_community_admins) 
       .filter_statuses_by_community_timeline_setting(user.id)
       .filter_with_primary_timeline_logic(account, user, community)
-      .where("mammoth_communities.slug = :community_slug", community_slug: community.slug)
       .where(deleted_at: nil)
       .where(reply: false)
       .filter_banned_statuses
