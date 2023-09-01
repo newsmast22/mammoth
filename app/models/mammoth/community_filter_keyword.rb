@@ -6,18 +6,6 @@ module Mammoth
 
     validates :keyword, uniqueness: { :if => :community_id?, :scope => :community_id}
 
-    scope :by_community, ->(community_id) { 
-            where(community_id: community_id) 
-    }
-
-    scope :without_community, -> { 
-             where(community_id: nil)
-    }
-
-    scope :ilike_any_keyword, ->(content_words) {
-            where('LOWER(keyword) ILIKE ANY (ARRAY[?])', content_words.map { |word| "#{word.downcase}" })
-    }
-
     def self.get_all_community_filter_keywords(account_id:, community_id:, max_id:)
 
       if max_id.present?
@@ -42,33 +30,13 @@ module Mammoth
 
     def filter_statuses_by_keywords(community_id,status_id) 
 
-      status = Mammoth::Status.where(id: status_id).last
-      if status.present?
-        content = status.text
-        unless content.empty?
+      # 1.) Global keywords check from status's text
+      create_status_manually_by_user(nil, status_id) 
 
-          # 1.) Global keywords check from status's text
-          filter_statuses_by_global_keywords(content,status.id)
+      # 2.) Community keywords check from status's text 
+      # Note: Check only is community_id is not nil
+      create_status_manually_by_user(community_id, status_id) unless community_id.nil?
 
-          # 2.) Community keywords check from status's text 
-          # Note: Check only is community_id is not nil
-          filter_statuses_by_community_keywords(content, status.id, community_id) unless community_id.nil?
-
-        end
-      end
-
-    end
-
-    def save_community_filter_keyword(community_id,status_id)
-      status = Mammoth::Status.where(id: status_id).last
-      if status.present?
-        content = status.text
-        unless content.empty?
-
-        # Community keywords check from status's text 
-        filter_statuses_by_community_keywords(content, status.id, community_id)
-        end
-      end
     end
 
     after_create :create_community_filter_statuses
@@ -82,48 +50,43 @@ module Mammoth
       json = {
         'community_id' => self.community_id,
         'is_status_create' => false,
-        'status_id' => nil
+        'status_id' => nil,
+        'community_filter_keyword_id' => self.id,
+        'community_filter_keyword_request' => "create"
       }
-
       community_statuses = Mammoth::CommunityFilterStatusesCreateWorker.perform_async(json)
-
     end
 
     def update_community_filter_statuses
 
       json = {
         'community_id' => self.community_id,
-        'community_filter_keyword_id' => self.id
+        'is_status_create' => false,
+        'status_id' => nil,
+        'community_filter_keyword_id' => self.id,
+        'community_filter_keyword_request' => "update"
       }
-
-      community_statuses = Mammoth::CommunityFilterStatusesUpdateWorker.perform_async(json)
-
+      community_statuses = Mammoth::CommunityFilterStatusesCreateWorker.perform_async(json)
     end
 
-    def filter_statuses_by_global_keywords(content, status_id)
+    def create_status_manually_by_user(community_id, status_id)
 
-      content_words = content.downcase.split(/\W+/)
-      @community_filter_Keywords = self.class.without_community.ilike_any_keyword(content_words)
-      create_matched_keywords_status(status_id)
-
-    end
-
-    def filter_statuses_by_community_keywords(content, status_id, community_id)
-
-      content_words = content.downcase.split(/\W+/)
-      @community_filter_Keywords = self.class.ilike_any_keyword(content_words).by_community(community_id)
-      create_matched_keywords_status(status_id)
-
-    end
-
-    def create_matched_keywords_status(status_id) 
-
-      @community_filter_Keywords.each do |community_filter_Keyword|
-        Mammoth::CommunityFilterStatus.where(
-          status_id: status_id,
-          community_filter_keyword_id: community_filter_Keyword.id
-        ).first_or_create
+      Mammoth::CommunityFilterKeyword.where(community_id: community_id).find_in_batches(batch_size: 100).each do |community_filter_keywords|
+        community_filter_keywords.each do |community_filter_keyword|
+          is_status_banned = Mammoth::Status.where("text ~* ? AND reply = false AND id = ?", "\\m#{community_filter_keyword.keyword}\\M", status_id).exists?
+          if is_status_banned
+            create_global_banned_statuses(community_filter_keyword,status_id)
+          end
+        end
       end
+    end
+
+    def create_global_banned_statuses(community_filter_Keyword,status_id)
+
+      Mammoth::CommunityFilterStatus.where(
+        status_id: status_id,
+        community_filter_keyword_id: community_filter_Keyword.id
+      ).first_or_create
 
     end
 

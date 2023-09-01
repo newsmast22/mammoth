@@ -8,18 +8,42 @@ module Mammoth
 
       if params['is_status_create'] == true
 
-        params['community_id'].each do |community_id|
-          Mammoth::CommunityFilterKeyword.new.filter_statuses_by_keywords(community_id, params['status_id'])
+        unless params['community_id'].nil?
+          params['community_id'].each do |community_id| 
+            Mammoth::CommunityFilterKeyword.new.filter_statuses_by_keywords(community_id, params['status_id'])
+          end
+        else
+          Mammoth::CommunityFilterKeyword.new.filter_statuses_by_keywords(nil, params['status_id'])
         end
         
       else
-        # This is only call when community filter keyword when create records
-        # Only need to fetch & create status when community keyword create/update
-        Mammoth::CommunityStatus.new.create_statuses_by_batch_size(params['community_id'])
+        unban_statuses(params['community_filter_keyword_id']) if params['community_filter_keyword_request'] === "update" || params['community_filter_keyword_request'] === "delete"
+
+        ban_statuses(params['community_filter_keyword_id']) unless params['community_filter_keyword_request'] === "delete"
       end
+
+    end
+
+    private
+
+    def ban_statuses(community_filter_keyword_id)
+
+      filter = Mammoth::CommunityFilterKeyword.where(id: community_filter_keyword_id).last
+
+      if filter.present?
+        Mammoth::Status.where("text ~* ?", "\\m#{filter.keyword}\\M").find_in_batches(batch_size: 100) do |statuses|
+          array = statuses.map{|status| {status_id: status.id, community_filter_keyword_id: filter.id}}
+          Mammoth::CommunityFilterStatus.create(array)
+        end
+      end
+    
+    end
+
+    def unban_statuses(community_filter_keyword_id)
+
+      Mammoth::CommunityFilterStatus.where(community_filter_keyword_id: community_filter_keyword_id)&.destroy_all
 
     end
 
   end
 end
-

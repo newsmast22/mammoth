@@ -750,14 +750,30 @@ module Mammoth::Api::V1
 
 				# To check text contains filtered keywords 
 				# If keywords contains, save record in community filter statuses
+				# Assume user selected mulitple community
 				create_status_json = {
 					'community_id' => selected_communities,
 					'is_status_create' => true,
-					'status_id' => @status.id
+					'status_id' => @status.id,
+					'community_filter_keyword_id' => nil,
+					'community_filter_keyword_request' => "non"
 				}
 
 				Mammoth::CommunityFilterStatusesCreateWorker.perform_async(create_status_json)
+			else
+				# To check text contains filtered keywords 
+				# If keywords contains, save record in community filter statuses
+				# Assume user NOT! selected mulitple community
+				create_status_json = {
+					'community_id' => nil,
+					'is_status_create' => true,
+					'status_id' => @status.id,
+					'community_filter_keyword_id' => nil,
+					'community_filter_keyword_request' => "non"
+				}
+				Mammoth::CommunityFilterStatusesCreateWorker.perform_async(create_status_json)
 			end
+		
 
 		end
 
