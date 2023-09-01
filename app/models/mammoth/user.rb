@@ -133,7 +133,7 @@ module Mammoth
       filtered_accounts = []
       unless @search_keywords.nil?
         filtered_accounts = perform_accounts_search! if account_searchable?
-        @accounts = Account.where.not(id: @current_account.id).where(id: filtered_accounts.pluck(:id), actor_type: nil , actor_type: 'Person').order(id: :desc) 
+        @accounts = Account.where.not(id: @current_account.id).where(id: filtered_accounts.pluck(:id)).order(id: :desc) 
       end
 
       unless filtered_accounts.any? || !@search_keywords.nil?

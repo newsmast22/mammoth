@@ -2,38 +2,41 @@ module Mammoth
   class AccountNoteCrawlWorker
     include Sidekiq::Worker
     include ActionView::Helpers::TextHelper
+    include FormattingHelper
     require 'nokogiri'
     require 'uri'
-    sidekiq_options queue: 'custom_account_note_crawl', retry: true, dead: true
+
+    sidekiq_options queue: 'custom_account_note_crawl', retry: false, dead: true
 
     def perform(account_id)
       @account_data = Account.where(id: account_id).last 
-
-      #@account_data = Account.where(id: 110933295158683851).last 
       
       if @account_data.try(:note).present? 
-        check_hashtag
-        check_account
+        formated_note = account_bio_format(@account_data)
+        check_hashtag(formated_note)
+        check_account(formated_note)
       end
     end
 
     private 
 
-    def check_hashtag 
+    def check_hashtag(note)
 
       # Check if the string contains any HTML tags
-      contains_html_tags = /<("[^"]*"|'[^']*'|[^'">])*>/.match?(@account_data.try(:note))
+      contains_html_tags = /<("[^"]*"|'[^']*'|[^'">])*>/.match?(note)
 
       if contains_html_tags
-        @tags = Extractor.extract_hashtags(PlainTextFormatter.new(@account_data.try(:note), false).to_s) 
+        @tags = Extractor.extract_hashtags(PlainTextFormatter.new(note, false).to_s) 
       else
-        @tags = Extractor.extract_hashtags(@account_data.try(:note))
+        @tags = Extractor.extract_hashtags(note)
       end
       Tag.find_or_create_by_names(@tags)
     end
 
-    def check_account
-      doc = Nokogiri::HTML.parse(@account_data.try(:note))
+    def check_account(note)
+      Rails.logger.info "--- Check account formatted: #{note} ----"
+      doc = Nokogiri::HTML.parse(note)
+      Rails.logger.info "--- Check account html parsed: #{doc} ----"
       href_values = doc.css('a.u-url.mention').map { |a| a['href'] }
 
       href_values.each do |href_value|
