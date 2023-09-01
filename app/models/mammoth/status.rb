@@ -68,10 +68,9 @@ module Mammoth
       excluded_account_ids.delete(account_id)
       where(account_id: excluded_account_ids)
     }
-
- 
-
-    scope :filter_with_commu_admin_acc_ids, -> (account_ids) {
+    
+    
+    scope :filter_statuses_with_followed_acc_ids, -> (account_ids) {
      
       follow_acc_ids = Follow.where(account_id: account_ids).pluck(:target_account_id).map(&:to_i).uniq 
                         
@@ -141,27 +140,48 @@ module Mammoth
         end
       end
     }
-  
-    scope :user_community_recommended_timeline, ->(max_id, account, user, community, page_no=nil) {
-      
-      left_joins(:communities_statuses)
-      .filter_with_commu_admin_acc_ids(community.get_community_admins)
+
+    scope :filter_statuses_with_user_and_commu, ->(account, commu) {
+      joins(:communities_statuses)
+        .joins("JOIN follows ON statuses.account_id = follows.target_account_id")
+        .where(follows: { account_id: account.id })
+        .where(communities_statuses: { community_id: commu.id })
+    }
+
+    # Scope to filter statuses with community admin logic
+    scope :filter_statuses_with_community_admin_logic, ->(community) {
+      Mammoth::Status.left_joins(:communities_statuses)
+        .filter_statuses_with_followed_acc_ids(community.get_community_admins)
+        .where(communities_statuses: { community_id: [community.id, nil] })
+    }
+    
+
+    # Scope to filter statuses with current user logic
+    scope :filter_statuses_with_current_user_logic, ->(account, community) {
+      Mammoth::Status.left_joins(:communities_statuses)
+        .filter_statuses_with_followed_acc_ids(account.id)
+        .where(communities_statuses: { community_id: community.id })
+    }
+
+    # Combined scope for user_community_recommended_timeline
+    scope :user_community_recommended_timeline, ->(max_id, account, user, community, page_no = nil) {
+      filter_statuses_with_community_admin_logic(community)
+      .or(filter_statuses_with_current_user_logic(account, community))
       .filter_block_mute_inactive_statuses_by_acc_ids(account.id, community.get_community_admins)
       .filter_statuses_by_community_timeline_setting(user.id)
       .filter_with_primary_timeline_logic(account, user, community)
-      .where("mammoth_communities_statuses.community_id = :community_id OR mammoth_communities_statuses.id IS NULL", community_id: community.id)
       .where(deleted_at: nil)
       .where(reply: false)
       .filter_banned_statuses
       .pagination(page_no, max_id)
     }
 
+
     scope :user_community_all_timeline, ->(max_id, account, user, community, page_no=nil) {
-      joins(communities_statuses: :community)
+      filter_statuses_with_community_admin_logic(community)
       .filter_block_mute_inactive_statuses_by_acc_ids(account.id, community.get_community_admins) 
       .filter_statuses_by_community_timeline_setting(user.id)
       .filter_with_primary_timeline_logic(account, user, community)
-      .where("mammoth_communities.slug = :community_slug", community_slug: community.slug)
       .where(deleted_at: nil)
       .where(reply: false)
       .filter_banned_statuses
@@ -178,8 +198,6 @@ module Mammoth
       .pagination(page_no, max_id)
     }
   
-    
-
     scope :newsmast_timeline, -> (max_id, excluded_ids=[], page_no=nil) {
     
       filter_banned_statuses
