@@ -49,6 +49,7 @@ module Mammoth
         .where("users.is_active = ?", false)
         .pluck("accounts.id")
 
+      
       excluded_account_ids = (blocked_account_ids + muted_account_ids + inactive_account_ids).uniq
       excluded_account_ids.delete(account_id)
       
@@ -70,21 +71,21 @@ module Mammoth
     }
     
     
-    scope :filter_statuses_with_followed_acc_ids, -> (account_ids,community) {
+    scope :filter_statuses_with_followed_acc_ids, -> (account_ids) {
      
       follow_acc_ids = Follow.where(account_id: account_ids).pluck(:target_account_id).map(&:to_i).uniq   
-      if follow_acc_ids.empty? 
-        where(communities_statuses: { community_id: community.id })
-      else
-        where(account_id: follow_acc_ids)
-      end
+      where(account_id: follow_acc_ids)
+     
     }
 
     scope :filter_block_mute_inactive_statuses_by_acc_ids, -> (current_user_acc_id, admin_acc_ids) {
-        acc_ids = admin_acc_ids.push(current_user_acc_id)
-        blocked_account_ids = joins(account: :blocks)
-        .where("blocks.target_account_id IN (:account_ids) OR blocks.account_id IN (:account_ids)", account_ids: acc_ids)
-        .pluck("blocks.account_id, blocks.target_account_id")
+     
+      acc_ids = admin_acc_ids.push(current_user_acc_id)
+
+      joins(account: :blocks)
+      .where("statuses.account_id IN (:account_ids) OR blocks.target_account_id IS NULL", account_ids: acc_ids)
+      .where('blocks.target_account_id IS NULL OR blocks.target_account_id NOT IN (:account_ids)', account_ids: acc_ids)
+      
 
       muted_account_ids = joins(account: :mutes)
         .where("mutes.account_id IN (:account_ids)", account_ids: acc_ids)
@@ -94,7 +95,7 @@ module Mammoth
         .where("users.is_active = ?", false)
         .pluck("accounts.id")
 
-      excluded_account_ids = (blocked_account_ids + muted_account_ids + inactive_account_ids).uniq
+      excluded_account_ids = ( muted_account_ids + inactive_account_ids).uniq
       excluded_account_ids.delete(acc_ids)
       
       where.not(account_id: excluded_account_ids)
@@ -154,15 +155,21 @@ module Mammoth
     # Scope to filter statuses with community admin logic
     scope :filter_statuses_with_community_admin_logic, ->(community) {
       Mammoth::Status.left_joins(:communities_statuses)
-        .filter_statuses_with_followed_acc_ids(community.get_community_admins,community)
+        .filter_statuses_with_followed_acc_ids(community.get_community_admins)
         .where(communities_statuses: { community_id: [community.id, nil] })
+    }
+
+    scope :filter_statuses_with_not_belong_any_commu_admin, ->(community) {
+      Mammoth::Status.left_joins(:communities_statuses)
+        .filter_statuses_with_followed_acc_ids(community.get_community_admins)
+        .where(communities_statuses: { community_id: nil })
     }
     
 
     # Scope to filter statuses with current user logic
     scope :filter_statuses_with_current_user_logic, ->(account, community) {
       Mammoth::Status.left_joins(:communities_statuses)
-        .filter_statuses_with_followed_acc_ids(account.id,community)
+        .filter_statuses_with_followed_acc_ids(account.id)
         .where(communities_statuses: { community_id: community.id })
     }
 
@@ -181,7 +188,9 @@ module Mammoth
 
 
     scope :user_community_all_timeline, ->(max_id, account, user, community, page_no=nil) {
-      filter_statuses_with_community_admin_logic(community)
+      left_joins(:communities_statuses)
+      .where(communities_statuses: { community_id: community.id })
+      .or(filter_statuses_with_not_belong_any_commu_admin(community))
       .filter_block_mute_inactive_statuses_by_acc_ids(account.id, community.get_community_admins) 
       .filter_statuses_by_community_timeline_setting(user.id)
       .filter_with_primary_timeline_logic(account, user, community)
