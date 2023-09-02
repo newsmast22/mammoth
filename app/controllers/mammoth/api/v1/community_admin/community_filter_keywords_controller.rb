@@ -17,7 +17,8 @@ module Mammoth::Api::V1::CommunityAdmin
       @community_filter_keyword = Mammoth::CommunityFilterKeyword.create!(
         account_id: current_account.id,
         keyword: community_filter_keyword_params[:keyword],
-        community_id: @community.try(:id) || nil
+        community_id: @community.try(:id) || nil,
+        is_filter_hashtag: community_filter_keyword_params[:is_filter_hashtag],
       )
       return_message("create")
 
@@ -107,7 +108,8 @@ module Mammoth::Api::V1::CommunityAdmin
 
       params.require(:community_filter_keyword).permit(
         :community_id,
-        :keyword
+        :keyword,
+        :is_filter_hashtag
       )
       
     end
