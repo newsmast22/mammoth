@@ -73,7 +73,9 @@ module Mammoth
 
       Mammoth::CommunityFilterKeyword.where(community_id: community_id).find_in_batches(batch_size: 100).each do |community_filter_keywords|
         community_filter_keywords.each do |community_filter_keyword|
-          is_status_banned = Mammoth::Status.where("text ~* ? AND reply = false AND id = ?", "\\m#{community_filter_keyword.keyword}\\M", status_id).exists?
+          # If keyword included #example, remove # and result will be example
+          cleaned_keyword = community_filter_keyword.keyword.gsub("#", "")
+          is_status_banned = Mammoth::Status.where("text ~* ? AND reply = false AND id = ?", "\\m#{cleaned_keyword}\\M", status_id).exists?
           if is_status_banned
             create_global_banned_statuses(community_filter_keyword,status_id)
           end
