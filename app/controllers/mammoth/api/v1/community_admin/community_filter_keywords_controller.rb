@@ -59,7 +59,7 @@ module Mammoth::Api::V1::CommunityAdmin
 
       unless @community_filter_keywords.empty?
 
-        render json: @community_filter_keywords, root: 'data', 
+        render json: @community_filter_keywords.limit(default_limit), root: 'data', 
         each_serializer: Mammoth::CommunityFilterKeywordSerializer, current_user: current_user, adapter: :json, 
         meta: {
           pagination:

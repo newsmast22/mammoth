@@ -5,7 +5,9 @@ module Mammoth
     belongs_to :account
     has_many :statuses, class_name: "Mammoth::Status", inverse_of: :community_feed
 
-    scope :feeds_for_admin, -> (community_id) { joins("
+    validates :slug, :presence => true, :uniqueness => {:scope => :community_id , conditions: -> { where(deleted_at: nil)} }
+
+    scope :feeds_for_admin, -> (community_id, offset, limit) { joins("
       LEFT JOIN statuses ON statuses.community_feed_id = mammoth_community_feeds.id"
       )
       .select("mammoth_community_feeds.*,COUNT(statuses.id) as feed_counts"
@@ -15,9 +17,11 @@ module Mammoth
        )
       .order("mammoth_community_feeds.name ASC")
       .group("mammoth_community_feeds.id")
+      .limit(limit)
+      .offset(offset)
     }
       
-    scope :feeds_for_rss_account, ->(community_id,account_id) { joins("
+    scope :feeds_for_rss_account, ->(community_id, account_id, offset, limit) { joins("
       LEFT JOIN statuses ON statuses.community_feed_id = mammoth_community_feeds.id"
       )
       .select("mammoth_community_feeds.*,COUNT(statuses.id) as feed_counts"
@@ -27,6 +31,8 @@ module Mammoth
        )
       .order("mammoth_community_feeds.name ASC")
       .group("mammoth_community_feeds.id")
+      .limit(limit)
+      .offset(offset)
     }
 
     after_save :invoke_rss_worker

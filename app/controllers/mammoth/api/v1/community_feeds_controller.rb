@@ -5,30 +5,26 @@ module Mammoth::Api::V1
 		before_action :set_community_feed, only: %i[show update destroy]
 
     def index
+
+      # Assign limit = 5 as 6 if limit is nil
+      # Limit always plus one 
+      # Addition plus one to get has_more_object
+
+      limit = params[:limit].present? ? params[:limit].to_i + 1 : 6
+      offset = params[:offset].present? ? params[:offset] : 0
+
       community = Mammoth::Community.find_by(slug: params[:id])
       role_name = current_user_role
 
       if role_name == "rss-account"
-       @community_feeds = Mammoth::CommunityFeed.feeds_for_rss_account(community.id,current_user.account.id)
+       @community_feeds = Mammoth::CommunityFeed.feeds_for_rss_account(community.id, current_user.account.id , offset, limit)
       else # community-admin
-        @community_feeds = Mammoth::CommunityFeed.feeds_for_admin(community.id)
+        @community_feeds = Mammoth::CommunityFeed.feeds_for_admin(community.id, offset, limit)
       end
 
-      if @community_feeds.present?
-        data = []
-        @community_feeds.each do |community_feed|
-          data << {
-            id: community_feed.id,
-            name: community_feed.name,
-            slug: community_feed.slug,
-            custom_url: community_feed.custom_url,
-            feed_counts: community_feed.feed_counts
-         }
-        end
-        render json: data
-      else
-        render json: {error: "Record not found"}
-      end
+      default_limit = limit - 1
+
+      return_format_json(offset, default_limit)
     end
 
     def show
@@ -70,8 +66,36 @@ module Mammoth::Api::V1
 
     private
 
+    def return_format_json(offset, default_limit)
+
+      unless @community_feeds.empty?
+
+        render json: @community_feeds.limit(default_limit), root: 'data', 
+        each_serializer: Mammoth::CommunityFeedSerializer, current_user: current_user, adapter: :json, 
+        meta: {
+          pagination:
+          { 
+            has_more_objects: @community_feeds.length > default_limit ? true : false,
+            offset: offset.to_i
+          } 
+        }
+      else
+        render json: {
+          data: [],
+          meta: {
+          pagination:
+          { 
+            has_more_objects: false,
+            offset: 0
+          } 
+          }
+        }
+      end
+
+    end
+
 		def set_community_feed
-			@community_feed = Mammoth::CommunityFeed.find_by(slug: params[:id])
+			@community_feed = Mammoth::CommunityFeed.find_by(id: params[:id])
 		end
 
     def community_feed_params
