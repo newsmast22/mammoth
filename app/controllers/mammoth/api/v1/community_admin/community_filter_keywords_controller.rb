@@ -87,7 +87,7 @@ module Mammoth::Api::V1::CommunityAdmin
 
 		def return_community_filter_keyword
 
-			render json: @community_filter_keyword
+			render json: @community_filter_keyword,root: 'data', serializer: Mammoth::CommunityFilterKeywordSerializer ,adapter: :json, current_user: current_user
 
 		end
 
