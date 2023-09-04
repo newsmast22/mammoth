@@ -7,8 +7,17 @@ module Mammoth::Api::V1::CommunityAdmin
 
     def index
 
-      @community_filter_keywords = Mammoth::CommunityFilterKeyword.get_all_community_filter_keywords(account_id: current_account.id, community_id: @community.id, max_id: params[:max_id])
-      return_format_json
+      # Assign limit = 5 as 6 if limit is nil
+      # Limit always plus one 
+      # Addition plus one to get has_more_object
+
+      limit = params[:limit].present? ? params[:limit].to_i + 1 : 6
+      offset = params[:offset].present? ? params[:offset] : 0
+
+      default_limit = limit - 1
+
+      @community_filter_keywords = Mammoth::CommunityFilterKeyword.get_all_community_filter_keywords(account_id: current_account.id, community_id: @community.id, offset: offset, limit: limit)
+      return_format_json(offset, default_limit)
 
     end
 
@@ -46,19 +55,17 @@ module Mammoth::Api::V1::CommunityAdmin
     
     private
 
-    def return_format_json 
+    def return_format_json(offset, default_limit)
 
       unless @community_filter_keywords.empty?
-        @community_filter_keywords = @community_filter_keywords.order(id: :desc).limit(5)
-
-        more_records_available = Mammoth::CommunityFilterKeyword.has_more_objects(account_id: current_account.id, community_id: @community.id, community_filter_keyword_id: @community_filter_keywords.last.id)
 
         render json: @community_filter_keywords, root: 'data', 
         each_serializer: Mammoth::CommunityFilterKeywordSerializer, current_user: current_user, adapter: :json, 
         meta: {
           pagination:
           { 
-            has_more_objects:  more_records_available
+            has_more_objects: @community_filter_keywords.size > default_limit ? true : false,
+            offset: offset.to_i
           } 
         }
       else
@@ -67,7 +74,8 @@ module Mammoth::Api::V1::CommunityAdmin
           meta: {
           pagination:
           { 
-            has_more_objects: false
+            has_more_objects: false,
+            offset: 0
           } 
           }
         }

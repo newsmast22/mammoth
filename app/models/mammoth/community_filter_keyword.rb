@@ -6,26 +6,12 @@ module Mammoth
 
     validates :keyword, uniqueness: { :if => :community_id?, :scope => :community_id}
 
-    def self.get_all_community_filter_keywords(account_id:, community_id:, max_id:)
-
-      if max_id.present?
-        query_string = "AND id < :max_id" if max_id.present?
-      end
+    def self.get_all_community_filter_keywords(account_id:, community_id:, offset:, limit:)
 
       community_filter_keywords = Mammoth::CommunityFilterKeyword.where("
-        mammoth_community_filter_keywords.account_id = :account_id AND mammoth_community_filter_keywords.community_id = :community_id #{query_string}",
-        account_id: account_id, community_id: community_id, max_id: max_id).order(id: :desc).limit(100)
+        mammoth_community_filter_keywords.account_id = :account_id AND mammoth_community_filter_keywords.community_id = :community_id",
+        account_id: account_id, community_id: community_id).order(id: :desc).limit(limit).offset(offset)
 
-    end
-
-    def self.has_more_objects(account_id:,community_id:,community_filter_keyword_id:)
-      Mammoth::CommunityFilterKeyword
-      .where("
-            mammoth_community_filter_keywords.account_id = :account_id
-            AND mammoth_community_filter_keywords.community_id = :community_id
-            AND id < :community_filter_keyword_id",
-            account_id: account_id, community_id: community_id, community_filter_keyword_id: community_filter_keyword_id) 
-       .exists?
     end
 
     def filter_statuses_by_keywords(community_id,status_id) 
