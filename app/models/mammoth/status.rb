@@ -99,7 +99,6 @@ module Mammoth
 
     scope :filter_block_mute_inactive_statuses_by_acc_ids, -> (acc_ids) {
      
-      
       joins(account: :user)
         .not_blocked(acc_ids)
         .not_muted(acc_ids)
@@ -203,88 +202,73 @@ module Mammoth
       .pagination(page_no, max_id)
     }
                        
-    scope :all_timeline, -> (max_id, excluded_ids=[], page_no=nil) {
+    scope :all_timeline, -> (param) {
       joins(communities_statuses: :community)
       .filter_banned_statuses
-      .where.not(id: excluded_ids)
+      .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
       .where.not(mammoth_communities: { slug: "breaking_news" })
       .filter_statuses_without_rss
       .where(deleted_at: nil)
-      .pagination(page_no, max_id)
+      .pagination(param.page_no, param.max_id)
     }
   
-    scope :newsmast_timeline, -> (max_id, excluded_ids=[], page_no=nil) {
+    scope :newsmast_timeline, -> (param) {
     
       filter_banned_statuses
       .where(is_rss_content: false)
-      .where.not(id: excluded_ids)
+      .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
       .where(local: true)
       .where(deleted_at: nil)
       .where(reply: false)
-      .pagination(page_no, max_id)
+      .pagination(param.page_no, param.max_id)
     }
 
-    scope :federated_timeline, -> (max_id, excluded_ids=[], page_no=nil) {
+    scope :federated_timeline, -> (param) {
      
       filter_banned_statuses
-      .where.not(id: excluded_ids)
+      .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
       .where(local: false)
       .where(deleted_at: nil)
       .where(reply: false)
-      .pagination(page_no, max_id)
+      .pagination(param.page_no, param.max_id)
     }
 
     scope :user_profile_timeline, -> (account_id, max_id = nil , page_no = nil ) {
       left_joins(:status_pins)
-      .filter_block_mute_inactive_statuses(account_id)
+      .filter_block_mute_inactive_statuses_by_acc_ids(account_id)
       .where(account_id: account_id)
       .where(deleted_at: nil)
       .where(reply: false)
       .pin_statuses_fileter(max_id)
     }
-
-    scope :pin_statuses_fileter, -> (max_id = nil) {
-      if max_id.nil? || !max.present? || max_id === ""
-        joins(
-          "LEFT JOIN status_pins on statuses.id = status_pins.status_id"
-          ).reorder(
-            Arel.sql('(case when status_pins.created_at is not null then 1 else 0 end) desc, status_pins.created_at desc, statuses.id desc')
-          ).limit(5)
-      else 
-        where(status_pins: { id: nil } )
-              .filter_with_max_id(max_id)
-              .order(id: :desc)
-              .distinct
-              .limit(5)
-      end
-    }
-                       
-    scope :my_community_timeline, -> (user_id, max_id, excluded_ids=[], page_no=nil) {
+     
+    scope :my_community_timeline, -> (param) {
            
       joins(communities_statuses: :community)
-      .filter_banned_statuses
       .joins(community_users: :community)
-      .where.not(id: excluded_ids)
+      .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
       .filter_statuses_without_rss
       .where.not(mammoth_communities: { slug: "breaking_news" })
-      .where(community_users: { user_id: user_id })
-      .where(deleted_at: nil)
-      .filter_statuses_by_timeline_setting(user_id)
-      .pagination(page_no, max_id)
-    }
-                                
-    scope :following_timeline, -> (user_id, acc_id, max_id, page_no=nil) {
-      filter_following_accounts(acc_id)
+      .where(community_users: { user_id: param.user_id })
       .filter_banned_statuses
-      .filter_statuses_by_timeline_setting(user_id)
-      .filter_block_mute_inactive_statuses(acc_id)
+      .where(deleted_at: nil)
+      .filter_statuses_by_timeline_setting(param.user_id)
+      .pagination(param.page_no, param.max_id)
+    }
+        
+    scope :following_timeline, -> (param) {
+      
+      filter_following_accounts(param.acc_id)
+      .filter_banned_statuses
+      .filter_statuses_by_timeline_setting(param.user_id)
+      .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
       .where(reply: false)
-      .pagination(page_no, max_id)
+      .pagination(param.page_no, param.max_id)
     }
 
     scope :pagination, ->( page_no = nil, max_id ) {
      
-      if page_no.nil? || !page_no.present? || !page_no.is_a?(Integer)
+      if page_no.nil? || !page_no.present? 
         filter_with_max_id(max_id)
         .order(id: :desc)
         .select('statuses.id') 
@@ -320,6 +304,22 @@ module Mammoth
       end
       
       where(condition_query, max_id: max_id.to_i || 0 )
+    }
+
+    scope :pin_statuses_fileter, -> (max_id = nil) {
+      if max_id.nil? || !max.present? || max_id === ""
+        joins(
+          "LEFT JOIN status_pins on statuses.id = status_pins.status_id"
+          ).reorder(
+            Arel.sql('(case when status_pins.created_at is not null then 1 else 0 end) desc, status_pins.created_at desc, statuses.id desc')
+          ).limit(5)
+      else 
+        where(status_pins: { id: nil } )
+              .filter_with_max_id(max_id)
+              .order(id: :desc)
+              .distinct
+              .limit(5)
+      end
     }
 
     scope :filter_statuses_without_rss, -> {
