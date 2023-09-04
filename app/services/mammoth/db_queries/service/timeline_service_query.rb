@@ -1,89 +1,53 @@
 module Mammoth
   module DbQueries
     module Service
-      class TimelineServiceQuery 
-
-        def initialize(max_id)
-          @max_id = max_id
-          @condition = condition_query
-          @authorize_query = Mammoth::DbQueries::Common::StatusAuthorizeQuery.new
-          @filter_block_delete_mute = @authorize_query.select_acc_by_block_mute_delete
-          @filter_amplifier = @authorize_query.select_acc_by_user_filter
+      class TimelineServiceQuery
+        def initialize(max_id, current_user, current_account, page_no)
+          @param = OpenStruct.new(
+            max_id: max_id,
+            user_id: current_user.id,
+            acc_id: current_account.id,
+            page_no: page_no
+          )
         end
 
-        def my_community_timeline_query
-          sql_query = "SELECT statuses.id
-                      FROM statuses
-                      JOIN mammoth_communities_statuses as commu_status ON statuses.id = commu_status.status_id
-                      JOIN mammoth_communities as commu ON commu_status.community_id = commu.id
-                      JOIN mammoth_communities_users as commu_usr ON commu_usr.community_id = commu.id
-                      WHERE #{@condition}
-                      AND #{select_status_without_rss}
-                      AND commu.slug != 'breaking_news' 
-                      AND commu_usr.user_id = :USR_ID
-                      AND statuses.deleted_at IS NULL 
-                      AND statuses.account_id NOT IN (#{@filter_block_delete_mute})
-                      AND statuses.account_id IN (#{@filter_amplifier})
-                      ORDER BY statuses.id DESC;"
-          return sql_query
+        def following_timeline
+          fetch_and_include(Mammoth::Status.following_timeline(@param))
         end
 
-        def primary_timeline_query
-          sql_query = "SELECT statuses.id
-                      FROM statuses
-                      JOIN mammoth_communities_statuses ON statuses.id = mammoth_communities_statuses.status_id
-                      JOIN mammoth_communities ON mammoth_communities_statuses.community_id = mammoth_communities.id
-                      WHERE #{@condition}
-                      AND mammoth_communities.slug != 'breaking_news' 
-                      AND #{select_status_without_rss}
-                      AND statuses.deleted_at IS NULL 
-                      AND statuses.account_id NOT IN (#{@filter_block_delete_mute})
-                      ORDER BY statuses.id DESC 
-                      ;"
-
-          puts sql_query
-          return sql_query
+        def my_community_timeline
+          fetch_and_include(Mammoth::Status.my_community_timeline(@param))
         end
 
-        def newsmast_timeline_query
-          sql_query = "SELECT statuses.id
-                        FROM statuses
-                        WHERE #{@condition}
-                        AND statuses.local = true 
-                        AND statuses.deleted_at IS NULL 
-                        AND statuses.account_id NOT IN (#{@filter_block_delete_mute})
-                        ORDER BY statuses.id DESC 
-                        ;"
+        def all_timeline
+          fetch_and_include(Mammoth::Status.all_timeline(@param))
         end
 
-        def federated_timeline_query
-          sql_query = "SELECT statuses.id
-                        FROM statuses
-                        WHERE #{@condition}
-                        AND statuses.local = false
-                        AND statuses.deleted_at IS NULL 
-                        AND statuses.account_id NOT IN (#{@filter_block_delete_mute})
-                        ORDER BY statuses.id DESC 
-                        ;"
+        def newsmast_timeline
+          fetch_and_include(Mammoth::Status.newsmast_timeline(@param))
         end
 
-        def select_status_without_rss
-          " statuses.reply = FALSE 
-          AND statuses.community_feed_id IS NULL 
-          AND statuses.group_id IS NULL "
+        def federated_timeline
+          fetch_and_include(Mammoth::Status.federated_timeline(@param))
         end
 
-        def condition_query
-          if  @max_id.nil?
-            condition = "statuses.id > 0"
-          else
-            condition = "statuses.id < :MAX_ID"
-          end
+        private
+
+        def fetch_and_include(statuses)
+          @statuses = Mammoth::Status.includes(
+            :reblog,
+            :media_attachments,
+            :active_mentions,
+            :tags,
+            :preloadable_poll,
+            :status_stat,
+            :conversation,
+            account: [:user, :account_stat]
+          ).where(id: statuses.pluck(:id))
+
+          @statuses
         end
       end
     end
   end
 end
-
-
-                

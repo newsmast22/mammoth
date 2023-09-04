@@ -10,7 +10,7 @@ module Mammoth
       @page_no = page_no
       @userTimeLineSetting = Mammoth::UserTimelineSetting.where(user_id: @current_user.id).last
       create_user_timeline_setting
-      @query_service = Mammoth::DbQueries::Service::TimelineServiceNew.new(@max_id,@current_user,@current_account, @page_no)
+      @query_service = Mammoth::DbQueries::Service::TimelineServiceQuery.new(@max_id,@current_user,@current_account, @page_no)
     end
 
     def call
