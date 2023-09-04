@@ -31,7 +31,11 @@ module Mammoth
       filter = Mammoth::CommunityFilterKeyword.where(id: community_filter_keyword_id).last
 
       if filter.present?
-        Mammoth::Status.where("text ~* ?", "\\m#{filter.keyword}\\M").find_in_batches(batch_size: 100) do |statuses|
+        
+        # If keyword included #example, remove # and result will be example
+        cleaned_keyword = filter.keyword.gsub("#", "")
+
+        Mammoth::Status.where("text ~* ?", "\\m#{cleaned_keyword}\\M").find_in_batches(batch_size: 100) do |statuses|
           array = statuses.map{|status| {status_id: status.id, community_filter_keyword_id: filter.id}}
           Mammoth::CommunityFilterStatus.create(array)
         end
