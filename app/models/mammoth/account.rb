@@ -5,10 +5,16 @@ module Mammoth
     belongs_to :voice, class_name: "Mammoth::Voice",  optional: true
     belongs_to :contributor_role, class_name: "Mammoth::ContributorRole",  optional: true
     belongs_to :subtitle, class_name: "Mammoth::Subtitle",  optional: true
-    has_many :follows
+
+    has_many :follows, foreign_key: 'account_id'
+    has_many :followed_accounts, through: :follows, source: :target_account
+
     has_many :blocks, foreign_key: 'account_id'
     has_many :blocked_accounts, through: :blocks, source: :target_account
+
     has_many :mutes
+    has_many :muted_accounts, through: :mutes, source: :target_account
+
     has_many :statuses
 
     scope :filter_timeline_with_countries,->(country_alpah2_name) {where(country: country_alpah2_name)}
