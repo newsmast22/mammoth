@@ -4,7 +4,7 @@ module Mammoth
     def initialize(current_account, max_id, current_user, current_community, page_no)
       @current_account = current_account
       @max_id = max_id
-      @current_user = current_user
+      @current_user = Mammoth::User.find(current_user.id)
       @page_no = page_no
       @userCommunitySetting = Mammoth::UserCommunitySetting.where(user_id: @current_user.id).last
       create_user_community_setting  

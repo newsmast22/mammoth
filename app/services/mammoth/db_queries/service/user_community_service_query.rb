@@ -3,12 +3,12 @@ module Mammoth
     module Service
       class UserCommunityServiceQuery
         def initialize(max_id, current_user, current_account, current_community, page_no)
-          @max_id = max_id
-          @user = Mammoth::User.find(current_user.id)
-          @account = current_account
-          @community = current_community
-          @community_slug = @community.nil? ? nil : @community.slug
-          @page_no = page_no
+          @param = OpenStruct.new(max_id: max_id, 
+                                  user: current_user, 
+                                  account: current_account, 
+                                  community: current_community, 
+                                  community_slug: current_community.nil? ? nil : current_community.slug,
+                                  page_no: page_no)
         end
 
         def all_timeline
@@ -22,9 +22,9 @@ module Mammoth
         private
 
         def load_and_filter_statuses(scope_name)
-          return [] unless @community_slug
+          return [] unless @param.community_slug
 
-          @statuses = Mammoth::Status.public_send(scope_name, @max_id, @account, @user, @community, @page_no)
+          @statuses = Mammoth::Status.public_send(scope_name, @param)
           @statuses = Mammoth::Status.includes(
             :reblog,
             :media_attachments,

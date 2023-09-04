@@ -168,38 +168,38 @@ module Mammoth
 
 
     # Combined scope for user_community_recommended_timeline
-    scope :user_community_recommended_timeline, ->(max_id, account, user, community, page_no = nil) {
+    scope :user_community_recommended_timeline, ->(param) {
+      
+      admin_acc_ids = param.community.get_community_admins
+      acc_ids = admin_acc_ids.push(param.account.id)
 
-      admin_acc_ids = community.get_community_admins
-      acc_ids = admin_acc_ids.push(account.id)
-
-      filter_statuses_with_community_admin_logic(community)
-      .or(filter_statuses_with_current_user_logic(account, community))
-      .filter_block_mute_inactive_statuses_by_acc_ids(acc_ids)
-      .filter_statuses_by_community_timeline_setting(user.id)
-      .filter_with_primary_timeline_logic(account, user, community)
+      filter_statuses_with_community_admin_logic(param.community)
+      .or(filter_statuses_with_current_user_logic(param.account, param.community))
+      .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_ids)
+      .filter_statuses_by_community_timeline_setting(param.user.id)
+      .filter_with_primary_timeline_logic(param.account, param.user, param.community)
       .where(deleted_at: nil)
       .where(reply: false)
       .filter_banned_statuses
-      .pagination(page_no, max_id)
+      .pagination(param.page_no, param.max_id)
     }
 
 
-    scope :user_community_all_timeline, ->(max_id, account, user, community, page_no=nil) {
+    scope :user_community_all_timeline, ->(param) {
 
-      admin_acc_ids = community.get_community_admins
-      acc_ids = admin_acc_ids.push(account.id)
+      admin_acc_ids = param.community.get_community_admins
+      acc_ids = admin_acc_ids.push(param.account.id)
 
       left_joins(:communities_statuses)
-      .where(communities_statuses: { community_id: community.id })
-      .or(filter_statuses_with_not_belong_any_commu_admin(community))
+      .where(communities_statuses: { community_id: param.community.id })
+      .or(filter_statuses_with_not_belong_any_commu_admin(param.community))
       .filter_block_mute_inactive_statuses_by_acc_ids(acc_ids)
-      .filter_statuses_by_community_timeline_setting(user.id)
-      .filter_with_primary_timeline_logic(account, user, community)
+      .filter_statuses_by_community_timeline_setting(param.user.id)
+      .filter_with_primary_timeline_logic(param.account, param.user, param.community)
       .where(deleted_at: nil)
       .where(reply: false)
       .filter_banned_statuses
-      .pagination(page_no, max_id)
+      .pagination(param.page_no, param.max_id)
     }
                        
     scope :all_timeline, -> (param) {
