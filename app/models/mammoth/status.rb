@@ -99,13 +99,13 @@ module Mammoth
 
     scope :filter_block_mute_inactive_statuses_by_acc_ids, -> (acc_ids) {
 
-    left_joins(account: :user)
-      .where(
-        "(users.id IS NULL AND accounts.domain IS NOT NULL) OR " +
-        "(users.id IS NOT NULL AND users.is_active != FALSE)"
-      )
-      .not_blocked(acc_ids)
-      .not_muted(acc_ids)
+      left_joins(account: :user)
+        .where(
+          "(users.id IS NULL AND accounts.domain IS NOT NULL) OR " +
+          "(users.id IS NOT NULL AND users.is_active != FALSE)"
+        )
+        .not_blocked(acc_ids)
+        .not_muted(acc_ids)
 
     }
 
@@ -183,8 +183,9 @@ module Mammoth
       .where(deleted_at: nil)
       .where(reply: false)
       .filter_banned_statuses
-      .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_ids)
+      .filter_block_mute_inactive_statuses_by_acc_ids(acc_ids)
       .pagination(param.page_no, param.max_id)
+
     }
 
 
@@ -206,6 +207,7 @@ module Mammoth
     }
                        
     scope :all_timeline, -> (param) {
+      
       joins(communities_statuses: :community)
       .filter_banned_statuses
       .where.not(mammoth_communities: { slug: "breaking_news" })
