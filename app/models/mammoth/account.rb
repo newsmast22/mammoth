@@ -14,7 +14,7 @@ module Mammoth
 
     has_many :mutes
     has_many :muted_accounts, through: :mutes, source: :target_account
-
+    has_many :users
     has_many :statuses
 
     scope :filter_timeline_with_countries,->(country_alpah2_name) {where(country: country_alpah2_name)}

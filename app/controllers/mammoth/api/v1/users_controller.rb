@@ -308,8 +308,9 @@ module Mammoth::Api::V1
         params[:max_id] = Mammoth::Status.new.check_pinned_status(params[:max_id], current_account.id)
       end
 
-      account = Account.find(params[:id])
-      statuses = Mammoth::Status.user_profile_timeline(account.id, params[:max_id] , page_no = nil )
+      profile_acc = Account.find(params[:id])
+
+      statuses = Mammoth::Status.user_profile_timeline(current_account.id ,profile_acc.id, params[:max_id] , page_no = nil )
 
       render json: statuses,root: 'statuses_data', each_serializer: Mammoth::StatusSerializer,adapter: :json,
       meta:{

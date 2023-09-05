@@ -98,12 +98,15 @@ module Mammoth
     }
 
     scope :filter_block_mute_inactive_statuses_by_acc_ids, -> (acc_ids) {
-     
-      joins(account: :user)
-        .not_blocked(acc_ids)
-        .not_muted(acc_ids)
-        .where.not("users.is_active = ?", false)
-      
+
+    left_joins(account: :user)
+      .where(
+        "(users.id IS NULL AND accounts.domain IS NOT NULL) OR " +
+        "(users.id IS NOT NULL AND users.is_active != FALSE)"
+      )
+      .not_blocked(acc_ids)
+      .not_muted(acc_ids)
+
     }
 
     scope :not_blocked, ->(acc_ids) {
@@ -175,12 +178,12 @@ module Mammoth
 
       filter_statuses_with_community_admin_logic(param.community)
       .or(filter_statuses_with_current_user_logic(param.account, param.community))
-      .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_ids)
       .filter_statuses_by_community_timeline_setting(param.user.id)
       .filter_with_primary_timeline_logic(param.account, param.user, param.community)
       .where(deleted_at: nil)
       .where(reply: false)
       .filter_banned_statuses
+      .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_ids)
       .pagination(param.page_no, param.max_id)
     }
 
@@ -193,22 +196,22 @@ module Mammoth
       left_joins(:communities_statuses)
       .where(communities_statuses: { community_id: param.community.id })
       .or(filter_statuses_with_not_belong_any_commu_admin(param.community))
-      .filter_block_mute_inactive_statuses_by_acc_ids(acc_ids)
       .filter_statuses_by_community_timeline_setting(param.user.id)
       .filter_with_primary_timeline_logic(param.account, param.user, param.community)
       .where(deleted_at: nil)
       .where(reply: false)
       .filter_banned_statuses
+      .filter_block_mute_inactive_statuses_by_acc_ids(acc_ids)
       .pagination(param.page_no, param.max_id)
     }
                        
     scope :all_timeline, -> (param) {
       joins(communities_statuses: :community)
       .filter_banned_statuses
-      .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
       .where.not(mammoth_communities: { slug: "breaking_news" })
       .filter_statuses_without_rss
       .where(deleted_at: nil)
+      .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
       .pagination(param.page_no, param.max_id)
     }
   
@@ -216,29 +219,30 @@ module Mammoth
     
       filter_banned_statuses
       .where(is_rss_content: false)
-      .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
       .where(local: true)
       .where(deleted_at: nil)
       .where(reply: false)
+      .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
       .pagination(param.page_no, param.max_id)
     }
 
     scope :federated_timeline, -> (param) {
      
       filter_banned_statuses
-      .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
       .where(local: false)
       .where(deleted_at: nil)
       .where(reply: false)
+      .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
       .pagination(param.page_no, param.max_id)
     }
 
-    scope :user_profile_timeline, -> (account_id, max_id = nil , page_no = nil ) {
+    scope :user_profile_timeline, -> (account_id, profile_id, max_id = nil , page_no = nil ) {
+
       left_joins(:status_pins)
-      .filter_block_mute_inactive_statuses_by_acc_ids(account_id)
-      .where(account_id: account_id)
+      .where(account_id: profile_id)
       .where(deleted_at: nil)
       .where(reply: false)
+      .filter_block_mute_inactive_statuses_by_acc_ids(account_id)
       .pin_statuses_fileter(max_id)
     }
      
@@ -246,13 +250,13 @@ module Mammoth
            
       joins(communities_statuses: :community)
       .joins(community_users: :community)
-      .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
       .filter_statuses_without_rss
       .where.not(mammoth_communities: { slug: "breaking_news" })
       .where(community_users: { user_id: param.user_id })
       .filter_banned_statuses
       .where(deleted_at: nil)
       .filter_statuses_by_timeline_setting(param.user_id)
+      .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
       .pagination(param.page_no, param.max_id)
     }
         
@@ -261,8 +265,8 @@ module Mammoth
       filter_following_accounts(param.acc_id)
       .filter_banned_statuses
       .filter_statuses_by_timeline_setting(param.user_id)
-      .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
       .where(reply: false)
+      .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
       .pagination(param.page_no, param.max_id)
     }
 
