@@ -14,17 +14,6 @@ module Mammoth
 
     end
 
-    def filter_statuses_by_keywords(community_id,status_id) 
-
-      # 1.) Global keywords check from status's text
-      create_status_manually_by_user(nil, status_id) 
-
-      # 2.) Community keywords check from status's text 
-      # Note: Check only is community_id is not nil
-      create_status_manually_by_user(community_id, status_id) unless community_id.nil?
-
-    end
-
     after_create :create_community_filter_statuses
 
     after_update :update_community_filter_statuses 
@@ -53,29 +42,6 @@ module Mammoth
         'community_filter_keyword_request' => "update"
       }
       community_statuses = Mammoth::CommunityFilterStatusesCreateWorker.perform_async(json)
-    end
-
-    def create_status_manually_by_user(community_id, status_id)
-
-      Mammoth::CommunityFilterKeyword.where(community_id: community_id).find_in_batches(batch_size: 100).each do |community_filter_keywords|
-        community_filter_keywords.each do |community_filter_keyword|
-          # If keyword included #example, remove # and result will be example
-          cleaned_keyword = community_filter_keyword.keyword.gsub("#", "")
-          is_status_banned = Mammoth::Status.where("text ~* ? AND reply = false AND id = ?", "\\m#{cleaned_keyword}\\M", status_id).exists?
-          if is_status_banned
-            create_global_banned_statuses(community_filter_keyword,status_id)
-          end
-        end
-      end
-    end
-
-    def create_global_banned_statuses(community_filter_Keyword,status_id)
-
-      Mammoth::CommunityFilterStatus.where(
-        status_id: status_id,
-        community_filter_keyword_id: community_filter_Keyword.id
-      ).first_or_create
-
     end
 
   end
