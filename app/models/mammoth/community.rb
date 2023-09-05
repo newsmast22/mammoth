@@ -7,9 +7,11 @@ module Mammoth
     has_and_belongs_to_many :statuses, class_name: "Mammoth::Status"
     has_and_belongs_to_many :users, class_name: "Mammoth::User"
     belongs_to :collection, class_name: "Mammoth::Collection"
-    has_many :community_users, class_name: "Mammoth::UserCommunity"
-    has_many :community_admins, class_name: "Mammoth::CommunityAdmin"
-
+    has_many :community_users, class_name: "Mammoth::UserCommunity", dependent: :destroy
+    has_many :community_admins, class_name: "Mammoth::CommunityAdmin", dependent: :destroy
+    has_many :community_statuses, class_name: "Mammoth::CommunityStatus", dependent: :destroy
+    has_many :community_filter_keywords, class_name: "Mammoth::CommunityFilterKeyword", dependent: :destroy
+    has_many :community_hasgtags, class_name: "Mammoth::CommunityHashtag", dependent: :destroy
 
   	IMAGE_LIMIT = 15.megabytes
 
