@@ -34,9 +34,7 @@ module Mammoth
     end
 
     def check_account(note)
-      Rails.logger.info "--- Check account formatted: #{note} ----"
       doc = Nokogiri::HTML.parse(note)
-      Rails.logger.info "--- Check account html parsed: #{doc} ----"
       href_values = doc.css('a.u-url.mention').map { |a| a['href'] }
 
       href_values.each do |href_value|
