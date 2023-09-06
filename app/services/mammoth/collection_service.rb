@@ -13,9 +13,6 @@ class Mammoth::CollectionService < BaseService
       @collections = Mammoth::Collection.all.order(position: :ASC)
       data = []
   
-      if @is_virtual == 'true' || @is_virtual.nil?
-        data << all_collection
-      end
       @collections.each do |collection|
           data << {
               id: collection.id,
@@ -32,6 +29,9 @@ class Mammoth::CollectionService < BaseService
               updated_at: collection.updated_at,
               image_url: collection.image.url
           }
+      end
+      if @is_virtual == 'true' || @is_virtual.nil?
+        data << all_collection
       end
       return data
     end

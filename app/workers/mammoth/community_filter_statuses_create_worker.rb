@@ -33,7 +33,7 @@ module Mammoth
               ban_statuses(tag.statuses, filter) if tag
             else
 
-              Mammoth::Status.where("text ~* ?", "\\m#{filter.keyword}\\M").find_in_batches(batch_size: 100) do |statuses|
+              Mammoth::Status.where("LOWER(text) ~* ?", "\\m#{filter.keyword.downcase}\\M").find_in_batches(batch_size: 100, order: :desc) do |statuses|
               ban_statuses(tag.statuses, filter)
               end
             end
@@ -67,15 +67,15 @@ module Mammoth
 
     def create_status_manually_by_user(community_id, status_id)
 
-      Mammoth::CommunityFilterKeyword.where(community_id: community_id).find_in_batches(batch_size: 100).each do |community_filter_keywords|
+      Mammoth::CommunityFilterKeyword.where(community_id: community_id).find_in_batches(batch_size: 100, order: :desc).each do |community_filter_keywords|
         community_filter_keywords.each do |community_filter_keyword|
 
           is_status_banned = false
 
           if community_filter_keyword.is_filter_hashtag
-            is_status_banned = Mammoth::Status.where(id: status_id).last.tags.where(name: community_filter_keyword.keyword.gsub("#", "")).exists?
+            is_status_banned = Mammoth::Status.where(id: status_id).last.tags.where(name: community_filter_keyword.keyword.downcase.gsub("#", "")).exists?
           else
-            is_status_banned = Mammoth::Status.where("text ~* ? AND reply = false AND id = ?", community_filter_keyword.keyword, status_id).exists?
+            is_status_banned = Mammoth::Status.where("LOWER(text) ~* ? AND reply = false AND id = ?", community_filter_keyword.keyword.downcase, status_id).exists?
           end
           
           if is_status_banned
