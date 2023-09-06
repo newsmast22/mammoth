@@ -59,7 +59,7 @@ module Mammoth
   
     scope :filter_statuses_with_community_admin_logic, ->(community, account) {
       Mammoth::Status.left_joins(:communities_statuses)
-        .filter_statuses_without_current_user_with_acc_ids(community.get_community_admins, account.id)
+        .filter_statuses_with_followed_acc_ids(community.get_community_admins)
         .where(communities_statuses: { community_id: [community.id, nil] })
     }
 
