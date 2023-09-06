@@ -92,9 +92,8 @@ module Mammoth
 
     scope :filter_statuses_without_current_user_with_acc_ids, -> (account_ids, current_acc_id) {
       followed_acc_ids = Follow.where(account_id: account_ids).pluck(:target_account_id).map(&:to_i).uniq
-      followed_acc_ids = followed_acc_ids.delete(current_acc_id)
+      followed_acc_ids.delete(current_acc_id) if followed_acc_ids
       where(account_id: followed_acc_ids)
-   
     }
     
     
@@ -189,6 +188,7 @@ module Mammoth
       .filter_with_primary_timeline_logic(param.account, param.user, param.community)
       .where(deleted_at: nil)
       .where(reply: false)
+      .where.not(account_id: param.account.id)
       .filter_banned_statuses
       .filter_block_mute_inactive_statuses_by_acc_ids(acc_ids)
       .pagination(param.page_no, param.max_id)
