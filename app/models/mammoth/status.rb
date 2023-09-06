@@ -57,9 +57,9 @@ module Mammoth
     }
 
   
-    scope :filter_statuses_with_community_admin_logic, ->(community) {
+    scope :filter_statuses_with_community_admin_logic, ->(community, account) {
       Mammoth::Status.left_joins(:communities_statuses)
-        .filter_statuses_with_followed_acc_ids(community.get_community_admins)
+        .filter_statuses_without_current_user_with_acc_ids(community.get_community_admins, account.id)
         .where(communities_statuses: { community_id: [community.id, nil] })
     }
 
@@ -88,6 +88,13 @@ module Mammoth
       excluded_account_ids = (follow_acc_ids + tag_acc_ids).uniq
       excluded_account_ids.delete(account_id)
       where(account_id: excluded_account_ids)
+    }
+
+    scope :filter_statuses_without_current_user_with_acc_ids, -> (account_ids, current_acc_id) {
+      followed_acc_ids = Follow.where(account_id: account_ids).pluck(:target_account_id).map(&:to_i).uniq
+      followed_acc_ids = followed_acc_ids.delete(current_acc_id)
+      where(account_id: followed_acc_ids)
+   
     }
     
     
@@ -176,7 +183,7 @@ module Mammoth
       admin_acc_ids = param.community.get_community_admins
       acc_ids = admin_acc_ids.push(param.account.id)
 
-      filter_statuses_with_community_admin_logic(param.community)
+      filter_statuses_with_community_admin_logic(param.community, param.account)
       .or(filter_statuses_with_current_user_logic(param.account, param.community))
       .filter_statuses_by_community_timeline_setting(param.user.id)
       .filter_with_primary_timeline_logic(param.account, param.user, param.community)
@@ -354,8 +361,7 @@ module Mammoth
     scope :filter_statuses_by_timeline_setting, ->(user_id) {
       user = Mammoth::User.find(user_id)
       selected_filters = user.selected_filters_for_user
-      common_filter_by_selected_filters(selected_filters)
-      
+      common_filter_by_selected_filters(selected_filters) 
     }
      
     scope :common_filter_by_selected_filters, ->(selected_filters) {
