@@ -733,39 +733,20 @@ module Mammoth::Api::V1
 				with_rate_limit: true,
 				is_only_for_followers: community_status_params[:is_only_for_followers],
 				is_meta_preview: community_status_params[:is_meta_preview],
+				community_ids: selected_communities.any? ? selected_communities : []
 			) 
 
+			# To delete uploaded temp image files
 			if image_data_array.any?
-
 				File.delete("#{Time.now.utc.strftime('%m%d%Y%H%M')}.png")
-		
 			end
 
-			if selected_communities.any?
-
-				# Create mulitple selected communities
-				selected_communities.each do |community_id|
-					Mammoth::CommunityStatus.find_or_create_by(status_id: @status.id, community_id: community_id)
-				end
-
+			if @status
 				# To check text contains filtered keywords 
 				# If keywords contains, save record in community filter statuses
 				# Assume user selected mulitple community
 				create_status_json = {
-					'community_id' => selected_communities,
-					'is_status_create' => true,
-					'status_id' => @status.id,
-					'community_filter_keyword_id' => nil,
-					'community_filter_keyword_request' => "non"
-				}
-
-				Mammoth::CommunityFilterStatusesCreateWorker.perform_async(create_status_json)
-			else
-				# To check text contains filtered keywords 
-				# If keywords contains, save record in community filter statuses
-				# Assume user NOT! selected mulitple community
-				create_status_json = {
-					'community_id' => nil,
+					'community_id' => selected_communities.any? ? selected_communities : nil,
 					'is_status_create' => true,
 					'status_id' => @status.id,
 					'community_filter_keyword_id' => nil,
@@ -773,8 +754,6 @@ module Mammoth::Api::V1
 				}
 				Mammoth::CommunityFilterStatusesCreateWorker.perform_async(create_status_json)
 			end
-		
-
 		end
 
 		def save_media_attachments()
