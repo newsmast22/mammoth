@@ -4,11 +4,11 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
   include RoutingHelper
   include FormattingHelper
 
-  attributes :id, :username, :acct, :display_name, :locked, :bot, :discoverable,:hide_collections, :group, :created_at,
+  attributes :id,:account_id, :username, :acct, :display_name, :locked, :bot, :discoverable,:hide_collections, :group, :created_at,
              :note, :url, :avatar, :avatar_static, :header, :header_static,:primary_community_slug,:primary_community_name,
              :followers_count, :following_count, :statuses_count, :last_status_at,:collection_count,:community_count,
-             :country,:country_common_name,:dob,:subtitle,:about_me,:hash_tag_count,:is_followed,
-             :email,:phone,:step,:is_active,:is_account_setup_finished
+             :country,:country_common_name,:dob,:subtitle,:about_me,:hash_tag_count,:is_followed,:is_requested,
+             :email,:phone,:step,:is_active,:is_account_setup_finished,:domain,:image_url,:bio
              
 
   has_one :moved_to_account, key: :moved, serializer: Mammoth::AccountSerializer, if: :moved_and_not_nested?
@@ -57,6 +57,22 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
     object.id.to_s
   end
 
+  def image_url
+    object.avatar.url&.remove('mammoth/')
+  end
+
+  def bio 
+    if instance_options && instance_options[:data] && instance_options[:data][:do_not_format_note]
+      object.suspended? ? '' : object.note
+    else
+      object.suspended? ? '' : account_bio_format(object)
+    end
+  end
+
+  def account_id
+    object.id.to_s
+  end
+
   def statuses_count
     object.statuses.where(reply: false).count
   end
@@ -99,6 +115,15 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
     end
   end
 
+  def is_requested 
+    if  @instance_options[:current_user].present?
+      follow_request = FollowRequest.where(account_id: @instance_options[:current_user].account_id, target_account_id: object.id)
+      is_requested = follow_request.present? ? true : false 
+    else
+      return false
+    end
+  end
+
   def country
     if object.country.present?
       object.country
@@ -134,6 +159,10 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
     else
       ""
     end
+  end
+
+  def domain 
+    object.domain
   end
 
   def hash_tag_count
@@ -202,7 +231,11 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
   end
 
   def note
-    object.suspended? ? '' : object.note
+    if instance_options && instance_options[:data] && instance_options[:data][:do_not_format_note]
+      object.suspended? ? '' : object.note
+    else
+      object.suspended? ? '' : account_bio_format(object)
+    end
   end
 
   def url
@@ -210,7 +243,7 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
   end
 
   def avatar
-    full_asset_url(object.suspended? ? object.avatar.default_url : object.avatar_original_url)
+    full_asset_url(object.suspended? ? object.avatar.default_url : object.avatar_original_url)&.remove('mammoth/')
   end
 
   def avatar_static
@@ -218,7 +251,7 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
   end
 
   def header
-    full_asset_url(object.suspended? ? object.header.default_url : object.header_original_url)
+    full_asset_url(object.suspended? ? object.header.default_url : object.header_original_url)&.remove('mammoth/')
   end
 
   def header_static

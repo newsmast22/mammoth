@@ -7,6 +7,7 @@ PATH
       httparty
       link_thumbnailer
       rails (~> 6.1)
+      will_paginate (~> 3.1.7)
 
 GEM
   remote: https://rubygems.org/
@@ -210,6 +211,7 @@ GEM
     websocket-driver (0.7.5)
       websocket-extensions (>= 0.1.0)
     websocket-extensions (0.1.5)
+    will_paginate (3.1.8)
     zeitwerk (2.6.8)
 
 PLATFORMS
@@ -220,6 +222,7 @@ DEPENDENCIES
   mammoth!
   rake (~> 13.0)
   rspec (~> 3.0)
+  will_paginate (~> 3.1.7)
 
 BUNDLED WITH
    2.3.17

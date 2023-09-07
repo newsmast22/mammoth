@@ -58,5 +58,6 @@ module Mammoth
 
     validates_attachment_content_type :image, content_type: IMAGE_MIME_TYPES
     validates_attachment_size :image, less_than: IMAGE_LIMIT
+
   end
 end

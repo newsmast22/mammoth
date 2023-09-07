@@ -7,7 +7,11 @@ module Mammoth
     has_and_belongs_to_many :statuses, class_name: "Mammoth::Status"
     has_and_belongs_to_many :users, class_name: "Mammoth::User"
     belongs_to :collection, class_name: "Mammoth::Collection"
-
+    has_many :community_users, class_name: "Mammoth::UserCommunity", dependent: :destroy
+    has_many :community_admins, class_name: "Mammoth::CommunityAdmin", dependent: :destroy
+    has_many :community_statuses, class_name: "Mammoth::CommunityStatus", dependent: :destroy
+    has_many :community_filter_keywords, class_name: "Mammoth::CommunityFilterKeyword", dependent: :destroy
+    has_many :community_hashtags, class_name: "Mammoth::CommunityHashtag", dependent: :destroy
 
   	IMAGE_LIMIT = 15.megabytes
 
@@ -63,9 +67,17 @@ module Mammoth
       self.image_file_name = name if name.present?
     end
 
+    def get_community_admins
+      community_admins.joins(:user)
+      .where(community_id: self.id)
+      .where(users: { is_active: true })
+      .pluck('users.account_id')
+    end
+
     def image_data=(data)
       self.image = {data: data} if data.present?
     end
+
 
     has_attached_file :header,
     styles: THUMBNAIL_STYLES
@@ -82,6 +94,50 @@ module Mammoth
 
     def header_data=(data)
       self.header = {data: data} if data.present?
+    end
+
+    def self.get_community_info_details(role_name, current_user, community_slug)
+
+			@user = Mammoth::User.find(current_user.id)
+
+			all_community_hash = Mammoth::CollectionService.all_collection
+
+			community = Mammoth::Community.new(
+				name: "All",
+				description: all_community_hash[:description],
+				collection_id: nil,
+				image: nil,
+				header: nil,
+				slug: "all",
+				id: all_community_hash[:id]
+			)
+
+			community = Mammoth::Community.find_by(slug: community_slug) unless community_slug == "all"
+
+			#begin::check is community-admin
+			is_community_admin = false
+			user_community_admin= Mammoth::CommunityAdmin.where(user_id: @user.id, community_id: community.id).last
+			if user_community_admin.present?
+				is_community_admin = true
+			end
+			#end::check is community-admin
+
+			user_communities_ids  = @user.user_communities.pluck(:community_id).map(&:to_i)
+
+			community_followed_user_counts = Mammoth::UserCommunity.where(community_id: community.id).size
+
+      result = {
+          community_followed_user_counts: community_followed_user_counts,
+          community_name: role_name == "rss-account" ? current_user.account.display_name : community.name,
+          community_description: community.description,
+          collection_name: community.try(:collection).try(:name).nil? ? " " : community.try(:collection).try(:name), 
+          community_url: community.try(:image).present? ? community.image.url : all_community_hash[:image_url] ,
+          community_header_url: community.try(:header).present? ? community.try(:header).try(:url) : all_community_hash[:collection_detail_image_url],
+          community_slug: community.slug,
+          is_joined: user_communities_ids.include?(community.id),
+          is_admin: is_community_admin,
+      }
+
     end
 
   end

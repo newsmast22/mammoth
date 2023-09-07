@@ -1,7 +1,7 @@
 module Mammoth::Api::V1
 	class CommunityStatusesController < Api::BaseController
-		before_action -> { authorize_if_got_token! :read, :'read:statuses' }
-		before_action -> { doorkeeper_authorize! :write, :'write:statuses' }
+		before_action -> { authorize_if_got_token! :read, :'read:statuses' }, except: [:create, :update, :destroy]
+  	before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only:   [:create, :update, :destroy]
 		before_action :require_user!, except: [:show, :context, :link_preview]
     before_action :set_status, only: [:show, :context]
 		before_action :set_thread, only: [:create]
@@ -61,22 +61,12 @@ module Mammoth::Api::V1
 
 		def create
 
-			#begin::check is_community_admin or not
-			user = User.find(current_user.id)
-			role_name = ""
-			community_slug = ""
-			if user.role_id == -99 || user.role_id.nil?
-				role_name = "end-user"
-			else
-				role_name = UserRole.find(user.role_id).name
-			end
-			#end::check is_community_admin or not
+			role_name = current_user_role
 
 			selected_communities = []
 			if community_status_params[:community_ids].present?
 				if community_status_params[:community_ids].any?
 					selected_communities = Mammoth::Community.where(slug: community_status_params[:community_ids]).pluck(:id)
-					puts selected_communities
 				end
 			end
 
@@ -90,46 +80,14 @@ module Mammoth::Api::V1
 		end
 
 		def get_community_details_profile
-			 #begin::check is_community_admin or not
-			 user = User.find(current_user.id)
-			 role_name = ""
-			 community_slug = ""
-			 if user.role_id == -99 || user.role_id.nil?
-				 role_name = "end-user"
-			 else
-				 role_name = UserRole.find(user.role_id).name
-			 end
-			 #end::check is_community_admin or not
-
-			@user = Mammoth::User.find(current_user.id)
-			community = Mammoth::Community.find_by(slug: params[:id])
-			#begin::check is community-admin
-			is_community_admin = false
-			user_community_admin= Mammoth::CommunityAdmin.where(user_id: @user.id, community_id: community.id).last
-			if user_community_admin.present?
-				is_community_admin = true
-			end
-			#end::check is community-admin
-			@user_communities = @user.user_communities
-			user_communities_ids  = @user_communities.pluck(:community_id).map(&:to_i)
-
-			account_followed_ids = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
-
-			community_statuses = Mammoth::CommunityStatus.where(community_id: community.id)
-			community_followed_user_counts = Mammoth::UserCommunity.where(community_id: community.id).size
-				render json: {
-				data: { 
-					community_followed_user_counts: community_followed_user_counts,
-					community_name: role_name == "rss-account" ? current_user.account.display_name : community.name,
-					community_description: community.description,
-					collection_name: community.collection.name,
-					community_url: community.image.url,
-					community_header_url: community.header.url,
-					community_slug: community.slug,
-					is_joined: user_communities_ids.include?(community.id),
-					is_admin: is_community_admin,
-				}
-			}
+			if params[:id] == 'newsmast.social'
+				@result = Mammoth::UserCommunitiesService.virtual_user_community_details
+			else 
+				@result = Mammoth::Community.get_community_info_details(current_user_role,current_user, params[:id])
+			end 
+		render json: {
+			data: @result
+		} 
 		end
 
 		def get_community_detail_statues
@@ -144,9 +102,14 @@ module Mammoth::Api::V1
 
 			@user = Mammoth::User.find(current_user.id)
 			community = Mammoth::Community.find_by(slug: params[:id])
+
+			# Fetch community admin by selected community to exlude muted/blocked
+			# A community can have admin (zero or more)
+			community_admins = User.joins("LEFT JOIN mammoth_communities_admins ON mammoth_communities_admins.user_id = users.id AND users.is_active = TRUE ").where("mammoth_communities_admins.community_id = #{community.id} OR users.id = #{current_user.id}")
+
 			#begin::check is community-admin
 			is_community_admin = false
-			user_community_admin= Mammoth::CommunityAdmin.where(user_id: @user.id, community_id: community.id).last
+			user_community_admin = Mammoth::CommunityAdmin.where(user_id: @user.id, community_id: community.id).last
 			if user_community_admin.present?
 				is_community_admin = true
 			end
@@ -167,7 +130,7 @@ module Mammoth::Api::V1
 								community_statues_ids: community_statues_ids, reply: false,max_id: params[:max_id] )
 
 				#@statuses = @statuses.filter_is_only_for_followers(account_followed_ids)
-
+        		#@statuses = @statuses.filter_banned_statuses
 				#begin::check is primary community country filter on/off
 				unless is_community_admin
 					primary_user_community = Mammoth::UserCommunity.where(user_id: current_user.id,is_primary: true).last
@@ -182,12 +145,12 @@ module Mammoth::Api::V1
 				#end::check is primary community country filter on/off
 	
 				#begin::muted account post
-				muted_accounts = Mute.where(account_id: current_account.id)
+				muted_accounts = Mute.where(account_id: community_admins.pluck(:account_id))
 				@statuses = @statuses.filter_mute_accounts(muted_accounts.pluck(:target_account_id).map(&:to_i)) unless muted_accounts.blank?
 				#end::muted account post
 
 				#begin::blocked account post
-				blocked_accounts = Block.where(account_id: current_account.id).or(Block.where(target_account_id: current_account.id))
+				blocked_accounts = Block.where(account_id: community_admins.pluck(:account_id)).or(Block.where(target_account_id: current_account.id))
 				unless blocked_accounts.blank?
 	
 					combined_block_account_ids = blocked_accounts.pluck(:account_id,:target_account_id).flatten
@@ -215,6 +178,7 @@ module Mammoth::Api::V1
 				@user_community_setting = Mammoth::UserCommunitySetting.find_by(user_id: current_user.id)
       
 				if @user_community_setting.nil? || @user_community_setting.selected_filters["is_filter_turn_on"] == false 
+					@statuses = @statuses.filter_banned_statuses
 					before_limit_statuses = @statuses
 					@statuses = @statuses.limit(5)
 					return render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, current_user: current_user, adapter: :json, 
@@ -305,7 +269,7 @@ module Mammoth::Api::V1
 			@user = Mammoth::User.find(current_user.id)
 			community = Mammoth::Community.find_by(slug: params[:id])
 
-			community_admins = User.joins("INNER JOIN mammoth_communities_admins ON mammoth_communities_admins.user_id = users.id AND users.is_active = TRUE ").where("mammoth_communities_admins.community_id = #{community.id}")
+			community_admins = Mammoth::User.joins("INNER JOIN mammoth_communities_admins ON mammoth_communities_admins.user_id = users.id AND users.is_active = TRUE ").where("mammoth_communities_admins.community_id = #{community.id}")
 
 			unless community_admins.blank?
 
@@ -313,6 +277,7 @@ module Mammoth::Api::V1
 
 				@user = Mammoth::User.find(current_user.id)
 				community = Mammoth::Community.find_by(slug: params[:id])
+
 				#begin::check is community-admin
 				is_community_admin = false
 				user_community_admin= Mammoth::CommunityAdmin.where(user_id: @user.id, community_id: community.id).last
@@ -320,12 +285,14 @@ module Mammoth::Api::V1
 					is_community_admin = true
 				end
 				#end::check is community-admin
+
 				@user_communities = @user.user_communities
 				user_communities_ids  = @user_communities.pluck(:community_id).map(&:to_i)
 	
 				account_followed_ids = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
 	
 				community_statuses = Mammoth::CommunityStatus.where(community_id: community.id)
+
 				unless community_statuses.empty? || !community_admin_followed_account_ids.any?
 					account_followed_ids.push(current_account.id)
 					community_statues_ids= community_statuses.pluck(:status_id).map(&:to_i)
@@ -337,7 +304,7 @@ module Mammoth::Api::V1
 								account_ids: community_admin_followed_account_ids, reply: false,max_id: params[:max_id] )
 
 					@statuses = @statuses.filter_with_community_status_ids(community_statues_ids)
-	
+          @statuses = @statuses.filter_banned_statuses
 					#begin::check is primary community country filter on/off [only for end-user]
 					unless is_community_admin
 						primary_user_community = Mammoth::UserCommunity.find_by(user_id: current_user.id,is_primary: true)
@@ -352,12 +319,17 @@ module Mammoth::Api::V1
 					#end::check is primary community country filter on/off
 		
 					#begin::muted account post
-					muted_accounts = Mute.where(account_id: current_account.id)
+
+					#Combine current user and community admin
+
+					community_admins = community_admins + [@user]
+
+					muted_accounts = Mute.where(account_id: community_admins.pluck(:account_id))
 					@statuses = @statuses.filter_mute_accounts(muted_accounts.pluck(:target_account_id).map(&:to_i)) unless muted_accounts.blank?
 					#end::muted account post
 
 					#begin::blocked account post
-					blocked_accounts = Block.where(account_id: current_account.id).or(Block.where(target_account_id: current_account.id))
+					blocked_accounts = Block.where(account_id: community_admins.pluck(:account_id)).or(Block.where(target_account_id: current_account.id))
 					unless blocked_accounts.blank?
 		
 						combined_block_account_ids = blocked_accounts.pluck(:account_id,:target_account_id).flatten
@@ -385,9 +357,9 @@ module Mammoth::Api::V1
 					@user_community_setting = Mammoth::UserCommunitySetting.find_by(user_id: current_user.id)
       
 					if @user_community_setting.nil? || @user_community_setting.selected_filters["is_filter_turn_on"] == false 
+						@statuses = @statuses.filter_banned_statuses
 						before_limit_statuses = @statuses
 						@statuses = @statuses.limit(5)
-
 					#@statuses = @statuses.page(params[:page]).per(5)
 						return render json: @statuses,root: 'data', each_serializer: Mammoth::StatusSerializer, current_user: current_user, adapter: :json, 
 						meta: {
@@ -482,11 +454,11 @@ module Mammoth::Api::V1
 		def get_community_statues
 			
 			#Begin::Create UserCommunitySetting
-      userCommunitySetting = Mammoth::UserCommunitySetting.where(user_id: current_user.id).last
-      unless userCommunitySetting.present?
-        create_userCommunitySetting()
-      end
-      #End:Create UserCommunitySetting
+			userCommunitySetting = Mammoth::UserCommunitySetting.where(user_id: current_user.id).last
+			unless userCommunitySetting.present?
+				create_userCommunitySetting()
+			end
+			#End:Create UserCommunitySetting
 
 			@user = Mammoth::User.find(current_user.id)
 			community = Mammoth::Community.find_by(slug: params[:id])
@@ -743,75 +715,65 @@ module Mammoth::Api::V1
 		end
 
 		def save_statuses(selected_communities)
-			## loop selected_communities
-			if selected_communities.any?
-				group_id = nil
-				selected_communities.each_with_index do |community_id,index|
 
-					@status = Mammoth::PostStatusService.new.call(
-						current_user.account,
-						text: community_status_params[:status],
-						thread: @thread,
-						media_ids: community_status_params[:media_ids],
-						sensitive: community_status_params[:sensitive],
-						spoiler_text: community_status_params[:spoiler_text],
-						visibility: community_status_params[:visibility],
-						language: community_status_params[:language],
-						scheduled_at: community_status_params[:scheduled_at],
-						application: doorkeeper_token.application,
-						poll: community_status_params[:poll],
-						idempotency: request.headers['Idempotency-Key'],
-						with_rate_limit: true,
-						is_only_for_followers: community_status_params[:is_only_for_followers],
-						is_meta_preview: community_status_params[:is_meta_preview],
-						group_id: group_id
-					) 
-					if index == 0
-						group_id = @status.id
-					end
-					
-	
-					@community_status = Mammoth::CommunityStatus.new()
-					@community_status.status_id = @status.id
-					@community_status.community_id = community_id
-					@community_status.save
-					unless community_status_params[:image_data].nil?
-						image = Paperclip.io_adapters.for(community_status_params[:image_data])
-						@community_status.image = image
-						@community_status.save
-					end
-				end
-			else
-				## not selected community
-				@status = Mammoth::PostStatusService.new.call(
-					current_user.account,
-					text: community_status_params[:status],
-					thread: @thread,
-					media_ids: community_status_params[:media_ids],
-					sensitive: community_status_params[:sensitive],
-					spoiler_text: community_status_params[:spoiler_text],
-					visibility: community_status_params[:visibility],
-					language: community_status_params[:language],
-					scheduled_at: community_status_params[:scheduled_at],
-					application: doorkeeper_token.application,
-					poll: community_status_params[:poll],
-					idempotency: request.headers['Idempotency-Key'],
-					with_rate_limit: true,
-					is_only_for_followers: community_status_params[:is_only_for_followers],
-					is_meta_preview: community_status_params[:is_meta_preview]
-				)
+			image_data_array = save_media_attachments()
+			@status = Mammoth::PostStatusService.new.call(
+				current_user.account,
+				text: community_status_params[:status],
+				thread: @thread,
+				media_ids: image_data_array,
+				sensitive: community_status_params[:sensitive],
+				spoiler_text: community_status_params[:spoiler_text],
+				visibility: community_status_params[:visibility],
+				language: community_status_params[:language],
+				scheduled_at: community_status_params[:scheduled_at],
+				application: doorkeeper_token.application,
+				poll: community_status_params[:poll],
+				idempotency: request.headers['Idempotency-Key'],
+				with_rate_limit: true,
+				is_only_for_followers: community_status_params[:is_only_for_followers],
+				is_meta_preview: community_status_params[:is_meta_preview],
+				community_ids: selected_communities.any? ? selected_communities : []
+			) 
 
-				@community_status = Mammoth::CommunityStatus.new()
-				@community_status.status_id = @status.id
-				@community_status.save
-				unless community_status_params[:image_data].nil?
-					image = Paperclip.io_adapters.for(community_status_params[:image_data])
-					@community_status.image = image
-					@community_status.save
-				end
-
+			# To delete uploaded temp image files
+			if image_data_array.any?
+				File.delete("#{Time.now.utc.strftime('%m%d%Y%H%M')}.png")
 			end
-			
+
+			if @status
+				# To check text contains filtered keywords 
+				# If keywords contains, save record in community filter statuses
+				# Assume user selected mulitple community
+				create_status_json = {
+					'community_id' => selected_communities.any? ? selected_communities : nil,
+					'is_status_create' => true,
+					'status_id' => @status.id,
+					'community_filter_keyword_id' => nil,
+					'community_filter_keyword_request' => "non"
+				}
+				Mammoth::CommunityFilterStatusesCreateWorker.perform_async(create_status_json)
+			end
 		end
+
+		def save_media_attachments()
+			# Assuming `base64_data` contains the Base64-encoded file
+			image_data_array = []
+			unless community_status_params[:image_data].nil? || community_status_params[:image_data] == ""
+				data = community_status_params[:image_data]# code like this  data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABPUAAAI9CAYAAABSTE0XAAAgAElEQVR4Xuy9SXPjytKm6ZwnUbNyHs7Jc7/VV9bW1WXWi9q
+				image_data = Base64.decode64(data['data:image/png;base64,'.length .. -1])
+				new_file=File.new("#{Time.now.utc.strftime('%m%d%Y%H%M')}.png", 'wb')
+				new_file.write(image_data)
+				
+				media_attachment_params = {
+					file: new_file
+				}
+				
+				@media_attachment = current_account.media_attachments.create!(media_attachment_params)
+				image_data_array << @media_attachment.id
+			end
+			return image_data_array	
+		end
+
   end
 end

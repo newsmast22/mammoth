@@ -8,8 +8,6 @@ Mammoth::Engine.routes.draw do
       get  'get_reset_password_otp' => 'user_sessions#get_reset_password_otp', as: 'get_reset_password_otp'
       post 'verify_reset_password_otp' => 'user_sessions#verify_reset_password_otp', as: 'verify_reset_password_otp'
       put  'reset_password' => 'user_sessions#reset_password', as: 'reset_password'
-      get  'search_all_commnities' => 'search_all_commnities#index', as: 'search_all_commnities'
-      get  'search_my_communities' => 'search_my_communities#index', as: 'search_my_communities'
 
       resources :communities do 
         collection do 
@@ -66,12 +64,26 @@ Mammoth::Engine.routes.draw do
           get 'get_my_community_status_timelines' => 'search#get_my_community_status_timelines', as: 'get_my_community_status_timelines'
           post 'create_user_search_setting' => 'search#create_user_search_setting', as: 'create_user_search_setting'
           get 'get_user_search_setting' => 'search#get_user_search_setting', as: 'get_user_search_setting'
-
         end
       end
       
       resources :primany_timelines
 
+      namespace :timeline do
+        get 'all_old', to: 'timelines#all_old'
+        get 'all', to: 'timelines#all'
+        get 'newsmast', to: 'timelines#newsmast'
+        get 'federated', to: 'timelines#federated'
+        get 'my_community', to: 'timelines#my_community'
+        get 'following', to: 'timelines#following'
+      end
+
+      namespace :timeline do
+        get 'community_all', to: 'community_timelines#all'
+        get 'community_recommended', to: 'community_timelines#recommended'
+      end
+
+      
       resources :following_timelines do
         collection do
           get 'get_following_timelines' => 'following_timelines#get_following_timelines', as: 'get_following_timelines'
@@ -128,10 +140,23 @@ Mammoth::Engine.routes.draw do
       resources :user_community_settings
 
       resources :following_accounts, only: :index
+
       resources :follower_accounts, only: :index
+
+      resources :following_tags, only: :index
 
       resources :notification_tokens, only: :create
 
+      resources :app_versions,only: [] do 
+        collection do
+          post 'check_version' => 'app_versions#check_version', as: 'check_version'
+        end
+      end
+
+      namespace :community_admin do
+        resources :community_filter_keywords
+      end
+      
     end
   end
 end

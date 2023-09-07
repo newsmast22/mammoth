@@ -22,12 +22,14 @@ class Mammoth::PostStatusService < BaseService
   # @option [Boolean] :with_rate_limit
   # @option [Boolean] :is_only_for_followers
   # @option [Boolean] :is_meta_preview
+  # @option [Boolean] :community_id
   # @return [Status]
   def call(account, options = {})
     @account     = account
     @options     = options
     @text        = @options[:text] || ''
     @in_reply_to = @options[:thread]
+    @community_ids = @options[:community_ids]
 
     return idempotency_duplicate if idempotency_given? && idempotency_duplicate?
 
@@ -70,6 +72,14 @@ class Mammoth::PostStatusService < BaseService
     ApplicationRecord.transaction do
       @status = @account.statuses.create!(status_attributes)
     end
+
+    if @status && @community_ids.any?
+      # Create mulitple selected communities
+      @community_ids.each do |community_id|
+        Mammoth::CommunityStatus.find_or_create_by(status_id: @status.id, community_id: community_id)
+      end
+    end
+    
   end
 
   def schedule_status!

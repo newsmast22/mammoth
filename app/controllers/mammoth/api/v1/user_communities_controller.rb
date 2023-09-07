@@ -1,60 +1,12 @@
 module Mammoth::Api::V1
 	class UserCommunitiesController < Api::BaseController
 		before_action :require_authenticated_user!
+    before_action :prepare_service, only: [ :index ]
     before_action -> { doorkeeper_authorize! :write, :read }
 
     def index
-      @user = Mammoth::User.find(current_user.id)
-      @communities = @user&.communities || []
-      @user_communities = Mammoth::UserCommunity.find_by(user_id: current_user.id,is_primary: true)
-      
-      unless @communities.empty?
-        data = []
-        @communities.each do |community|
-          data << {
-            id: community.id.to_s,
-            user_id: @user.id.to_s,
-            is_primary: community.id == (@user_communities&.community_id || 0) ? true : false,
-            name: community.name,
-            slug: community.slug,
-            image_file_name: community.image_file_name,
-            image_content_type: community.image_content_type,
-            image_file_size: community.image_file_size,
-            image_updated_at: community.image_updated_at,
-            description: community.description,
-            image_url: community.image.url,
-            collection_id: community.collection.id,
-            followers: Mammoth::UserCommunity.where(community_id: community.id).size,
-            created_at: community.created_at,
-            updated_at: community.updated_at
-          }
-        end
-        data = data.sort_by {|h| [h[:is_primary] ? 0 : 1,h[:slug]]}
-
-        if params[:community_slug].present?
-          new_community = Mammoth::Community.find_by(slug: params[:community_slug])
-          unless data.any? { |obj| obj[:slug] == params[:community_slug] }
-            data.prepend << {
-              id: new_community.id.to_s,
-              user_id: @user.id.to_s,
-              is_primary:  false,
-              name: new_community.name,
-              slug: new_community.slug,
-              image_file_name: new_community.image_file_name,
-              image_content_type: new_community.image_content_type,
-              image_file_size: new_community.image_file_size,
-              image_updated_at: new_community.image_updated_at,
-              description: new_community.description,
-              image_url: new_community.image.url,
-              collection_id: new_community.collection.id,
-              followers: Mammoth::UserCommunity.where(community_id: new_community.id).size,
-              created_at: new_community.created_at,
-              updated_at: new_community.updated_at
-            }
-            data = data.sort_by {|h| [h[:slug] == new_community.slug ? 0 : 1,h[:slug]]}
-          end
-        end
-
+      data = @service.get_user_communities
+      if data.count > 0
         render json: data
       else
         render json: { error: 'no communities found' }
@@ -202,6 +154,10 @@ module Mammoth::Api::V1
     end
 
     private
+
+    def prepare_service
+      @service = Mammoth::UserCommunitiesService.new(params, current_user)
+    end
 
     def user_community_params
 		  params.require(:user_community).permit(:primary_community, interested_communities: [])

@@ -1,7 +1,7 @@
 class Mammoth::TagSerializer < ActiveModel::Serializer
   include RoutingHelper
 
-  attributes :name, :url, :history, :post_count
+  attributes :id, :name, :url, :history, :post_count
 
   attribute :following, if: :current_user?
 

@@ -12,9 +12,11 @@ module Mammoth::Api::V1
 
     def suggestion
       #condition: Intial start with limit
+      offset = params[:offset].present? ? params[:offset] : 0
+
       @user  = Mammoth::User.find(current_user.id)
 
-      @users = Mammoth::User.joins(:user_communities).where.not(id: @user.id).where(user_communities: {community_id: @user.communities.ids}).distinct.order(created_at: :desc)
+      @users = Mammoth::User.joins(:user_communities).where.not(id: @user.id).where(user_communities: {community_id: @user.communities.ids}).distinct.order('users.account_id desc').limit(params[:limit].to_i + 10).offset(offset)
 
       #begin::blocked account post
       blocked_accounts = Block.where(account_id: current_account.id).or(Block.where(target_account_id: current_account.id))
@@ -37,80 +39,41 @@ module Mammoth::Api::V1
       left_seggession_count = 0
       if params[:limit].present?
         left_seggession_count = @users.size - params[:limit].to_i <= 0 ? 0 : @users.size - params[:limit].to_i
-        @users = @users.limit(params[:limit])
+        @users = @users.limit(params[:limit].to_i)
       end
         
       account_followed = Follow.where(account_id: current_account).pluck(:target_account_id).map(&:to_i)
 
-      data   = []
-      @users.each do |user|
-        data << {
-          account_id: user.account_id.to_s,
-          is_followed: account_followed.include?(user.account_id), 
-          user_id: user.id.to_s,
-          username: user.account.username,
-          display_name: user.account.display_name.presence || user.account.username,
-          email: user.email,
-          image_url: user.account.avatar.url,
-          bio: user.account.note
-        }
-      end
-      render json: {
-        data: data,
-        meta: { 
-					left_suggession_count: left_seggession_count
-				}
-      }
+      accounts = Account.where(id: @users.pluck(:account_id).map(&:to_i))
+
+      render json: accounts, root: 'data', 
+                    each_serializer: Mammoth::AccountSerializer, current_user: current_user, adapter: :json, 
+                    meta: { 
+                        has_more_objects: left_seggession_count > 0 ? true : false,
+                        offset: offset.to_i
+                    }
     end
 
-    def global_suggestion
-      @user  = Mammoth::User.find(current_user.id)
-      @users = Mammoth::User.where.not(id: @user.id).where(role_id: nil).distinct
-      
-      #begin::blocked account post
-      blocked_accounts = Block.where(account_id: current_account.id).or(Block.where(target_account_id: current_account.id))
-      unless blocked_accounts.blank?
-        combined_block_account_ids = blocked_accounts.pluck(:account_id,:target_account_id).flatten
-        combined_block_account_ids.delete(current_account.id)
-        @users = @users.filter_blocked_accounts(combined_block_account_ids)
-      end
-      #end::blocked account post
+    def global_suggestion  
 
-      #begin::deactivated account post
-				deactivated_accounts = Account.joins(:user).where('users.is_active = ?', false)
-				unless deactivated_accounts.blank?
-          @users = @users.filter_blocked_accounts(deactivated_accounts.pluck(:id).map(&:to_i))
-				end
-			#end::deactivated account post
+      # Assign limit = 5 as 6 if limit is nil
+      # Limit always plus one 
+      # Addition plus one to get has_more_object
 
-      @users = @users.filter_with_words(params[:words].downcase) if params[:words].present?
+      limit = params[:limit].present? ? params[:limit].to_i + 1 : 6
+      offset = params[:offset].present? ? params[:offset] : 0
+      keywords = params[:words].present? ? params[:words] : nil
 
-      left_seggession_count = 0
-      if params[:limit].present?
-        left_seggession_count = @users.size - params[:limit].to_i <= 0 ? 0 : @users.size - params[:limit].to_i
-        @users = @users.limit(params[:limit])
-      end
+      default_limit = limit - 1
 
-      account_followed = Follow.where(account_id: current_account).pluck(:target_account_id).map(&:to_i)
-      data   = []
-      @users.each do |user|
-        data << {
-          account_id: user.account_id.to_s,
-          is_followed: account_followed.include?(user.account_id), 
-          user_id: user.id.to_s,
-          username: user.account.username,
-          display_name: user.account.display_name.presence || user.account.username,
-          email: user.email,
-          image_url: user.account.avatar.url,
-          bio: user.account.note
-        }
-      end
-      render json: {
-        data: data,
-        meta: { 
-					left_suggession_count: left_seggession_count
-				}
-      }
+      @accounts = Mammoth::User.search_global_users(limit , offset, keywords, current_account)  
+
+      render json:  @accounts.take(default_limit), root: 'data', 
+                    each_serializer: Mammoth::AccountSerializer, current_user: current_user, adapter: :json, 
+                    meta: { 
+                      has_more_objects: @accounts.size > default_limit ? true : false,
+                      offset: offset.to_i
+                    }
     end
 
     def update
@@ -340,8 +303,24 @@ module Mammoth::Api::V1
     end
 
     def get_profile_detail_statuses_by_account
-      account = Account.find(params[:id])
-      get_user_details_statuses(params[:id], account)
+      
+      if !params[:max_id].nil? || params[:max_id].present? 
+        params[:max_id] = Mammoth::Status.new.check_pinned_status(params[:max_id], current_account.id)
+      end
+
+      profile_acc = Account.find(params[:id])
+
+      statuses = Mammoth::Status.user_profile_timeline(current_account.id ,profile_acc.id, params[:max_id] , page_no = nil )
+
+      render json: statuses,root: 'statuses_data', each_serializer: Mammoth::StatusSerializer,adapter: :json,
+      meta:{
+        pagination:
+          { 
+            total_objects: nil,
+            has_more_objects: 5 <= statuses.size ? true : false
+          } 
+      }
+  
     end
 
     def show
@@ -380,7 +359,11 @@ module Mammoth::Api::V1
       end
       #end::check community admin & communnity_slug
 
-      render json: @account,root: 'data', serializer: Mammoth::CredentialAccountSerializer,adapter: :json,
+      data = {
+        do_not_format_note: true
+      }
+
+      render json: @account,root: 'data', serializer: Mammoth::CredentialAccountSerializer, data: data ,adapter: :json,
       meta:{
         community_images_url: community_images,
         following_images_url: following_account_images,
@@ -530,17 +513,9 @@ module Mammoth::Api::V1
       )
     end
 
-    def get_user_details_info(account_id, account_info)
-      #begin::check is_community_admin or not
-      user = User.find(current_user.id)
-      role_name = ""
-      community_slug = ""
-      if user.role_id == -99 || user.role_id.nil?
-        role_name = "end-user"
-      else
-        role_name = UserRole.find(user.role_id).name
-      end
-      #end::check is_community_admin or not
+    def get_user_details_info(target_account_id, account_info)
+      
+      role_name = current_user_role
 
       community_images = []
       following_account_images = []
@@ -578,10 +553,19 @@ module Mammoth::Api::V1
       end
       #end::check community admin & communnity_slug
 
+      #begin::check account requested or not
+      follow_request = Account.requested_map(target_account_id, current_account.id)
+
+      following = Account.following_map(target_account_id, current_account.id)
+
+      is_requested = follow_request.present? ? true : false
+      is_following = following.present? ? true : false
+      #end::check account requested or not
+
       account_data = single_serialize(account_info, Mammoth::CredentialAccountSerializer)
       render json: {
         data:{
-          account_data: account_data.merge(:is_my_account => is_my_account, :is_followed => account_followed_ids.include?(account_id.to_i)),
+          account_data: account_data.merge(:is_requested => is_requested,:is_my_account => is_my_account, :is_followed => is_following),
           community_images_url: community_images,
           following_images_url: following_account_images,
           is_admin: is_admin,
@@ -598,6 +582,8 @@ module Mammoth::Api::V1
                 statuses.reply = :reply AND statuses.account_id = :account_id #{query_string}",
                 reply: false, account_id: account_id, max_id: params[:max_id]
                 )      
+
+            
           
       #begin::muted account post
       muted_accounts = Mute.where(account_id: current_account.id)
@@ -719,6 +705,20 @@ module Mammoth::Api::V1
       else
         return obj_list.pluck(:id).map(&:to_i)
       end
+    end
+
+    def perform_accounts_search!
+      AccountSearchService.new.call(
+        params[:words],
+        current_account,
+        limit: params[:limit].present? ? params[:limit] : 5 ,
+        resolve: true,
+        offset: params[:offset].present? ? params[:offset] : 0
+      )
+    end
+
+    def account_searchable?
+      !params[:type].present? && !(params[:words].start_with?('#') || (params[:words].include?('@') && params[:words].include?(' ')))
     end
 
   end

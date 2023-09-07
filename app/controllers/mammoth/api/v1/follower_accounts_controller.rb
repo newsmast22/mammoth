@@ -5,10 +5,25 @@ module Mammoth::Api::V1
     before_action -> { authorize_if_got_token! :read, :'read:accounts' }
     before_action :set_account
     after_action :insert_pagination_headers
+    before_action :require_user!
 
     def index
-      @accounts = load_accounts
-      render json: @accounts, current_user: current_user, each_serializer: Mammoth::AccountSerializer
+
+      offset = params[:offset].present? ? params[:offset] : 0
+      limit = params[:limit].present? ? params[:limit].to_i + 1 : 6
+      default_limit = limit - 1
+
+      accounts = Mammoth::Account.follower_accouts(params[:account_id],current_account.id, offset, limit)
+
+      render json: accounts.limit(params[:limit]),root: 'data', each_serializer: Mammoth::AccountSerializer, current_user: current_user, adapter: :json, 
+					meta: {
+						pagination:
+						{ 
+							total_objects: nil,
+							has_more_objects: accounts.size > default_limit ? true : false,
+              offset: offset.to_i
+						} 
+					}
     end
 
     private

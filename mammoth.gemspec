@@ -39,4 +39,6 @@ Gem::Specification.new do |spec|
   spec.add_dependency "feedjira"
   spec.add_dependency 'httparty'
   spec.add_dependency 'link_thumbnailer'
+  #spec.add_dependency 'aws-sdk-translate', '~> 1.57'
+  #spec.add_dependency 'aws-sdk-comprehend', '~> 1.73'
 end
