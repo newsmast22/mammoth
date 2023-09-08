@@ -42,7 +42,7 @@ class Mammoth::UserCommunitiesService < BaseService
 
       @data = @data.sort_by {|h| [h[:is_primary] ? 0 : 1,h[:slug]]}
 
-      if @params[:community_slug].present? && !(@params[:community_slug] == "all" || @params[:community_slug] == "newsmast.social")
+      if @params[:community_slug].present? && !(@params[:community_slug] == ENV['ALL_COLLECTION'] || @params[:community_slug] == ENV['NEWSMAST_COLLECTION'])
         new_community = Mammoth::Community.find_by(slug: @params[:community_slug])
         unless @data.any? { |obj| obj[:slug] == @params[:community_slug] }
           @data.prepend << {
@@ -74,12 +74,12 @@ class Mammoth::UserCommunitiesService < BaseService
   def self.virtual_user_community_details
     { 
       community_followed_user_counts: nil,
-      community_name: 'Newsmast.social',
+      community_name: ENV['NEWSMAST_COLLECTION'].capitalize,
       community_description:  "All posts from the communities of Newsmast.",
-      collection_name: 'Newsmast.social',
+      collection_name: ENV['NEWSMAST_COLLECTION'].capitalize,
       community_url: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/my_server_newsmast_cover_photos/newsmast_community_profile_photo.png",
       community_header_url: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/my_server_newsmast_cover_photos/newsmast_community_cover_photo.png",
-      community_slug: "newsmast.social",
+      community_slug: ENV['NEWSMAST_COLLECTION'],
       is_joined: nil,
       is_admin: nil,
       is_virtual: true
@@ -93,9 +93,9 @@ class Mammoth::UserCommunitiesService < BaseService
         user_id: @user.id.to_s,
         is_primary: false,
         is_virtual: true,
-        name: 'Newsmast.social',
-        slug: 'newsmast.social',
-        image_file_name: 'newsmast.social',
+        name: ENV['NEWSMAST_COLLECTION'].capitalize,
+        slug: ENV['NEWSMAST_COLLECTION'],
+        image_file_name: ENV['NEWSMAST_COLLECTION'],
         image_content_type: nil,
         image_file_size: nil,
         image_updated_at: Time.now,
