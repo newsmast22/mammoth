@@ -103,16 +103,16 @@ module Mammoth
 			all_community_hash = Mammoth::CollectionService.all_collection
 
 			community = Mammoth::Community.new(
-				name: "All",
+				name: ENV['ALL_COLLECTION'].capitalize,
 				description: all_community_hash[:description],
 				collection_id: nil,
 				image: nil,
 				header: nil,
-				slug: "all",
+				slug: ENV['ALL_COLLECTION'],
 				id: all_community_hash[:id]
 			)
 
-			community = Mammoth::Community.find_by(slug: community_slug) unless community_slug == "all"
+			community = Mammoth::Community.find_by(slug: community_slug) unless community_slug == ENV['ALL_COLLECTION']
 
 			#begin::check is community-admin
 			is_community_admin = false

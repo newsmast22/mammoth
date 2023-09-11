@@ -42,8 +42,8 @@ class Mammoth::CollectionService < BaseService
 		data = {
 		  id: Mammoth::Collection.count + 1,
 		  position: nil,
-      name: 'All',
-      slug: 'all',
+      name: ENV['ALL_COLLECTION'].capitalize,
+      slug: ENV['ALL_COLLECTION'],
       is_virtual: true,
 		  image_file_name: nil,
 		  image_content_type: nil,
