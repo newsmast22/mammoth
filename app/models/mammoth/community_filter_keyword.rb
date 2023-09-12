@@ -4,7 +4,7 @@ module Mammoth
     belongs_to :account, class_name: "Account"
     has_many :community_filter_statuses , class_name: "Mammoth::CommunityFilterStatus", dependent: :destroy
 
-    validates :keyword, uniqueness: { :if => :community_id?, :scope => :community_id}
+    validates :keyword, uniqueness: { :if => :community_id?, :scope => [:community_id, :is_filter_hashtag] }
 
     def self.get_all_community_filter_keywords(account_id:, community_id:, offset:, limit:)
 
@@ -24,7 +24,7 @@ module Mammoth
 
       json = {
         'community_id' => self.community_id,
-        'is_status_create' => false,
+        'is_status_create' => "non",
         'status_id' => nil,
         'community_filter_keyword_id' => self.id,
         'community_filter_keyword_request' => "create"
@@ -36,7 +36,7 @@ module Mammoth
 
       json = {
         'community_id' => self.community_id,
-        'is_status_create' => false,
+        'is_status_create' => "non",
         'status_id' => nil,
         'community_filter_keyword_id' => self.id,
         'community_filter_keyword_request' => "update"

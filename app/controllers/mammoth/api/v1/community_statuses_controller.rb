@@ -747,7 +747,7 @@ module Mammoth::Api::V1
 				# Assume user selected mulitple community
 				create_status_json = {
 					'community_id' => selected_communities.any? ? selected_communities : nil,
-					'is_status_create' => true,
+					'is_status_create' => "create",
 					'status_id' => @status.id,
 					'community_filter_keyword_id' => nil,
 					'community_filter_keyword_request' => "non"
