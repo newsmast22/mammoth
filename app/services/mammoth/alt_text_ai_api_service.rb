@@ -5,9 +5,10 @@ module Mammoth
   
       def initialize(options = {})
         @options = options
-        @base_url = Rails.application.config.api_alttext_base_url
-        @api_key = Rails.application.config.alttext_api_key
+        @base_url = ENV['ALTTEXT_URL']
+        @api_key =  ENV['ALTTEXT_SECRET']
         @payload = @options[:payload] if @options.key?(:payload)
+        puts "base url : #{@base_url}, api_key : #{@api_key}, payload : #{@options}"
       end
   
       def get_account

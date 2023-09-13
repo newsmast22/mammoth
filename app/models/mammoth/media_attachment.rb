@@ -7,7 +7,9 @@ module Mammoth
         end
         
         def check_user_desc?
-            !self.description.present? && !self.auto_generated_description.present?
+            flag = !self.description.present? && !self.auto_generated_description.present?
+            puts "description is already exists" if !flag
+            return flag
         end
 
         def generate_alt_text?
@@ -15,7 +17,9 @@ module Mammoth
         end
 
         def is_valid_content_type?
-            IMAGE_ALLOW_TYPES.include?(self.file_content_type)
+            flag = IMAGE_ALLOW_TYPES.include?(self.file_content_type)
+            puts "invalid content_type is : #{self.file_content_type}" if !flag
+            return flag
         end
 
         def check_file_size?
