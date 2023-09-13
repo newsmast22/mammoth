@@ -159,8 +159,13 @@ class Mammoth::StatusSerializer < ActiveModel::Serializer
     status_content_format(object)
   end
 
+  def language
+    'de'
+  end
+
   def translated_text
-    status_translated_text_format(object)
+    "<p>@firefish .lgbt is history.</p> <p>Unfortunately, the firefish.lgbt server is down and will remain so. The administration has decided not to rebuild the server. <br />My second account was on this server, now all data is irretrievably gone. I'm not angry though, as accidents like this can happen. <br />So I'm now looking for a new Firefish <a href=\"https://lsbt.me/tags/Server\" class=\"mention hashtag\" rel=\"tag\"># <span>server</span></a> for a second account and building it up again.</p> <p>If you haven't tested <a href=\"https://lsbt.me/tags/Firefish\" class=\"mention hashtag\" rel=\"tag\"><span>#Firefish</span></a> yet, I can only recommend it to you. <br />Firefish has some features that are simply missing in Mastodon</p>. <p><a href=\"https://lsbt.me/tags/fedi\" class=\"mention hashtag\" rel=\"tag\"># <span>fedi</span></a> <span><a href=\"https://lsbt.me/tags/lgbt\" class=\"mention hashtag\" rel=\"tag\"><span><a href=\"https://lsbt.me/tags/fediverse\" class=\"mention hashtag\" rel=\"tag\"># <span>fediverse</span> #</a> <a href=\"https://lsbt.me/tags/mastodon\" class=\"mention hashtag\" rel=\"tag\"><span>mastodon # misskey # lgbt</span></a> <a href=\"https://lsbt.me/tags/misskey\" class=\"mention hashtag\" rel=\"tag\">#</a></span></a></span> <a href=\"https://lsbt.me/tags/lgbtq\" class=\"mention hashtag\" rel=\"tag\"><span> LGBTQ</span></a></p>"
+    #status_translated_text_format(object)
   end
 
   def url

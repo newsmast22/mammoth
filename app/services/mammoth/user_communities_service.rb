@@ -36,7 +36,8 @@ class Mammoth::UserCommunitiesService < BaseService
           collection_id: community.collection.id,
           followers: Mammoth::UserCommunity.where(community_id: community.id).size,
           created_at: community.created_at,
-          updated_at: community.updated_at
+          updated_at: community.updated_at,
+          is_default_checked: false
         }
       end
 
@@ -60,15 +61,74 @@ class Mammoth::UserCommunitiesService < BaseService
             collection_id: new_community.collection.id,
             followers: Mammoth::UserCommunity.where(community_id: new_community.id).size,
             created_at: new_community.created_at,
-            updated_at: new_community.updated_at
+            updated_at: new_community.updated_at,
+            is_default_checked: false
           }
           @data = @data.sort_by {|h| [h[:slug] == new_community.slug ? 0 : 1,h[:slug]]}
         end
       end
-      #@data = @data.sort_by {|h| [h[:is_primary] ? 0 : 1,h[:slug]]}
+      
       virtual_community
+
+      if @params.include?(:status_id)
+        fetch_status_communities(@params[:status_id])
+      end
+
     end
     return @data
+  end
+
+  def fetch_status_communities(status_id)
+
+    status = Status.where(id: status_id).last
+    
+    if status.present?
+      status_communities = status.communities
+
+      # Loop status's communities [start]
+      status_communities.each do |status_community|
+        id_to_update = status_community.id.to_s
+
+        # Check status communities within user's communities,
+        # If found then update is_default_checked to true
+        # Loop user's communities [start]
+        @data.each do |item|
+          if item[:id] == id_to_update
+            item[:is_default_checked] = true
+            break  # Exit the loop once the update is done
+          end
+        end
+        # Loop user's communities [end]
+
+        # Check status communities exist in user's communities,
+        # If not include then append to exciting array and is_default_checked to true
+        unless @data.any? { |obj| obj[:slug] == status_community.slug }
+          @data.append << {
+            id: status_community.id.to_s,
+            user_id: @user.id.to_s,
+            is_primary:  false,
+            name: status_community.name,
+            slug: status_community.slug,
+            image_file_name: status_community.image_file_name,
+            image_content_type: status_community.image_content_type,
+            image_file_size: status_community.image_file_size,
+            image_updated_at: status_community.image_updated_at,
+            description: status_community.description,
+            image_url: status_community.image.url,
+            collection_id: status_community.collection.id,
+            followers: Mammoth::UserCommunity.where(community_id: status_community.id).size,
+            created_at: status_community.created_at,
+            updated_at: status_community.updated_at,
+            is_default_checked: true
+          }
+        end
+
+      end
+      # Loop status's communities [end]
+
+      @data = @data.sort_by {|h| [h[:is_primary] ? 0 : 1,h[:slug]]}
+      
+    end
   end
 
   def self.virtual_user_community_details
@@ -105,6 +165,7 @@ class Mammoth::UserCommunitiesService < BaseService
         followers: nil,
         created_at: Time.now,
         updated_at: Time.now,
+        is_default_checked: false
       } )
     end
   end
