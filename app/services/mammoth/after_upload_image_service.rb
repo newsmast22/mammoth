@@ -30,6 +30,7 @@ module Mammoth
     end
 
     def update_image_alt!
+      @media_attachment = MediaAttachment.find(@media_attachment.id)
       @media_attachment.update(auto_generated_description: @alttext_return.alt_text)
     end
 
