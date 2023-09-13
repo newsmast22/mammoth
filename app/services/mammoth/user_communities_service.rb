@@ -93,8 +93,8 @@ class Mammoth::UserCommunitiesService < BaseService
         # If found then update is_default_checked to true
         # Loop user's communities [start]
         @data.each do |item|
-          if item["id"] == id_to_update
-            item["is_default_checked"] = true
+          if item[:id] == id_to_update
+            item[:is_default_checked] = true
             break  # Exit the loop once the update is done
           end
         end
