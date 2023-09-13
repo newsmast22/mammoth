@@ -7,7 +7,9 @@ module Mammoth
     def perform(params = {})
 
       # This condition only work on create / update status manually
-      if params['is_status_create'] == true
+      unless params['is_status_create'] === "non"
+
+        update_status_manually_by_user(params['status_id']) if params['is_status_create'] === "update"
 
         unless params['community_id'].nil?
           params['community_id'].each do |community_id| 
@@ -16,7 +18,7 @@ module Mammoth
         else
           filter_statuses_by_keywords(nil, params['status_id'])
         end
-        
+
       else
         # This condition work on create / update community filter keyword
         if params['community_filter_keyword_id'].present?
@@ -91,6 +93,10 @@ module Mammoth
         community_filter_keyword_id: community_filter_Keyword.id
       ).first_or_create
 
+    end
+
+    def update_status_manually_by_user(status_id)
+      Mammoth::CommunityFilterStatus.where(status_id: status_id)&.destroy_all
     end
 
   end
