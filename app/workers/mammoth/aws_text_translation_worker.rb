@@ -5,7 +5,7 @@ module Mammoth
 
     def perform(status_id)
       # Fetch status_details by status_id
-      status = Mammoth::Status.where(id: status_id).last
+      status = Status.where(id: status_id).last
       puts "====================== AwsTextTranslationWorker status_id: #{status_id} ========================"
       unless status.nil? || status.try(:text).nil? || status.try(:text).blank?
         puts "====================== (before tranlate) status_id: #{ status.id }  |  Text: #{ status.try(:text) }========================"
