@@ -32,7 +32,7 @@ module Mammoth
     def update_image_alt!
       @media_attachment = MediaAttachment.find(@media_attachment.id)
       if @alttext_return.present? && @alttext_return.alt_text.present?
-        @media_attachment.update(auto_generated_description: @alttext_return.alt_text)
+        @media_attachment.update_column(:auto_generated_description, @alttext_return.alt_text)
         puts "successfully update alt text with #{@alttext_return.json}"
       else 
         puts "can't not generate form api #{@alttext_return.json}"
@@ -41,7 +41,9 @@ module Mammoth
 
     def validate_image_url!
       return nil if @media_attachment.nil?
-      { image: { url: full_asset_url(@media_attachment.file.url(:small)) } }
+      image_url = full_asset_url(@media_attachment.file.url(:small))&.remove('mammoth/')
+      puts "upload image url is : #{image_url}"
+      return { image: { url: image_url } }
     end
   end
 end
