@@ -7,7 +7,7 @@ module Mammoth
       # Fetch status_details by status_id
       status = Mammoth::Status.where(id: status_id).last
       puts "====================== AwsTextTranslationWorker ========================"
-      puts "====================== status: #{ status.inspect } ========================"
+      puts "====================== (before tranlate) status_id: #{ status.id }  |  Text: #{ status.try(:text) }========================"
       unless status.nil? || status.try(:text).nil? || status.try(:text).blank?
         aws_lamda_service = Mammoth::AwsLamdaTranslateService.new
         translated_text = aws_lamda_service.translate_text(status.text)
@@ -15,6 +15,7 @@ module Mammoth
           puts "====================== translated_text: #{ translated_text.inspect } ========================"
           unless translated_text["body"]["original_language"].nil? || translated_text["body"]["original_language"] == "en"
             status.update_columns(language: translated_text["body"]["original_language"], translated_text: translated_text["body"]["translated_text"])
+            puts "====================== (after tranlate) status_id: #{ status.id }  |  Text: #{ status.try(:text) }========================"
           end
         end
       end
