@@ -1,7 +1,7 @@
 module Mammoth
   class AwsTextTranslationWorker
     include Sidekiq::Worker
-    sidekiq_options queue: 'aws_translate__text', retry: false, dead: true
+    sidekiq_options queue: 'aws_translate_text', retry: false, dead: true
 
     def perform(status_id)
       puts "====================== AwsTextTranslationWorker status_id: #{status_id} ======================"
