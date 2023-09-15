@@ -11,10 +11,10 @@ module Mammoth
       while retries < max_retries
 
         # Fetch status_details by status_id
-        @status = Status.where(id: status_id.to_i).last
+        @status = Status.find(status_id.to_i)
 
         puts "====================== AwsTextTranslationWorker status_id: #{status_id} | max:3 | retries: #{retries} ========================"
-        unless @status.nil? || @status.try(:text).nil? || @status.try(:text).blank?
+        unless @status.present? || @status.try(:text).nil? || @status.try(:text).blank?
           puts "==============================  @status: #{@status.inspect} =============================="
           call_translate_text_service
           break
