@@ -7,7 +7,6 @@ module Mammoth
             @media_attachment = Mammoth::MediaAttachment.find(media_attachment_id)
             if @media_attachment.present?
                 if @media_attachment.can_generate_alt? 
-                    puts "start calling AfterUploadImageService #{@media_attachment.to_json}"
                     Mammoth::AfterUploadImageService.new(media_attachment_id).call
                 else
                     puts "can not generate it  #{@media_attachment.to_json}"
