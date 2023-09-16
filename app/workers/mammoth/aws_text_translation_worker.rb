@@ -24,9 +24,11 @@ module Mammoth
         puts "====================== translated_text: #{ translated_text.inspect } ========================"
         unless translated_text["body"]["original_language"].nil? || translated_text["body"]["original_language"] == "en"
           @status.update_columns(language: translated_text["body"]["original_language"], translated_text: translated_text["body"]["translated_text"])
-          puts "====================== (after tranlate) status_id: #{ @status.id }  |  translated_text: #{ @status.try(:translated_text) } ========================"
-          return true if @status
+        else
+          @status.update_columns(language: @status.language, translated_text: @status.text)
         end
+        puts "====================== (after tranlate) status_id: #{ @status.id }  |  translated_text: #{ @status.try(:translated_text) } ========================"
+        return true if @status
       end
     end
       
