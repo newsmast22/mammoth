@@ -1,7 +1,7 @@
 module Mammoth::Api::V1
 	class CommunityStatusesController < Api::BaseController
 		before_action -> { authorize_if_got_token! :read, :'read:statuses' }, except: [:create, :update, :destroy]
-  	before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only:   [:create, :update, :destroy]
+  	before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only:   [:create, :update, :destroy, :translate_text]
 		before_action :require_user!, except: [:show, :context, :link_preview]
     before_action :set_status, only: [:show, :context]
 		before_action :set_thread, only: [:create]
@@ -645,6 +645,15 @@ module Mammoth::Api::V1
 			end
 		end
 
+		def translate_text 
+			params[:id].present?
+				status = Status.where(id: params[:id]).last
+				unless status.nil? || status.try(:text).nil? || status.try(:text).blank?
+					call_translate_text_service(status)
+					render json: call_translate_text_service(status), serializer: Mammoth::StatusSerializer
+				end
+		end
+
     private
 
 		def create_userCommunitySetting
@@ -774,6 +783,22 @@ module Mammoth::Api::V1
 			end
 			return image_data_array	
 		end
+
+		def call_translate_text_service(status) 
+      puts "====================== (before tranlate) status_id: #{ status.id }  |  Text: #{ status.try(:text) }========================"
+      aws_lamda_service = Mammoth::AwsLamdaTranslateService.new
+      translated_text = aws_lamda_service.translate_text(status.text)
+      if translated_text.code == 200
+        puts "====================== translated_text: #{ translated_text.inspect } ========================"
+        unless translated_text["body"]["original_language"].nil? || translated_text["body"]["original_language"] == "en"
+          status.update_columns(language: translated_text["body"]["original_language"], translated_text: translated_text["body"]["translated_text"])
+          puts "====================== (after tranlate) status_id: #{ status.id }  |  translated_text: #{ status.try(:translated_text) } ========================"
+          return status.reload if status
+        end
+			else
+				return status
+      end
+    end
 
   end
 end
