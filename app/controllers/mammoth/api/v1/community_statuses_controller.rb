@@ -793,10 +793,8 @@ module Mammoth::Api::V1
       if translated_text.code == 200
         unless translated_text["body"]["original_language"].nil? || translated_text["body"]["original_language"] == "en"
           status.update_columns(language: translated_text["body"]["original_language"], translated_text: translated_text["body"]["translated_text"])
-				else
-          status.update_columns(language: status.language, translated_text: status.text)
+					return status.reload if status
         end
-				return status.reload if status
 			else
 				return status
       end
