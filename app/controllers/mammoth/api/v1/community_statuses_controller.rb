@@ -654,7 +654,7 @@ module Mammoth::Api::V1
 				unless status.nil? || status.try(:text).nil? || status.try(:text).blank? || !status.try(:translated_text).nil? || !status.try(:translated_text).blank? 
 					status = call_translate_text_service(status)
 				end
-				render json: status, serializer: Mammoth::StatusSerializer
+				render json: status#, serializer: Mammoth::StatusSerializer
 		end
 
     private
@@ -790,14 +790,13 @@ module Mammoth::Api::V1
 		def call_translate_text_service(status) 
       aws_lamda_service = Mammoth::AwsLamdaTranslateService.new
       translated_text = aws_lamda_service.translate_text(status.text)
-      if translated_text.code == 200
+      if translated_text.code == 200 && !translated_text["body"].nil?
         unless translated_text["body"]["original_language"].nil? || translated_text["body"]["original_language"] == "en"
           status.update_columns(language: translated_text["body"]["original_language"], translated_text: translated_text["body"]["translated_text"])
 					return status.reload if status
         end
-			else
-				return status
       end
+			return status
     end
 
   end
