@@ -188,6 +188,7 @@ module Mammoth
       .filter_with_primary_timeline_logic(param.account, param.user, param.community)
       .where(deleted_at: nil)
       .where(reply: false)
+      .where(created_at: 1.week.ago..)
       .where.not(account_id: param.account.id)
       .filter_banned_statuses
       .filter_block_mute_inactive_statuses_by_acc_ids(acc_ids)
@@ -208,6 +209,7 @@ module Mammoth
       .filter_with_primary_timeline_logic(param.account, param.user, param.community)
       .where(deleted_at: nil)
       .where(reply: false)
+      .where(created_at: 1.week.ago..)
       .filter_banned_statuses
       .filter_block_mute_inactive_statuses_by_acc_ids(acc_ids)
       .pagination(param.page_no, param.max_id)
@@ -220,6 +222,7 @@ module Mammoth
       .where.not(mammoth_communities: { slug: "breaking_news" })
       .filter_statuses_without_rss
       .where(deleted_at: nil)
+      .where(created_at: 1.week.ago..)
       .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
       .pagination(param.page_no, param.max_id)
     }
@@ -231,6 +234,7 @@ module Mammoth
       .where(local: true)
       .where(deleted_at: nil)
       .where(reply: false)
+      .where(created_at: 1.week.ago..)
       .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
       .pagination(param.page_no, param.max_id)
     }
@@ -241,6 +245,7 @@ module Mammoth
       .where(local: false)
       .where(deleted_at: nil)
       .where(reply: false)
+      .where(created_at: 1.week.ago..)
       .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
       .pagination(param.page_no, param.max_id)
     }
@@ -251,6 +256,7 @@ module Mammoth
       .where(account_id: profile_id)
       .where(deleted_at: nil)
       .where(reply: false)
+      .where(created_at: 1.week.ago..)
       .filter_block_mute_inactive_statuses_by_acc_ids(account_id)
       .pin_statuses_fileter(max_id)
     }
@@ -264,6 +270,7 @@ module Mammoth
       .where(community_users: { user_id: param.user_id })
       .filter_banned_statuses
       .where(deleted_at: nil)
+      .where(created_at: 1.week.ago..)
       .filter_statuses_by_timeline_setting(param.user_id)
       .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
       .pagination(param.page_no, param.max_id)
@@ -275,6 +282,7 @@ module Mammoth
       .filter_banned_statuses
       .filter_statuses_by_timeline_setting(param.user_id)
       .where(reply: false)
+      .where(created_at: 1.week.ago..)
       .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
       .pagination(param.page_no, param.max_id)
     }
