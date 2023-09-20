@@ -654,7 +654,7 @@ module Mammoth::Api::V1
 				unless status.nil? || status.try(:text).nil? || status.try(:text).blank? || !status.try(:translated_text).nil? || !status.try(:translated_text).blank? 
 					status = call_translate_text_service(status)
 				end
-				render json: status#, serializer: Mammoth::StatusSerializer
+				render json: status, serializer: Mammoth::StatusSerializer
 		end
 
     private
