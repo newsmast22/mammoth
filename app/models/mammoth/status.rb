@@ -31,6 +31,7 @@ module Mammoth
 
     scope :blocked_account_status_ids, -> (blocked_account_ids) {where(account_id: blocked_account_ids, reply: false)}
     scope :blocked_reblog_status_ids, -> (blocked_status_ids) {where(reblog_of_id: blocked_status_ids, reply: false)}
+    scope :last_7_days, -> { where('created_at >= ?', 7.days.ago) }
 
     scope :fetch_all_blocked_status_ids, -> (blocked_status_ids) {
       where(id: blocked_status_ids).or(where(reblog_of_id:blocked_status_ids ))
@@ -191,6 +192,7 @@ module Mammoth
       .where.not(account_id: param.account.id)
       .filter_banned_statuses
       .filter_block_mute_inactive_statuses_by_acc_ids(acc_ids)
+      .last_7_days
       .pagination(param.page_no, param.max_id)
 
     }
@@ -210,6 +212,7 @@ module Mammoth
       .where(reply: false)
       .filter_banned_statuses
       .filter_block_mute_inactive_statuses_by_acc_ids(acc_ids)
+      .last_7_days
       .pagination(param.page_no, param.max_id)
     }
                        
@@ -221,6 +224,7 @@ module Mammoth
       .filter_statuses_without_rss
       .where(deleted_at: nil)
       .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
+      .last_7_days
       .pagination(param.page_no, param.max_id)
     }
   
@@ -232,6 +236,7 @@ module Mammoth
       .where(deleted_at: nil)
       .where(reply: false)
       .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
+      .last_7_days
       .pagination(param.page_no, param.max_id)
     }
 
@@ -242,6 +247,7 @@ module Mammoth
       .where(deleted_at: nil)
       .where(reply: false)
       .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
+      .last_7_days
       .pagination(param.page_no, param.max_id)
     }
 
