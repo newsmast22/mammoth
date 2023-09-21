@@ -183,7 +183,8 @@ module Mammoth
       admin_acc_ids = param.community.get_community_admins
       acc_ids = admin_acc_ids.push(param.account.id)
 
-      filter_statuses_with_community_admin_logic(param.community, param.account)
+      filter_one_week_ago_statuses
+      .filter_statuses_with_community_admin_logic(param.community, param.account)
       .or(filter_statuses_with_current_user_logic(param.account, param.community))
       .filter_statuses_by_community_timeline_setting(param.user.id)
       .filter_with_primary_timeline_logic(param.account, param.user, param.community)
@@ -192,7 +193,6 @@ module Mammoth
       .where.not(account_id: param.account.id)
       .filter_banned_statuses
       .filter_block_mute_inactive_statuses_by_acc_ids(acc_ids)
-      .filter_one_week_ago_statuses
       .pagination(param.page_no, param.max_id)
 
     }
@@ -203,50 +203,50 @@ module Mammoth
       admin_acc_ids = param.community.get_community_admins
       acc_ids = admin_acc_ids.push(param.account.id)
 
-      left_joins(:communities_statuses)
+      filter_one_week_ago_statuses
+      .left_joins(:communities_statuses)
       .where(communities_statuses: { community_id: param.community.id })
       .or(filter_statuses_with_not_belong_any_commu_admin(param.community))
       .filter_statuses_by_community_timeline_setting(param.user.id)
       .filter_with_primary_timeline_logic(param.account, param.user, param.community)
       .where(deleted_at: nil)
       .where(reply: false)
-      .filter_one_week_ago_statuses
       .filter_banned_statuses
       .filter_block_mute_inactive_statuses_by_acc_ids(acc_ids)
       .pagination(param.page_no, param.max_id)
     }
                        
     scope :all_timeline, -> (param) {
-      
-      joins(communities_statuses: :community)
+
+      filter_one_week_ago_statuses
+      .joins(communities_statuses: :community)
       .filter_banned_statuses
       .where.not(mammoth_communities: { slug: "breaking_news" })
       .filter_statuses_without_rss
       .where(deleted_at: nil)
-      .filter_one_week_ago_statuses
       .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
       .pagination(param.page_no, param.max_id)
     }
   
     scope :newsmast_timeline, -> (param) {
     
-      filter_banned_statuses
+      filter_one_week_ago_statuses
+      .filter_banned_statuses
       .where(is_rss_content: false)
       .where(local: true)
       .where(deleted_at: nil)
       .where(reply: false)
-      .filter_one_week_ago_statuses
       .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
       .pagination(param.page_no, param.max_id)
     }
 
     scope :federated_timeline, -> (param) {
      
-      filter_banned_statuses
+      filter_one_week_ago_statuses
+      .filter_banned_statuses
       .where(local: false)
       .where(deleted_at: nil)
       .where(reply: false)
-      .filter_one_week_ago_statuses
       .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
       .pagination(param.page_no, param.max_id)
     }
@@ -262,27 +262,28 @@ module Mammoth
     }
      
     scope :my_community_timeline, -> (param) {
-           
-      joins(communities_statuses: :community)
+       
+      filter_one_week_ago_statuses
+      .joins(communities_statuses: :community)
       .joins(community_users: :community)
       .filter_statuses_without_rss
       .where.not(mammoth_communities: { slug: "breaking_news" })
       .where(community_users: { user_id: param.user_id })
       .filter_banned_statuses
       .where(deleted_at: nil)
-      .filter_one_week_ago_statuses
+      
       .filter_statuses_by_timeline_setting(param.user_id)
       .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
       .pagination(param.page_no, param.max_id)
     }
         
     scope :following_timeline, -> (param) {
-      
-      filter_following_accounts(param.acc_id)
+
+      filter_one_week_ago_statuses
+      .filter_following_accounts(param.acc_id)
       .filter_banned_statuses
       .filter_statuses_by_timeline_setting(param.user_id)
       .where(reply: false)
-      .filter_one_week_ago_statuses
       .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
       .pagination(param.page_no, param.max_id)
     }
