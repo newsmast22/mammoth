@@ -31,6 +31,7 @@ Mammoth::Engine.routes.draw do
           get  'get_community_detail_statues' => 'community_statuses#get_community_detail_statues', as: 'get_community_detail_statues'
           get  'get_recommended_community_detail_statuses' => 'community_statuses#get_recommended_community_detail_statuses', as: 'get_recommended_community_detail_statuses'
           get  'link_preview'  => 'community_statuses#link_preview', as: 'link_preview'
+          post  'translate_text'  => 'community_statuses#translate_text', as: 'translate_text'
         end
         member do
           get :context
