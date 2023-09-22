@@ -271,10 +271,10 @@ module Mammoth
       .where(community_users: { user_id: param.user_id })
       .filter_banned_statuses
       .where(deleted_at: nil)
-      
       .filter_statuses_by_timeline_setting(param.user_id)
       .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
       .pagination(param.page_no, param.max_id)
+      
     }
         
     scope :following_timeline, -> (param) {
