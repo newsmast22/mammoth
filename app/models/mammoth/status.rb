@@ -31,7 +31,7 @@ module Mammoth
 
     scope :blocked_account_status_ids, -> (blocked_account_ids) {where(account_id: blocked_account_ids, reply: false)}
     scope :blocked_reblog_status_ids, -> (blocked_status_ids) {where(reblog_of_id: blocked_status_ids, reply: false)}
-    scope :filter_one_week_ago_statuses, -> { where(created_at: 1.week.ago..) }
+    scope :filter_24_hour_ago, -> { where(created_at: 24.hour.ago..) }
 
     scope :fetch_all_blocked_status_ids, -> (blocked_status_ids) {
       where(id: blocked_status_ids).or(where(reblog_of_id:blocked_status_ids ))
@@ -183,7 +183,7 @@ module Mammoth
       admin_acc_ids = param.community.get_community_admins
       acc_ids = admin_acc_ids.push(param.account.id)
 
-      filter_one_week_ago_statuses
+      filter_24_hour_ago
       .filter_statuses_with_community_admin_logic(param.community, param.account)
       .or(filter_statuses_with_current_user_logic(param.account, param.community))
       .filter_statuses_by_community_timeline_setting(param.user.id)
@@ -203,7 +203,7 @@ module Mammoth
       admin_acc_ids = param.community.get_community_admins
       acc_ids = admin_acc_ids.push(param.account.id)
 
-      filter_one_week_ago_statuses
+      filter_24_hour_ago
       .left_joins(:communities_statuses)
       .where(communities_statuses: { community_id: param.community.id })
       .or(filter_statuses_with_not_belong_any_commu_admin(param.community))
@@ -218,7 +218,7 @@ module Mammoth
                        
     scope :all_timeline, -> (param) {
 
-      filter_one_week_ago_statuses
+      filter_24_hour_ago
       .joins(communities_statuses: :community)
       .filter_banned_statuses
       .where.not(mammoth_communities: { slug: "breaking_news" })
@@ -230,7 +230,7 @@ module Mammoth
   
     scope :newsmast_timeline, -> (param) {
     
-      filter_one_week_ago_statuses
+      filter_24_hour_ago
       .filter_banned_statuses
       .where(is_rss_content: false)
       .where(local: true)
@@ -242,7 +242,7 @@ module Mammoth
 
     scope :federated_timeline, -> (param) {
      
-      filter_one_week_ago_statuses
+      filter_24_hour_ago
       .filter_banned_statuses
       .where(local: false)
       .where(deleted_at: nil)
@@ -263,7 +263,7 @@ module Mammoth
      
     scope :my_community_timeline, -> (param) {
        
-      filter_one_week_ago_statuses
+      filter_24_hour_ago
       .joins(communities_statuses: :community)
       .joins(community_users: :community)
       .filter_statuses_without_rss
@@ -279,7 +279,7 @@ module Mammoth
         
     scope :following_timeline, -> (param) {
 
-      filter_one_week_ago_statuses
+      filter_24_hour_ago
       .filter_following_accounts(param.acc_id)
       .filter_banned_statuses
       .filter_statuses_by_timeline_setting(param.user_id)
