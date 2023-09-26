@@ -61,20 +61,20 @@ module Mammoth
     scope :filter_statuses_with_community_admin_logic, ->(community, account) {
       Mammoth::Status.left_joins(:communities_statuses)
         .filter_statuses_with_followed_acc_ids(community.get_community_admins)
-        .where(communities_statuses: { community_id: [community.id, nil] })
+        .where(communities_statuses: { community_id: [community.id, nil] }).limit(400)
     }
 
     scope :filter_statuses_with_not_belong_any_commu_admin, ->(community) {
       Mammoth::Status.left_joins(:communities_statuses)
         .filter_statuses_with_followed_acc_ids(community.get_community_admins)
-        .where(communities_statuses: { community_id: nil })
+        .where(communities_statuses: { community_id: nil }).limit(400)
     }
     
 
     scope :filter_statuses_with_current_user_logic, ->(account, community) {
       Mammoth::Status.left_joins(:communities_statuses)
         .filter_statuses_with_followed_acc_ids(account.id)
-        .where(communities_statuses: { community_id: community.id })
+        .where(communities_statuses: { community_id: community.id }).limit(400)
     }
 
     scope :filter_following_accounts, -> (account_id) {
