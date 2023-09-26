@@ -18,7 +18,6 @@ module Mammoth::Api::V1
           password: user_params[:password], 
           agreement: user_params[:agreement],
           locale: user_params[:locale],
-          otp_code: @otp_code,
           password_confirmation: user_params[:password], 
           account_attributes: user_params.slice(:display_name, :username),
           invite_request_attributes: { text: user_params[:reason] },
@@ -37,7 +36,6 @@ module Mammoth::Api::V1
           password: user_params[:password], 
           agreement: user_params[:agreement],
           locale: user_params[:locale],
-          otp_code: @otp_code,
           password_confirmation: user_params[:password], 
           account_attributes: user_params.slice(:display_name, :username),
           invite_request_attributes: { text: user_params[:reason] },
@@ -150,7 +148,7 @@ module Mammoth::Api::V1
       end
 
       unless params[:user_id].present?
-      verify_otp_code_for_update()
+        verify_otp_code_for_update()
       end
     end
 
@@ -184,36 +182,33 @@ module Mammoth::Api::V1
     end
 
     def verify_otp_code_for_signup
-      @user = User.find(params[:user_id])
-      invited_code = Mammoth::WaitList.where(invitation_code: params[:invitation_code].downcase).last
-      unless invited_code.nil? || invited_code.is_invitation_code_used == true
-        if @user.otp_code == params[:confirmed_otp_code]
-          @user.confirmed_at = Time.now.utc
-          @user.otp_code = nil
-          @user.step = "dob"
-          @user.wait_list_id = invited_code.id
-          @user.save(validate: false)
+      @user = User.find(params[:user_id].to_i)
+      invitation_code = params[:invitation_code].present? ? params[:invitation_code].downcase : ""
+      invited_code = Mammoth::WaitList.where(invitation_code: invitation_code).last
+      if @user.otp_code == params[:confirmed_otp_code]
+        @user.confirmed_at = Time.now.utc
+        @user.otp_code = nil
+        @user.step = "dob"
+        @user.wait_list_id = invited_code.id unless invited_code.nil? || invited_code.is_invitation_code_used == true
+        @user.save(validate: false)
 
-          #begin::invitation code update
-          invited_code.update(is_invitation_code_used: true)
-          #end::invitation code update
+        #begin::invitation code update
+        invited_code.update(is_invitation_code_used: true) unless invited_code.nil? || invited_code.is_invitation_code_used == true
+        #end::invitation code update
 
-          @app = doorkeeper_token.application
-          @access_token = Doorkeeper::AccessToken.create!(
-            application: @app,
-            resource_owner_id: @user.id,
-            scopes: @app.scopes,
-            expires_in: Doorkeeper.configuration.access_token_expires_in,
-            use_refresh_token: Doorkeeper.configuration.refresh_token_enabled?
-          )
-          response = Doorkeeper::OAuth::TokenResponse.new(@access_token)
-          render json: {message: 'account confirmed', access_token: JSON.parse(Oj.dump(response.body["access_token"]))}
-        else
-          render json: {error: 'wrong otp'}, status: 422
-        end
+        @app = doorkeeper_token.application
+        @access_token = Doorkeeper::AccessToken.create!(
+          application: @app,
+          resource_owner_id: @user.id,
+          scopes: @app.scopes,
+          expires_in: Doorkeeper.configuration.access_token_expires_in,
+          use_refresh_token: Doorkeeper.configuration.refresh_token_enabled?
+        )
+        response = Doorkeeper::OAuth::TokenResponse.new(@access_token)
+        render json: {message: 'account confirmed', access_token: JSON.parse(Oj.dump(response.body["access_token"]))}
       else
-        render json: {error: 'wrong invitation_code'}, status: 422
-      end 
+        render json: {error: 'wrong otp'}, status: 422
+      end
     end
 
     def find_by_email_phone
