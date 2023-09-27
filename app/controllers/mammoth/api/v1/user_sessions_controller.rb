@@ -1,13 +1,15 @@
 module Mammoth::Api::V1
   class UserSessionsController < Api::BaseController
 
-    before_action -> { doorkeeper_authorize! :write, :'write:accounts' }, only: [:create]
+    before_action -> { doorkeeper_authorize! :write, :'write:accounts' }, except: [:connect_with_instance]
     before_action :check_enabled_registrations, only: [:create]
     before_action :generate_otp, except: [:verify_otp, :verify_reset_password_otp, :update_password]
     before_action :find_by_email_phone, only: [:get_reset_password_otp, :verify_reset_password_otp, :reset_password]
     skip_before_action :require_authenticated_user!
 
     require 'aws-sdk-sns'
+    require 'net/http'
+
     def register_with_email
       @user = User.find_by(email: user_params[:email])
       if @user.nil?
@@ -152,7 +154,122 @@ module Mammoth::Api::V1
       end
     end
 
+    def connect_with_instance
+      if params[:instance].present? && params[:code].present?
+        base_url = request.base_url
+        return render json: {
+          instance: params[:instance],
+          code: params[:code],
+          redirect_uri: "#{base_url}/api/v1/connect_with_instance?instance=mastodon.social",
+        }
+      end
+    end
+
+    def create_user_object 
+      if params[:instance].present?
+        base_url = request.base_url
+
+        
+        uri = URI("https://#{params[:instance]}/oauth/token")
+        http = Net::HTTP.new(uri.host, uri.port)
+        http.use_ssl = true
+
+        request = Net::HTTP::Post.new(uri.path)
+        request.set_form_data(
+          'client_id' => params[:client_id],
+          'client_secret' => params[:client_secret],
+          'code' => params[:code],
+          'grant_type' => 'authorization_code',
+          'redirect_uri' => "#{base_url}/api/v1/connect_with_instance?instance=mastodon.social"
+        )
+
+        response = http.request(request)
+        token_data = JSON.parse(response.body)
+
+        # The token_data should contain an access token that you can use to make authenticated API requests.
+        access_token = token_data['access_token']
+        #render json: access_token
+
+        #access_token = 'W_7s3_7jf_KSxQ53P_NbCP5pcNmd7PuFZNbKvI9lLLk'
+
+        puts "------------------------------------ accessTOken: #{access_token}"
+
+        # Fetch user object by access_token
+        api_uri = URI("https://#{params[:instance]}/api/v1/accounts/verify_credentials")
+        http = Net::HTTP.new(api_uri.host, api_uri.port)
+        http.use_ssl = true
+        request = Net::HTTP::Get.new(api_uri.path)
+        request['Authorization'] = "Bearer #{access_token}"
+        response = http.request(request)
+        user_data = JSON.parse(response.body)
+
+        @user = User.find_by(account_id: user_data["id"])
+
+
+        @account = Account.find_by(domain: params[:instance], username: user_data["username"])
+
+        #render json: {access_token: access_token, user_data: user_data, acc: @account}
+
+        if @user.nil?
+          @user = User.new()
+          @user.created_by_application= doorkeeper_token.application
+          @user.sign_up_ip= " "
+          @user.email= "" 
+          @user.password= nil 
+          @user.agreement= true
+          @user.locale= "en"
+          @user.password_confirmation= nil 
+          if @account.nil?
+            @user.account_attributes = {
+              display_name: user_data["display_name"],
+              username: user_data["username"],
+              domain: user_data["domain"],
+              note: user_data["note"],
+              uri: user_data["uri"],
+              url: user_data["url"],
+              fields: user_data["fields"],
+              discoverable: user_data["discoverable"],
+              hide_collections: user_data["hide_collections"],
+              avatar:  set_image(user_data["avatar"]),
+              header: set_image(user_data["header"]),
+            }
+          else 
+            @user.account_id = @account.id
+          end
+          @user.invite_request_attributes = { text:user_data["reason"] }
+          @user.wait_list_id = nil
+          @user.step = "dob"
+          @user.otp_code = nil
+          @user.confirmed_at = Time.now.utc
+          @user.save(validate: false)
+        end
+
+        @app = doorkeeper_token.application
+        token = Doorkeeper::AccessToken.new(
+          token: access_token,
+          application: @app,
+          resource_owner_id: @user.id,
+          scopes: @app.scopes,
+          expires_in: Doorkeeper.configuration.access_token_expires_in,
+          use_refresh_token: Doorkeeper.configuration.refresh_token_enabled?
+        )
+        token.save(validate: false)
+        sign_in @user
+        render json: {message: 'account confirmed', access_token: user_data}
+
+      end
+    end
+
     private
+
+    def set_image(img)
+      if img.include?("missing.png")
+        return nil
+      else
+        return URI.parse(img)
+      end
+
+    end
 
     def verify_otp_code_for_update
       @user = User.where(otp_code: params[:confirmed_otp_code]).last
