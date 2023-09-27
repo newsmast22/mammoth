@@ -8,6 +8,8 @@ Mammoth::Engine.routes.draw do
       get  'get_reset_password_otp' => 'user_sessions#get_reset_password_otp', as: 'get_reset_password_otp'
       post 'verify_reset_password_otp' => 'user_sessions#verify_reset_password_otp', as: 'verify_reset_password_otp'
       put  'reset_password' => 'user_sessions#reset_password', as: 'reset_password'
+      get 'connect_with_instance' => 'user_sessions#connect_with_instance', as: 'connect_with_instance'
+      post 'create_user_object' => 'user_sessions#create_user_object', as: 'create_user_object'
 
       resources :communities do 
         collection do 
