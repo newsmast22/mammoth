@@ -276,9 +276,9 @@ module Mammoth
     }
         
     scope :following_timeline, -> (param) {
-
-      fetching_400_statuses
-      .filter_following_accounts(param.acc_id)
+      
+      filter_following_accounts(param.acc_id)
+      .where(created_at: 1.week.ago..).limit(400)
       .filter_banned_statuses
       .filter_statuses_by_timeline_setting(param.user_id)
       .where(reply: false)
