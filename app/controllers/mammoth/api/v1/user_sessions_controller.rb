@@ -165,7 +165,7 @@ module Mammoth::Api::V1
     end
 
     def create_user_object 
-      if params[:instance].present? && params[:client_id].present? && params[:client_secret].present?
+      if params[:instance].present? && params[:client_id].present? && params[:client_secret].present? && params[:redirect_uris].present?
         base_url = request.base_url
 
         
@@ -179,7 +179,7 @@ module Mammoth::Api::V1
           'client_secret' => params[:client_secret],
           'code' => params[:code],
           'grant_type' => 'authorization_code',
-          'redirect_uri' => "#{base_url}/api/v1/connect_with_instance?instance=mastodon.social"
+          'redirect_uri' => params[:redirect_uris]
         )
 
         response = http.request(request)
