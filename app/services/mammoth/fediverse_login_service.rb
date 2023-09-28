@@ -69,12 +69,12 @@ class Mammoth::FediverseLoginService < BaseService
       @user = User.new()
       @user.created_by_application= doorkeeper_token.application
       @user.sign_up_ip= " "
-      @user.email= "" 
       @user.password= nil 
       @user.agreement= true
       @user.locale= "en"
       @user.password_confirmation= nil 
       if @account.nil?
+        @user.email= "#{user_data["username"]}.#{options[:instance]}"
         @user.account_attributes = {
           display_name: user_data["display_name"],
           username: user_data["username"],
@@ -89,6 +89,7 @@ class Mammoth::FediverseLoginService < BaseService
           #header: image_exitst(user_data["header"]) === true ? File.open(set_image(user_data["header"], user_data["id"], "header")) : nil,
         }
       else 
+        @user.email= "#{@account.username}.#{options[:instance]}"
         @user.account_id = @account.id
       end
       @user.invite_request_attributes = { text:user_data["reason"] }
