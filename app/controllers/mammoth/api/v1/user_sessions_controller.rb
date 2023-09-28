@@ -9,6 +9,7 @@ module Mammoth::Api::V1
 
     require 'aws-sdk-sns'
     require 'net/http'
+    #require 'open-uri'
 
     def register_with_email
       @user = User.find_by(email: user_params[:email])
@@ -48,8 +49,6 @@ module Mammoth::Api::V1
       end
       
       Mammoth::Mailer.with(user: @user).account_confirmation.deliver_now
-
-      #render json: {data: @user.as_json(except: [:otp_code])}
 
       render json: {data: @user}
 
@@ -166,7 +165,7 @@ module Mammoth::Api::V1
     end
 
     def create_user_object 
-      if params[:instance].present?
+      if params[:instance].present? && params[:client_id].present? && params[:client_secret].present? && params[:redirect_uris].present?
         base_url = request.base_url
 
         
@@ -180,7 +179,7 @@ module Mammoth::Api::V1
           'client_secret' => params[:client_secret],
           'code' => params[:code],
           'grant_type' => 'authorization_code',
-          'redirect_uri' => "#{base_url}/api/v1/connect_with_instance?instance=mastodon.social"
+          'redirect_uri' => params[:redirect_uris]
         )
 
         response = http.request(request)
@@ -188,9 +187,8 @@ module Mammoth::Api::V1
 
         # The token_data should contain an access token that you can use to make authenticated API requests.
         access_token = token_data['access_token']
-        #render json: access_token
 
-        #access_token = 'W_7s3_7jf_KSxQ53P_NbCP5pcNmd7PuFZNbKvI9lLLk'
+        access_token = '1MdZet9N41INxVQP26fUikz8cFrtjnpBK4RbXQ7gip8'
 
         puts "------------------------------------ accessTOken: #{access_token}"
 
@@ -203,12 +201,8 @@ module Mammoth::Api::V1
         response = http.request(request)
         user_data = JSON.parse(response.body)
 
-        @user = User.find_by(account_id: user_data["id"])
-
-
         @account = Account.find_by(domain: params[:instance], username: user_data["username"])
-
-        #render json: {access_token: access_token, user_data: user_data, acc: @account}
+        @user = User.find_by(account_id: @account.try(:id).nil? ? 0 : @account.id)
 
         if @user.nil?
           @user = User.new()
@@ -223,15 +217,15 @@ module Mammoth::Api::V1
             @user.account_attributes = {
               display_name: user_data["display_name"],
               username: user_data["username"],
-              domain: user_data["domain"],
+              domain: params[:instance],
               note: user_data["note"],
               uri: user_data["uri"],
               url: user_data["url"],
               fields: user_data["fields"],
               discoverable: user_data["discoverable"],
               hide_collections: user_data["hide_collections"],
-              avatar:  set_image(user_data["avatar"]),
-              header: set_image(user_data["header"]),
+              #avatar: image_exitst(user_data["avatar"]) === true ? File.open(set_image(user_data["avatar"], user_data["id"], "avatar")) : nil,
+              #header: image_exitst(user_data["header"]) === true ? File.open(set_image(user_data["header"], user_data["id"], "header")) : nil,
             }
           else 
             @user.account_id = @account.id
@@ -242,33 +236,58 @@ module Mammoth::Api::V1
           @user.otp_code = nil
           @user.confirmed_at = Time.now.utc
           @user.save(validate: false)
+
+          # Delete images (avatar/header) in tmp folders
+          #File.delete("#{user_data["id"]}#{user_data["avatar"]}.png") if image_exitst(user_data["avatar"]) === true
+          #File.delete("#{user_data["id"]}#{user_data["header"]}.png") if image_exitst(user_data["header"]) === true
+
         end
 
         @app = doorkeeper_token.application
-        token = Doorkeeper::AccessToken.new(
-          token: access_token,
-          application: @app,
-          resource_owner_id: @user.id,
-          scopes: @app.scopes,
-          expires_in: Doorkeeper.configuration.access_token_expires_in,
-          use_refresh_token: Doorkeeper.configuration.refresh_token_enabled?
-        )
-        token.save(validate: false)
-        sign_in @user
-        render json: {message: 'account confirmed', access_token: user_data}
+        @token = Doorkeeper::AccessToken.where(token: access_token).last
+        unless @token.present?
+          @token = Doorkeeper::AccessToken.new(
+            token: access_token,
+            application: @app,
+            resource_owner_id: @user.id,
+            scopes: @app.scopes,
+            expires_in: Doorkeeper.configuration.access_token_expires_in,
+            use_refresh_token: Doorkeeper.configuration.refresh_token_enabled?
+          )
+          @token.save(validate: false)
+        end
+        render json: {
+          access_token: access_token,
+          token_type: 'Bearer',
+          scope: @app.scopes,
+          created_at: @user.created_at,
+          role: 'end-user',
+          community_slug: "",
+          is_active: true,
+          is_account_setup_finished: @user.is_account_setup_finished,
+          step: @user.step,
+          user_id: @user.id
+        }
 
       end
     end
 
     private
 
-    def set_image(img)
-      if img.include?("missing.png")
-        return nil
-      else
-        return URI.parse(img)
+    def set_image(image_url, id, photo_type)
+      url = image_url
+      file = open(url)
+      # Save the file locally, e.g., in the /tmp directory
+      local_photo_path = Rails.root.join('tmp', "#{id}#{photo_type}.png")
+      File.open(local_photo_path, 'wb') do |f|
+        f.write(file.read)
       end
+      return local_photo_path
+    end
 
+    def image_exitst(image_url)
+      return false if image_url.include?("missing.png")
+      true
     end
 
     def verify_otp_code_for_update
