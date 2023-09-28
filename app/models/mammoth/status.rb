@@ -77,20 +77,6 @@ module Mammoth
         .where(communities_statuses: { community_id: community.id }).limit(400)
     }
 
-    scope :filter_following_accounts, -> (account_id) {
-      follow_acc_ids = joins(:follows)
-                      .where("follows.account_id = :account_id", account_id: account_id)
-                      .pluck("follows.target_account_id").uniq
-
-      tag_acc_ids = joins(:tag_followed)
-                    .where("tag_follows.account_id = :account_id", account_id: account_id)
-                    .pluck("statuses.account_id").uniq
-
-      excluded_account_ids = (follow_acc_ids + tag_acc_ids).uniq
-      excluded_account_ids.delete(account_id)
-      where(account_id: excluded_account_ids)
-    }
-
     scope :filter_statuses_without_current_user_with_acc_ids, -> (account_ids, current_acc_id) {
       followed_acc_ids = Follow.where(account_id: account_ids).pluck(:target_account_id).map(&:to_i).uniq
       followed_acc_ids.delete(current_acc_id) if followed_acc_ids
@@ -174,6 +160,27 @@ module Mammoth
         .where(follows: { account_id: account.id })
         .where(communities_statuses: { community_id: commu.id })
     }
+
+    scope :following_timeline_logic, ->(account_id) {
+      Mammoth::Status
+        .joins("LEFT JOIN follows ON statuses.account_id = follows.target_account_id")
+        .joins("LEFT JOIN statuses_tags ON statuses_tags.status_id = statuses.id")
+        .joins("LEFT JOIN tag_follows ON statuses_tags.tag_id = tag_follows.tag_id")
+        .where("follows.account_id = :account_id OR tag_follows.account_id = :account_id ",account_id: account_id)
+        .order("statuses.id DESC")
+        .limit(400)
+    }
+    
+    scope :following_timeline, ->(param) do
+      following_timeline_logic(param.acc_id)
+        .filter_banned_statuses
+        .filter_statuses_by_timeline_setting(param.user_id)
+        .where(reply: false)
+        .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
+        .pagination(param.page_no, param.max_id)
+    end
+    
+    
 
     # Combined scope for user_community_recommended_timeline
     scope :user_community_recommended_timeline, ->(param) {
@@ -275,16 +282,7 @@ module Mammoth
       
     }
         
-    scope :following_timeline, -> (param) {
-      
-      filter_following_accounts(param.acc_id)
-      .where(created_at: 1.week.ago..).limit(400)
-      .filter_banned_statuses
-      .filter_statuses_by_timeline_setting(param.user_id)
-      .where(reply: false)
-      .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
-      .pagination(param.page_no, param.max_id)
-    }
+
 
     scope :pagination, ->( page_no = nil, max_id ) {
      
