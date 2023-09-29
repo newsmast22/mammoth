@@ -11,7 +11,7 @@ module Mammoth
     has_many :follows, through: :account, foreign_key: :account_id
     has_many :status_tags, class_name: "Mammoth::StatusTag"
     has_many :status_pins
-    has_many :tags, through: :status_tags
+
 
     scope :filter_with_community_status_ids, ->(ids) { where(id: ids,reply: false) }
 
@@ -163,18 +163,10 @@ module Mammoth
         .where(communities_statuses: { community_id: commu.id })
     }
 
-    # scope :following_timeline_logic, ->(account_id) {
-    #   Mammoth::Status
-    #     .joins("LEFT JOIN follows ON statuses.account_id = follows.target_account_id")
-    #     .joins("LEFT JOIN statuses_tags ON statuses_tags.status_id = statuses.id")
-    #     .joins("LEFT JOIN tag_follows ON statuses_tags.tag_id = tag_follows.tag_id")
-    #     .where("follows.account_id = :account_id OR tag_follows.account_id = :account_id ",account_id: account_id)
-    #     .order("statuses.id DESC")
-    #     .limit(400)
-    # }
-
     scope :following_timeline_logic, ->(acc_id) {
+
       account = Mammoth::Account.find(acc_id)
+
       current_user_tag_ids = account.tag_follows.pluck(:tag_id).uniq
 
       joins(account: :follows)
@@ -185,6 +177,7 @@ module Mammoth
 
     
     scope :following_timeline, ->(param) do
+
         following_timeline_logic(param.acc_id)
         .filter_banned_statuses
         .filter_statuses_by_timeline_setting(param.user_id)
