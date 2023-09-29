@@ -163,16 +163,21 @@ module Mammoth
         .where(communities_statuses: { community_id: commu.id })
     }
 
+    # scope :following_timeline_logic, ->(acc_id) {
+
+    #   account = Mammoth::Account.find(acc_id)
+
+    #   current_user_tag_ids = account.tag_follows.pluck(:tag_id).uniq
+
+    #   left_joins(account: :follows)
+    #     .left_joins(:status_tags)
+    #     .where(follows: { account_id: account.id } )
+    #     .or(where(status_tags: { tag_id: current_user_tag_ids })).limit(400)
+    # }
+
     scope :following_timeline_logic, ->(acc_id) {
-
-      account = Mammoth::Account.find(acc_id)
-
-      current_user_tag_ids = account.tag_follows.pluck(:tag_id).uniq
-
-      left_joins(account: :follows)
-        .left_joins(:status_tags)
-        .where(follows: { account_id: account.id } )
-        .or(where(status_tags: { tag_id: current_user_tag_ids })).limit(400)
+        joins(account: :follows)
+        .where(follows: { account_id: acc_id } ).limit(400)
     }
 
     
