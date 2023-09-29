@@ -169,7 +169,7 @@ module Mammoth
 
       current_user_tag_ids = account.tag_follows.pluck(:tag_id).uniq
 
-      joins(account: :follows)
+      left_joins(account: :follows)
         .left_joins(:status_tags)
         .where(follows: { account_id: account.id } )
         .or(where(status_tags: { tag_id: current_user_tag_ids })).limit(400)
@@ -177,7 +177,6 @@ module Mammoth
 
     
     scope :following_timeline, ->(param) do
-
         following_timeline_logic(param.acc_id)
         .filter_banned_statuses
         .filter_statuses_by_timeline_setting(param.user_id)
