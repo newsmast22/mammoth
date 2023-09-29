@@ -173,8 +173,8 @@ module Mammoth
     #     .limit(400)
     # }
 
-    scope :following_timeline_logic, ->(account) {
-
+    scope :following_timeline_logic, ->(acc_id) {
+      account = Mammoth::Account.find(acc_id)
       current_user_tag_ids = account.tag_follows.pluck(:tag_id).uniq
 
       joins(account: :follows)
