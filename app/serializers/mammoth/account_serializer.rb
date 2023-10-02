@@ -79,31 +79,35 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
 
   def step
     object.try(:user).try(:step)
-    #object.user.step
   end
 
   def is_active
     object.try(:user).try(:is_active)
-    #object.user.is_active
   end
   
   def is_account_setup_finished
     object.try(:user).try(:is_account_setup_finished)
-    #object.user.is_account_setup_finished
   end
 
   def email
-    if object.try(:user).try(:phone).present? #object.user.phone.present?
-      nil
+    if object.try(:domain).nil?
+      if object.try(:user).try(:phone).present?
+        nil
+      else
+        object.try(:user).try(:email)
+      end
     else
-      object.try(:user).try(:email)
-       #object.user.email
+      nil
     end
+    
   end
 
   def phone
-    object.try(:user).try(:phone)
-    #object.user.phone
+    if object.try(:domain).nil?
+      object.try(:user).try(:phone)
+    else
+      nil
+    end
   end
 
   def is_followed
