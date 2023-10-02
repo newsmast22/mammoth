@@ -13,6 +13,10 @@ module Mammoth
     has_many :community_filter_keywords, class_name: "Mammoth::CommunityFilterKeyword", dependent: :destroy
     has_many :community_hashtags, class_name: "Mammoth::CommunityHashtag", dependent: :destroy
 
+    scope :get_my_communities, ->(acc_id){
+      joins(mammoth_communities_users: { user: :account }).where(account: {id: acc_id})
+    }
+
   	IMAGE_LIMIT = 15.megabytes
 
   	IMAGE_MIME_TYPES = %w(image/jpeg image/png image/gif image/heic image/heif image/webp image/avif).freeze

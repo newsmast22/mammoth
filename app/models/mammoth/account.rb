@@ -26,6 +26,12 @@ module Mammoth
     scope :filter_timeline_with_voice,->(id) {where("about_me_title_option_ids && ARRAY[?]::integer[] ", id)}
     scope :filter_timeline_with_media,->(id) {where("about_me_title_option_ids && ARRAY[?]::integer[] ", id)}
 
+    scope :get_community_admins_by_my_communties, ->(acc_id) {
+        community_ids = Mammoth::Community.get_my_communities(acc_id).pluck(:id)
+        joins(users: :community_admins)
+              .where(community_admins: {community_id: community_ids})
+    }
+
     scope :following_accouts, -> (account_id, current_account_id, offset, limit){
             joins("INNER JOIN follows ON accounts.id = follows.target_account_id")
             .where("follows.account_id = ? AND accounts.id != ?",account_id, current_account_id)

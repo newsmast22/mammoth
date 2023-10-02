@@ -275,9 +275,12 @@ module Mammoth
       .filter_block_mute_inactive_statuses_by_acc_ids(account_id)
       .pin_statuses_fileter(max_id)
     }
-     
+
     scope :my_community_timeline, -> (param) {
-       
+
+      acc_ids = Mammoth::Account.get_community_admins_by_my_communties(param.acc_id).pluck(:id)
+      acc_ids = acc_ids.push(param.acc_id)
+
       fetching_400_statuses
       .joins(communities_statuses: :community)
       .joins(community_users: :community)
@@ -287,7 +290,7 @@ module Mammoth
       .filter_banned_statuses
       .where(deleted_at: nil)
       .filter_statuses_by_timeline_setting(param.user_id)
-      .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
+      .filter_block_mute_inactive_statuses_by_acc_ids(acc_ids)
       .pagination(param.page_no, param.max_id)
       
     }
