@@ -31,7 +31,7 @@ module Mammoth
 
     scope :blocked_account_status_ids, -> (blocked_account_ids) {where(account_id: blocked_account_ids, reply: false)}
     scope :blocked_reblog_status_ids, -> (blocked_status_ids) {where(reblog_of_id: blocked_status_ids, reply: false)}
-    scope :fetching_400_statuses, -> { where(created_at: 1.week.ago..).limit(400) }
+    scope :fetching_400_statuses, -> { where(created_at: 1.week.ago..).limit(200) }
 
     scope :fetch_all_blocked_status_ids, -> (blocked_status_ids) {
       where(id: blocked_status_ids).or(where(reblog_of_id:blocked_status_ids ))
@@ -49,34 +49,29 @@ module Mammoth
       inactive_account_ids = joins(account: :user)
         .where("users.is_active = ?", false)
         .pluck("accounts.id")
-
-      
+     
       excluded_account_ids = (blocked_account_ids + muted_account_ids + inactive_account_ids).uniq
       excluded_account_ids.delete(account_id)
       
       where(account_id: excluded_account_ids).pluck(:account_id)
     }
 
- 
-
-  
     scope :filter_statuses_with_community_admin_logic, ->(community, account) {
       Mammoth::Status.left_joins(:communities_statuses)
         .filter_statuses_with_followed_acc_ids(community.get_community_admins)
-        .where(communities_statuses: { community_id: [community.id, nil] }).limit(400)
+        .where(communities_statuses: { community_id: [community.id, nil] }).limit(200)
     }
 
     scope :filter_statuses_with_not_belong_any_commu_admin, ->(community) {
       Mammoth::Status.left_joins(:communities_statuses)
         .filter_statuses_with_followed_acc_ids(community.get_community_admins)
-        .where(communities_statuses: { community_id: nil }).limit(400)
+        .where(communities_statuses: { community_id: nil }).limit(200)
     }
     
-
     scope :filter_statuses_with_current_user_logic, ->(account, community) {
       Mammoth::Status.left_joins(:communities_statuses)
         .filter_statuses_with_followed_acc_ids(account.id)
-        .where(communities_statuses: { community_id: community.id }).limit(400)
+        .where(communities_statuses: { community_id: community.id }).limit(200)
     }
 
     scope :filter_statuses_without_current_user_with_acc_ids, -> (account_ids, current_acc_id) {
@@ -85,23 +80,22 @@ module Mammoth
       where(account_id: followed_acc_ids)
     }
     
-    
-    scope :filter_statuses_with_followed_acc_ids, -> (account_ids) {
-        
+    scope :filter_statuses_with_followed_acc_ids, -> (account_ids) { 
       where(account_id: Follow.where(account_id: account_ids).pluck(:target_account_id).map(&:to_i).uniq)
-     
     }
 
     scope :filter_block_mute_inactive_statuses_by_acc_ids, -> (acc_ids) {
-
-      left_joins(account: :user)
-        .where(
-          "(users.id IS NULL AND accounts.domain IS NOT NULL) OR " +
-          "(users.id IS NOT NULL AND users.is_active != FALSE)"
-        )
-        .not_blocked(acc_ids)
-        .not_muted(acc_ids)
-
+      joins(:account)
+        .left_joins(account: :user)
+        .where(user: { id: nil })
+        .where.not(account: { domain: nil })
+        .or(joins(:account)
+          .left_joins(account: :user)
+          .where.not(user: { id: nil })
+          .where.not(user: { is_active: false })
+          .where(account: { domain: nil }))
+      .not_blocked(acc_ids)
+      .not_muted(acc_ids)
     }
 
     scope :not_blocked, ->(acc_ids) {
@@ -177,7 +171,7 @@ module Mammoth
 
     scope :following_timeline_logic, ->(acc_id) {
         joins(account: :follows)
-        .where(follows: { account_id: acc_id } ).limit(400)
+        .where(follows: { account_id: acc_id } ).limit(200)
     }
 
     
@@ -224,8 +218,7 @@ module Mammoth
       .or(filter_statuses_with_not_belong_any_commu_admin(param.community))
       .filter_statuses_by_community_timeline_setting(param.user.id)
       .filter_with_primary_timeline_logic(param.account, param.user, param.community)
-      .where(deleted_at: nil)
-      .where(reply: false)
+      .where(reply: false, deleted_at: nil)
       .filter_banned_statuses
       .filter_block_mute_inactive_statuses_by_acc_ids(acc_ids)
       .pagination(param.page_no, param.max_id)
@@ -247,10 +240,7 @@ module Mammoth
     
       fetching_400_statuses
       .filter_banned_statuses
-      .where(is_rss_content: false)
-      .where(local: true)
-      .where(deleted_at: nil)
-      .where(reply: false)
+      .where(local: false, deleted_at: nil, reply: false, is_rss_content: false)
       .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
       .pagination(param.page_no, param.max_id)
     }
@@ -259,9 +249,7 @@ module Mammoth
      
       fetching_400_statuses
       .filter_banned_statuses
-      .where(local: false)
-      .where(deleted_at: nil)
-      .where(reply: false)
+      .where(local: false, deleted_at: nil, reply: false)
       .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
       .pagination(param.page_no, param.max_id)
     }
@@ -269,9 +257,7 @@ module Mammoth
     scope :user_profile_timeline, -> (account_id, profile_id, max_id = nil , page_no = nil ) {
 
       left_joins(:status_pins)
-      .where(account_id: profile_id)
-      .where(deleted_at: nil)
-      .where(reply: false)
+      .where(deleted_at: nil, reply: false, account_id: profile_id)
       .filter_block_mute_inactive_statuses_by_acc_ids(account_id)
       .pin_statuses_fileter(max_id)
     }
@@ -354,14 +340,12 @@ module Mammoth
     }
 
     scope :filter_statuses_without_rss, -> {
-      where(reply: false)
-      .where(community_feed_id: nil)
-      .where(group_id: nil)
+      where(reply: false, community_feed_id: nil, group_id: nil)
     }
 
     scope :inactive_account_ids, -> {
         joins(account: :user)
-        .where("users.is_active = ?", false)
+        .where(users: { is_active: false} )
         .pluck("accounts.id")
     }
 
