@@ -23,7 +23,7 @@ module Mammoth
 
         def load_and_filter_statuses(scope_name)
           return [] unless @param.community_slug
-
+          puts "============TimelineService #{scope_name}// ActiveRecord::Base:Role: '<<  #{ActiveRecord::Base.current_role} >>'============"
           @statuses = Mammoth::Status.public_send(scope_name, @param)
           @statuses = Mammoth::Status.includes(
             :reblog,
