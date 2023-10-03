@@ -116,7 +116,7 @@ module Mammoth
 				id: all_community_hash[:id]
 			)
 
-			community = Mammoth::Community.find_by(slug: community_slug) unless community_slug == ENV['ALL_COLLECTION']
+			community = Mammoth::Community.find_by!(slug: community_slug) unless community_slug == ENV['ALL_COLLECTION']
 
 			#begin::check is community-admin
 			is_community_admin = false
