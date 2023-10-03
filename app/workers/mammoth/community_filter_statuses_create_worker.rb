@@ -30,12 +30,12 @@ module Mammoth
           
           if filter.present?
             if filter.is_filter_hashtag
-
               tag = Tag.find_by(name: filter.keyword.downcase.gsub('#', ''))
               ban_statuses(tag.statuses, filter) if tag
             else
-              Mammoth::Status.where("LOWER(text) ~* ?", "\\m#{filter.keyword.downcase}\\M").find_in_batches(batch_size: 100, order: :desc) do |statuses|
-              ban_statuses(tag.statuses, filter)
+              status_list = Mammoth::Status.where("LOWER(text) ~* ?", "\\m#{filter.keyword.downcase}\\M").order(created_at: :desc).limit(400)
+              status_list.each do |status|   
+                loop_ban_statuses(status, filter)
               end
             end
           end
@@ -48,6 +48,11 @@ module Mammoth
 
     def ban_statuses(statuses = [], filter)
       array = statuses.map{|status| {status_id: status.id, community_filter_keyword_id: filter.id}}
+      Mammoth::CommunityFilterStatus.create(array)
+    end
+
+    def loop_ban_statuses(status, filter)
+      array = {status_id: status.id, community_filter_keyword_id: filter.id}
       Mammoth::CommunityFilterStatus.create(array)
     end
 
