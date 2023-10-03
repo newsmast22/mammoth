@@ -71,7 +71,7 @@ module Mammoth
     scope :filter_statuses_with_current_user_logic, ->(account, community) {
       Mammoth::Status.left_joins(:communities_statuses)
         .filter_statuses_with_followed_acc_ids(account.id)
-        .where(communities_statuses: { community_id: community.id }).limit(00)
+        .where(communities_statuses: { community_id: community.id }).limit(200)
     }
 
     scope :filter_statuses_without_current_user_with_acc_ids, -> (account_ids, current_acc_id) {
