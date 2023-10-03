@@ -290,8 +290,6 @@ module Mammoth
       
     }
         
-
-
     scope :pagination, ->( page_no = nil, max_id ) {
      
       if page_no.nil? || !page_no.present? 
@@ -391,22 +389,22 @@ module Mammoth
     
     scope :with_countries, ->(country_alpha2_name) {
       return self if country_alpha2_name.blank?
-      joins(:account).where(accounts: { country: country_alpha2_name })
+      joins(:account).where(account: { country: country_alpha2_name })
     }
     
     scope :with_contributor_role, ->(id) {
       return self if id.blank?
-      joins(:account).where("accounts.about_me_title_option_ids @> ARRAY[?]::integer[]", id)
+      joins(:account).where("account.about_me_title_option_ids @> ARRAY[?]::integer[]", id)
     }
     
     scope :with_voice, ->(id) {
       return self if id.blank?
-      joins(:account).where("accounts.about_me_title_option_ids && ARRAY[?]::integer[]", id)
+      joins(:account).where("account.about_me_title_option_ids && ARRAY[?]::integer[]", id)
     }
     
     scope :with_media, ->(id) {
       return self if id.blank?
-      joins(:account).where("accounts.about_me_title_option_ids && ARRAY[?]::integer[]", id)
+      joins(:account).where("account.about_me_title_option_ids && ARRAY[?]::integer[]", id)
     }
     
     scope :filter_with_words, ->(words) {
