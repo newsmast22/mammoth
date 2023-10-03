@@ -34,7 +34,7 @@ module Mammoth
         private
 
         def fetch_and_include(statuses)
-          puts "============TimelineService // ActiveRecord::Base:Role: '<<  #{ActiveRecord::Base.current_role} >>'==========="
+          puts "============TimelineService// ActiveRecord::Base:Role: '<<  #{ActiveRecord::Base.current_role} >>'========="
           @statuses = Mammoth::Status.includes(
             :reblog,
             :media_attachments,
