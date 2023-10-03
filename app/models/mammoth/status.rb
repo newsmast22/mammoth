@@ -71,7 +71,7 @@ module Mammoth
     scope :filter_statuses_with_current_user_logic, ->(account, community) {
       Mammoth::Status.left_joins(:communities_statuses)
         .filter_statuses_with_followed_acc_ids(account.id)
-        .where(communities_statuses: { community_id: community.id }).limit(200)
+        .where(communities_statuses: { community_id: community.id }).limit(00)
     }
 
     scope :filter_statuses_without_current_user_with_acc_ids, -> (account_ids, current_acc_id) {
@@ -170,11 +170,20 @@ module Mammoth
     # }
 
     scope :following_timeline_logic, ->(acc_id) {
-        joins(account: :follows)
-        .where(follows: { account_id: acc_id } ).limit(200)
-    }
-
+      account = Mammoth::Account.find(acc_id)
+      current_user_tag_ids = account.tag_follows.pluck(:tag_id).uniq
     
+      query_1 = Mammoth::Status.left_joins(:status_tags)
+                                .where(status_tags: { tag_id: current_user_tag_ids }).limit(100).pluck(:id)
+    
+      query_2 = Mammoth::Status.joins(:account).left_joins(:follows)
+                               .where(follows: { account_id: account.id }).limit(100).pluck(:id)
+    
+      status_ids = query_1.concat(query_2).uniq
+      
+      where(id: status_ids)
+    }
+   
     scope :following_timeline, ->(param) do
         following_timeline_logic(param.acc_id)
         .filter_banned_statuses
