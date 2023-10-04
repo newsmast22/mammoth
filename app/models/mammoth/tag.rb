@@ -8,8 +8,6 @@ module Mammoth
     has_many :tag_followed, class_name: "Mammoth::TagFollow", foreign_key: "tag_id"
     has_and_belongs_to_many :accounts, through: :tag_followed
 
-    scope :filter_with_words, ->(words) { where("LOWER(tags.name) like '%#{words}%' OR LOWER(tags.display_name) like '%#{words}%' ") }
-
     def self.search_global_hashtag(search_tags, limit, offset)
 
       sql_query = "AND LOWER(tags.name) like '%#{search_tags.downcase}%' OR LOWER(tags.display_name) like '%#{search_tags.downcase}%' " unless search_tags.nil?

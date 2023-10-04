@@ -37,7 +37,7 @@ module Mammoth::Api::V1
 
     def return_search_format_json(default_limit, offset) 
       render json:  @tag.take(default_limit), root: 'data', 
-      each_serializer: Mammoth::TagSerializer, current_user: current_user, adapter: :json, 
+      each_serializer: Mammoth::TagSerializer, current_user: current_user, adapter: :json, is_post_count: true,
       meta: { 
       has_more_objects: @tag.length > default_limit ? true : false,
       offset: offset.to_i
