@@ -8,7 +8,6 @@ module Mammoth::Api::V1
     before_action -> { authorize_if_got_token! :read, :'read:search' }
 
     def get_all_community_status_timelines
-      #@user_search_setting = Mammoth::UserSearchSetting.find_by(user_id: current_user.id)
 
       @statuses = Mammoth::Status.where(reply: false).where.not(account_id: current_account.id)
 
@@ -18,8 +17,6 @@ module Mammoth::Api::V1
         @statuses = Mammoth::Status.where(reply: false).where.not(account_id: current_account.id).limit(params[:limit])
       end
       
-      #@statuses = @statuses.filter_with_words(params[:words].downcase)
-
 
       #begin::muted account post
       muted_accounts = Mute.where(account_id: current_account.id)
@@ -84,9 +81,6 @@ module Mammoth::Api::V1
       else
         @statuses = Mammoth::Status.where(reply: false,id: community_statuses_ids).limit(params[:limit])
       end
-      #@statuses = @statuses.filter_with_words(params[:words].downcase) if params[:words].present?
-
-      #@statuses = Mammoth::Status.where(reply: false,id: community_statuses_ids)
 
       #begin::muted account post
       muted_accounts = Mute.where(account_id: current_account.id)
@@ -118,16 +112,6 @@ module Mammoth::Api::V1
         @statuses = @statuses.filter_blocked_statuses(combine_deactivated_status_ids)
       end
       #end::deactivated account post
-
-      #@statuses = @statuses.filter_with_words(params[:words].downcase) if params[:words].present?
-      
-      #begin::community filter
-      # create_default_user_search_setting() if @user_search_setting.nil?
-      # if @user_search_setting.selected_filters["communities_filter"]["selected_communities"].present?
-      #   status_tag_ids = Mammoth::CommunityStatus.group(:community_id,:status_id).where(community_id: @user_search_setting.selected_filters["communities_filter"]["selected_communities"]).pluck(:status_id).map(&:to_i)
-      #   @statuses = @statuses.merge(Mammoth::Status.filter_without_community_status_ids(status_tag_ids))
-      # end
-      #end::community filter
 
      unless @statuses.empty?
       #begin::muted account post
