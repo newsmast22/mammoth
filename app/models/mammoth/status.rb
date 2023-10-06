@@ -249,7 +249,7 @@ module Mammoth
     
       fetching_400_statuses
       .filter_banned_statuses
-      .where(local: false, deleted_at: nil, reply: false, is_rss_content: false)
+      .where(local: true, deleted_at: nil, reply: false, is_rss_content: false)
       .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
       .pagination(param.page_no, param.max_id)
     }
