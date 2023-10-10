@@ -11,51 +11,20 @@ module Mammoth::Api::V1
     end
 
     def suggestion
-      #condition: Intial start with limit
       offset = params[:offset].present? ? params[:offset] : 0
+      words = params[:words].present? ? params[:words] : nil
 
-      @user  = Mammoth::User.find(current_user.id)
-
-      @users = Mammoth::User.joins(:user_communities).where.not(id: @user.id).where(user_communities: {community_id: @user.communities.ids}).distinct.order('users.account_id desc').limit(params[:limit].to_i + 10).offset(offset)
-
-      #begin::blocked account post
-      blocked_accounts = Block.where(account_id: current_account.id).or(Block.where(target_account_id: current_account.id))
-      unless blocked_accounts.blank?
-        combined_block_account_ids = blocked_accounts.pluck(:account_id,:target_account_id).flatten
-        combined_block_account_ids.delete(current_account.id)
-        @users = @users.filter_blocked_accounts(combined_block_account_ids)
-      end
-      #end::blocked account post
-
-      #begin::deactivated account post
-				deactivated_accounts = Account.joins(:user).where('users.is_active = ?', false)
-				unless deactivated_accounts.blank?
-          @users = @users.filter_blocked_accounts(deactivated_accounts.pluck(:id).map(&:to_i))
-				end
-			#end::deactivated account post
-
-      @users = @users.filter_with_words(params[:words].downcase) if params[:words].present?
-
-      left_seggession_count = 0
-      if params[:limit].present?
-        left_seggession_count = @users.size - params[:limit].to_i <= 0 ? 0 : @users.size - params[:limit].to_i
-        @users = @users.limit(params[:limit].to_i)
-      end
+      @accounts = Mammoth::User.users_suggestion(current_user, params[:is_registeration],params[:limit].to_i + 10, offset, words)
         
-      account_followed = Follow.where(account_id: current_account).pluck(:target_account_id).map(&:to_i)
-
-      accounts = Account.where(id: @users.pluck(:account_id).map(&:to_i))
-
-      render json: accounts, root: 'data', 
+      render json: @accounts, root: 'data', 
                     each_serializer: Mammoth::AccountSerializer, current_user: current_user, adapter: :json, 
                     meta: { 
-                        has_more_objects: left_seggession_count > 0 ? true : false,
+                        has_more_objects: records_continue?,
                         offset: offset.to_i
                     }
     end
 
-    def global_suggestion  
-
+    def global_suggestion        
       # Assign limit = 5 as 6 if limit is nil
       # Limit always plus one 
       # Addition plus one to get has_more_object
@@ -487,6 +456,10 @@ module Mammoth::Api::V1
         fields: [:name, :value],
         fields_attributes: [:name, :value]
       )
+    end
+
+    def records_continue?
+      @accounts.size == limit_param(10)
     end
 
     def user_settings_params

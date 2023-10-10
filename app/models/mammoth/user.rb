@@ -137,21 +137,65 @@ module Mammoth
       end
 
       unless filtered_accounts.any? || !@search_keywords.nil?
-        unless @search_offset.nil?
-          @accounts = Account.joins("LEFT JOIN users on accounts.id = users.account_id").where("
-            users.role_id IS NULL AND accounts.id != #{@current_account.id} AND (accounts.actor_type IS NULL OR accounts.actor_type = 'Person')").order(id: :desc).offset(@search_offset) 
-        else
-          @accounts = Account.joins("LEFT JOIN users on accounts.id = users.account_id").where("
-            users.role_id IS NULL AND accounts.id != #{@current_account.id} AND (accounts.actor_type IS NULL OR accounts.actor_type = 'Person') ").order(id: :desc).limit(@search_limit)
-        end
+        @accounts = Account.joins("LEFT JOIN users on accounts.id = users.account_id")
+                    .where("users.role_id IS NULL AND accounts.id != #{@current_account.id} 
+                            AND accounts.is_popular = true AND (accounts.actor_type IS NULL OR accounts.actor_type = 'Person') "
+                    )
+                    .order(id: :desc).limit(@search_limit)            
+
       end
       #end::search from other instance
 
-      @accounts
+      return @accounts
 
     end
 
+    def self.users_suggestion(current_user, is_registeration = false, limit, offset, seach_words)
+
+      if is_registeration
+
+        fetch_suggestion_accounts("registeration", current_user, limit, offset)
+
+      elsif seach_words.nil?
+
+        fetch_suggestion_accounts("my_community", current_user, limit, offset)
+
+      else
+
+        user = Mammoth::User.find(current_user.id)
+        filtered_account_ids = Mammoth::Status.get_block_mute_inactive_acc_id(current_user.account_id)
+        
+        users =  Mammoth::User
+                .joins(:user_communities)
+                .where.not(account_id: ([current_user.account_id] + filtered_account_ids).uniq)
+                .where(user_communities: {community_id: user.communities.ids})
+                .distinct
+                .order('users.account_id desc')
+                .limit(limit)
+                .offset(offset)
+
+        users = users.filter_with_words(seach_words.downcase) unless seach_words.nil?
+
+        @accounts = Account.where(id: users.pluck(:account_id).map(&:to_i))
+      end
+
+      return @accounts
+      
+    end
+
     private
+
+    def self.fetch_suggestion_accounts(flag, current_user,limit, offset) 
+
+      sql_query = " accounts.is_recommended = true AND" if flag === "registeration"
+      sql_query = " (accounts.is_recommended = true OR accounts.is_popular = true) AND " if flag === "my_community"
+
+      @accounts = Account.joins("LEFT JOIN users on accounts.id = users.account_id")
+      .where("users.role_id IS NULL AND accounts.id != #{current_user.account_id} 
+              AND #{sql_query} (accounts.actor_type IS NULL OR accounts.actor_type = 'Person') "
+      )
+      .order(id: :desc).limit(limit).offset(offset)
+    end
 
     def self.account_searchable?
       !(@search_keywords.start_with?('#') || (@search_keywords.include?('@') && @search_keywords.include?(' ')))
