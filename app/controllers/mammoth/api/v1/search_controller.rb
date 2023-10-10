@@ -4,7 +4,7 @@ module Mammoth::Api::V1
   class SearchController < Api::BaseController
     include Authorization
 
-    before_action :require_user!
+    before_action :require_user!, except: [:get_all_community_status_timelines]
     before_action -> { authorize_if_got_token! :read, :'read:search' }
 
     def get_all_community_status_timelines

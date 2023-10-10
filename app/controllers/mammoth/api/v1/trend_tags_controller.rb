@@ -1,6 +1,6 @@
 module Mammoth::Api::V1
   class TrendTagsController < Api::BaseController
-    before_action :require_user!
+    before_action :require_user!, except: [:index]
 		before_action -> { doorkeeper_authorize! :read}
     before_action :set_tags, only: [:index ,:get_my_community_trend_tag] 
 

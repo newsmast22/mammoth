@@ -2,7 +2,7 @@ module Mammoth::Api::V1
   class UsersController < Api::BaseController
 		before_action -> { doorkeeper_authorize! :read , :write}
     before_action :generate_otp, only: [:change_email_phone]
-    before_action :require_user!
+    before_action :require_user!, except: [:global_suggestion]
 
     require 'aws-sdk-sns'
 

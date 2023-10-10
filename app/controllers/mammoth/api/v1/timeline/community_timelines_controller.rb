@@ -1,6 +1,6 @@
 module Mammoth::Api::V1::Timeline
   class CommunityTimelinesController < Api::BaseController
-    before_action :require_user!
+    before_action :require_user!, except: [:all, :recommended]
     before_action :set_max_id, only: [:all, :recommended] 
     before_action :create_service, only: [:all, :recommended] 
     before_action -> { doorkeeper_authorize! :read , :write}

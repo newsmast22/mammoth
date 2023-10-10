@@ -1,7 +1,7 @@
 require 'date'
 module Mammoth::Api::V1
     class CollectionsController < Api::BaseController
-        before_action :require_user!
+        before_action :require_user!, except: [:index]
         before_action :prepare_service, only: [ :index ]
         before_action -> { doorkeeper_authorize! :read , :write}
         before_action :set_collection, only: %i[show update destroy]

@@ -137,12 +137,7 @@ module Mammoth
       end
 
       unless filtered_accounts.any? || !@search_keywords.nil?
-        @accounts = Account.joins("LEFT JOIN users on accounts.id = users.account_id")
-                    .where("users.role_id IS NULL AND accounts.id != #{@current_account.id} 
-                            AND accounts.is_popular = true AND (accounts.actor_type IS NULL OR accounts.actor_type = 'Person') "
-                    )
-                    .order(id: :desc).limit(@search_limit)            
-
+        fetch_suggestion_accounts("global", current_account.user, @search_limit, @search_offset)     
       end
       #end::search from other instance
 
@@ -189,12 +184,13 @@ module Mammoth
 
       sql_query = " accounts.is_recommended = true AND" if flag === "registeration"
       sql_query = " (accounts.is_recommended = true OR accounts.is_popular = true) AND " if flag === "my_community"
+      sql_query = " accounts.is_popular = true AND" if flag === "global"
 
       @accounts = Account.joins("LEFT JOIN users on accounts.id = users.account_id")
       .where("users.role_id IS NULL AND accounts.id != #{current_user.account_id} 
               AND #{sql_query} (accounts.actor_type IS NULL OR accounts.actor_type = 'Person') "
       )
-      .order(id: :desc).limit(limit).offset(offset)
+      .order(username: :asc).limit(limit).offset(offset)
     end
 
     def self.account_searchable?
