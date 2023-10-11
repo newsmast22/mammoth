@@ -415,6 +415,28 @@ module Mammoth
     scope :filter_banned_statuses, -> { left_joins(:community_filter_statuses)
                                         .where(community_filter_statuses: { id: nil }) }
 
+    def blocked_by_community_admin?
+      return false unless self.communities.present?
+    
+      admin_ids = get_community_admins
+      blocked = Block.where(account_id: account_id, target_account_id: admin_ids)
+                    .or(Block.where(account_id: admin_ids, target_account_id: account_id))
+      blocked.any?
+    end
+    
+    def get_community_admins
+      community_admins = self.communities.get_community_admins
+      community_admins.concat(self.reblog&.communities.get_community_admins) if self.reblog?
+      community_admins.uniq
+    end
+
+    def is_valid_my_community?
+      Mammoth::Status.joins(communities_statuses: :community)
+      .where.not(community: { slug: "breaking_news" })
+      .where(reply: false, community_feed_id: nil, group_id: nil, id: self.id).any?
+    end
+    
+                                       
     def check_pinned_status(status_id, account_id)
 
       if StatusPin.exists?(status_id: status_id, account_id: account_id)

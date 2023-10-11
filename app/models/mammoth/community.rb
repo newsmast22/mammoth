@@ -71,6 +71,12 @@ module Mammoth
       self.image_file_name = name if name.present?
     end
 
+    scope :get_community_admins, -> {
+      joins(community_admins: :user)
+      .where(users: { is_active: true })
+      .pluck('users.account_id')
+    }
+
     def get_community_admins
       community_admins.joins(:user)
       .where(community_id: self.id)
@@ -99,6 +105,13 @@ module Mammoth
     def header_data=(data)
       self.header = {data: data} if data.present?
     end
+
+    def self.community_followers_for_local_distribution
+        joins(community_users: {user: :account})
+        .where(accounts: { domain: nil })
+        .where('users.current_sign_in_at > ?', User::ACTIVE_DURATION.ago)
+    end
+    
 
     def self.get_community_info_details(role_name, current_user, community_slug)
 
