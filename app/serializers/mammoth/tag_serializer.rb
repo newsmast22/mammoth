@@ -5,8 +5,6 @@ class Mammoth::TagSerializer < ActiveModel::Serializer
 
   attribute :following, if: :current_user?
 
-  attribute :post_count,if: -> { instance_options && instance_options[:is_post_count] }
-
   def url
     # Begin::orignal_code
     #tag_url(object)
@@ -19,7 +17,7 @@ class Mammoth::TagSerializer < ActiveModel::Serializer
   end
 
   def post_count
-   object.tag_count
+    object.statuses.count
   end
 
   def name

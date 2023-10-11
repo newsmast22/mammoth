@@ -82,4 +82,20 @@ class Mammoth::CollectionService < BaseService
 	  
 		return data
 	end 
+
+  def self.virtual_all_collection_details
+    { 
+      community_followed_user_counts: nil,
+      community_name: ENV['ALL_COLLECTION'].capitalize,
+      community_description:  "All posts from the communities of Newsmast and connected instances of Fediverse.",
+      collection_name: ENV['ALL_COLLECTION'].capitalize,
+      community_url: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/all_collection_community_cover_photos/all_collection_cover_photo.jpg",
+      community_header_url: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/all_collection_community_cover_photos/all_community_cover_photo.jpg",
+      community_slug: ENV['ALL_COLLECTION'],
+      is_joined: nil,
+      is_admin: nil,
+      is_virtual: true
+    }
+  end
+  
 end

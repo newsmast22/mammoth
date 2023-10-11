@@ -1,6 +1,6 @@
 module Mammoth::Api::V1::Timeline
   class TimelinesController < Api::BaseController
-    before_action :require_user!
+    before_action :require_user!, except: [:all, :federated, :newsmast]
     before_action :set_max_id, only: [:all, :federated, :newsmast, :my_community, :all_old, :following] 
     before_action :create_service, only: [:all, :federated, :newsmast, :my_community, :all_old, :following] 
     before_action :create_policy, only: [:create]

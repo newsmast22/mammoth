@@ -82,6 +82,8 @@ module Mammoth::Api::V1
 		def get_community_details_profile
 			if params[:id] == ENV['NEWSMAST_COLLECTION']
 				@result = Mammoth::UserCommunitiesService.virtual_user_community_details
+			elsif params[:id] == ENV['ALL_COLLECTION']
+        @result = Mammoth::CollectionService.virtual_all_collection_details
 			else 
 				@community = Mammoth::Community.find_by!(slug: params[:id])
 				@result = Mammoth::Community.get_community_info_details(current_user_role,current_user, params[:id])

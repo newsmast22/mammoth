@@ -8,7 +8,7 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
              :note, :url, :avatar, :avatar_static, :header, :header_static,:primary_community_slug,:primary_community_name,
              :followers_count, :following_count, :statuses_count, :last_status_at,:collection_count,:community_count,
              :country,:country_common_name,:dob,:subtitle,:about_me,:hash_tag_count,:is_followed,:is_requested,
-             :email,:phone,:step,:is_active,:is_account_setup_finished,:domain,:image_url,:bio
+             :email,:phone,:step,:is_active,:is_account_setup_finished,:domain,:image_url,:bio,:is_popular,:is_recommended
              
 
   has_one :moved_to_account, key: :moved, serializer: Mammoth::AccountSerializer, if: :moved_and_not_nested?
