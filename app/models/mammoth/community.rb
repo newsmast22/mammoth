@@ -111,7 +111,13 @@ module Mammoth
         .where(accounts: { domain: nil })
         .where('users.current_sign_in_at > ?', User::ACTIVE_DURATION.ago)
     end
-    
+
+    def  self.get_communities_by_acc(acc_id)
+      joins(community_users: {user: :account})
+        .where(accounts: { domain: nil , id: acc_id })
+        .where(user: { is_active: true })
+        .where.not(slug: "breaking_news")
+    end
 
     def self.get_community_info_details(role_name, current_user, community_slug)
 
