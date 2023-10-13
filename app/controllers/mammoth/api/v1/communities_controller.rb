@@ -21,7 +21,7 @@ module Mammoth::Api::V1
 				user_communities_ids = user&.user_communities.pluck(:community_id).map(&:to_i) || []
 				#End::check user have selected community 
 
-      	@communities= Mammoth::Community.joins("
+      	@communities = Mammoth::Community.joins("
 																							LEFT JOIN mammoth_communities_users ON mammoth_communities_users.community_id = mammoth_communities.id"
 																							)
 																							.select("mammoth_communities.*,COUNT(mammoth_communities_users.id) as follower_counts"
@@ -29,6 +29,7 @@ module Mammoth::Api::V1
 																							.order("mammoth_communities.position ASC,mammoth_communities.name ASC")
 																							.group("mammoth_communities.id")
 
+				@communities = @communities.get_public_communities() if role_name === "Owner"
 
 				if user_communities_ids.any?
 					primary_community =  user&.user_communities.where(is_primary: true).last
@@ -96,10 +97,6 @@ module Mammoth::Api::V1
 												)
 												.order("mammoth_communities.position ASC,mammoth_communities.name ASC")
 												.group("mammoth_communities.id")
-
-											#	.where("mammoth_communities.id != :primary_community_id", primary_community_id: primary_community.community_id)
-
-
 
 					@communities.each do |community|
 						data << {
