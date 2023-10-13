@@ -182,9 +182,8 @@ module Mammoth
 
     def self.fetch_suggestion_accounts(flag, current_user,limit, offset) 
 
-      sql_query = " accounts.is_recommended = true AND" if flag === "registeration"
-      sql_query = " (accounts.is_recommended = true OR accounts.is_popular = true) AND " if flag === "my_community"
-      sql_query = " accounts.is_popular = true AND" if flag === "global"
+      sql_query = " (accounts.is_recommended = true OR accounts.is_popular = true) AND " if flag === "registeration"
+      sql_query = " (users.current_sign_in_at > '#{User::ACTIVE_DURATION.ago}') AND " if flag === "my_community" || flag === "global"
 
       @accounts = Account.joins("LEFT JOIN users on accounts.id = users.account_id")
       .where("users.role_id IS NULL AND accounts.id != #{current_user.account_id} 
