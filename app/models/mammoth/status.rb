@@ -254,6 +254,11 @@ module Mammoth
       .pagination(param.page_no, param.max_id)
     }
 
+    scope :get_newsmast_statuses_lates_400, -> {
+      where(local: true, deleted_at: nil, is_rss_content: false)
+      .order(id: :desc).limit(400)
+    }
+
     scope :federated_timeline, -> (param) {
      
       fetching_400_statuses
@@ -261,6 +266,11 @@ module Mammoth
       .where(local: false, deleted_at: nil, reply: false)
       .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
       .pagination(param.page_no, param.max_id)
+    }
+
+    scope :get_federated_statuses_lates_400, -> {
+      where(local: false, deleted_at: nil)
+      .order(id: :desc).limit(400)
     }
 
     scope :user_profile_timeline, -> (account_id, profile_id, max_id = nil , page_no = nil ) {
