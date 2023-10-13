@@ -45,5 +45,11 @@ module Mammoth
             .order("accounts.id DESC")
             .limit(limit).offset(offset)
           }
+
+    scope :for_local_distribution, -> {
+        joins(:user)
+          .where(domain: nil)
+          .where('users.current_sign_in_at > ?', User::ACTIVE_DURATION.ago)
+      }
   end
 end

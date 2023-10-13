@@ -84,6 +84,10 @@ module Mammoth
       .pluck('users.account_id')
     end
 
+    def last_status_at
+      community_statuses.order(created_at: :desc).first&.created_at
+    end    
+
     def image_data=(data)
       self.image = {data: data} if data.present?
     end
