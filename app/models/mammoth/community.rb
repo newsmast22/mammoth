@@ -116,6 +116,10 @@ module Mammoth
         .where('users.current_sign_in_at > ?', User::ACTIVE_DURATION.ago)
     end
 
+    def self.find_normalized(slug)
+      find_by(slug: slug) || (raise ActiveRecord::RecordNotFound, "Couldn't find a record with slug: #{slug}")
+    end
+    
     def  self.get_communities_by_acc(acc_id)
       joins(community_users: {user: :account})
         .where(accounts: { domain: nil , id: acc_id })
