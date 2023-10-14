@@ -253,9 +253,13 @@ module Mammoth
       .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
       .pagination(param.page_no, param.max_id)
     }
+
+    scope :all_timeline_logic, -> {
+      joins(communities_statuses: :community)
+      .where.not(mammoth_communities: { slug: "breaking_news" })
+    }
   
     scope :newsmast_timeline, -> (param) {
-    
       fetching_400_statuses
       .filter_banned_statuses
       .where(local: true, deleted_at: nil, reply: false, is_rss_content: false)
