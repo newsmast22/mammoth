@@ -1,5 +1,7 @@
 module Mammoth
   class Account < Account
+    include Redisable
+    
     self.table_name = 'accounts'
     belongs_to :media, class_name: "Mammoth::Media",  optional: true
     belongs_to :voice, class_name: "Mammoth::Voice",  optional: true
@@ -51,5 +53,9 @@ module Mammoth
           .where(domain: nil)
           .where('users.current_sign_in_at > ?', User::ACTIVE_DURATION.ago)
       }
+
+    def recommended_statuses
+      redis.zrange("feed:recommended:#{id}", 0, -1, with_scores: false)
+    end
   end
 end

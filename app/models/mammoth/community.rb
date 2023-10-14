@@ -84,6 +84,12 @@ module Mammoth
       .pluck('users.account_id')
     end
 
+    def get_communities_admins_account 
+      Mammoth::Account.joins(users: :community_admins)
+        .where(community_admins: {community_id: self.id})
+        .where(users: { is_active: true })
+    end
+
     def last_status_at
       community_statuses.order(created_at: :desc).first&.created_at
     end    

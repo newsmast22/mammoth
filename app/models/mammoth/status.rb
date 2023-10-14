@@ -32,7 +32,9 @@ module Mammoth
     scope :blocked_account_status_ids, -> (blocked_account_ids) {where(account_id: blocked_account_ids, reply: false)}
     scope :blocked_reblog_status_ids, -> (blocked_status_ids) {where(reblog_of_id: blocked_status_ids, reply: false)}
     scope :fetching_400_statuses, -> { where(created_at: 1.week.ago..).limit(200) }
-
+    scope :included_by_recommend_status, ->(accounts) { 
+      where(id: accounts.flat_map(&:recommended_statuses))
+    }    
     scope :fetch_all_blocked_status_ids, -> (blocked_status_ids) {
       where(id: blocked_status_ids).or(where(reblog_of_id:blocked_status_ids ))
     }
@@ -84,6 +86,7 @@ module Mammoth
       where(account_id: Follow.where(account_id: account_ids).pluck(:target_account_id).map(&:to_i).uniq)
     }
 
+
     scope :filter_block_mute_inactive_statuses_by_acc_ids, -> (acc_ids) {
       joins(:account)
         .left_joins(account: :user)
@@ -106,7 +109,15 @@ module Mammoth
     scope :not_muted, ->(acc_ids) {
       where.not(account_id: Mute.where(account_id: acc_ids).pluck(:target_account_id))
     }
+    scope :not_belong_to_any_community, -> {
+      left_joins(:communities_statuses)
+      .where(communities_statuses: {community_id: nil})
+    }
 
+    scope :belong_to_community, ->(community) {
+      left_joins(:communities_statuses)
+      .where(communities_statuses: {community_id: community.id})
+    }
 
     scope :filter_block_mute_inactive_statuses, -> (account_id) {
       blocked_account_ids = joins(account: :blocks)
@@ -192,8 +203,6 @@ module Mammoth
         .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
         .pagination(param.page_no, param.max_id)
     end
-    
-    
 
     # Combined scope for user_community_recommended_timeline
     scope :user_community_recommended_timeline, ->(param) {
@@ -445,8 +454,7 @@ module Mammoth
       .where.not(community: { slug: "breaking_news" })
       .where(reply: false, community_feed_id: nil, group_id: nil, id: self.id).any?
     end
-    
-                                       
+                                
     def check_pinned_status(status_id, account_id)
 
       if StatusPin.exists?(status_id: status_id, account_id: account_id)
