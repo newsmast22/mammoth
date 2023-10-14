@@ -76,6 +76,11 @@ module Mammoth
         .where(communities_statuses: { community_id: community.id }).limit(200)
     }
 
+    scope :filter_recommended_community, -> {
+      joins(communities_statuses: :community)
+      .where.not(mammoth_communities: { is_recommended: true })
+    }
+
     scope :filter_statuses_without_current_user_with_acc_ids, -> (account_ids, current_acc_id) {
       followed_acc_ids = Follow.where(account_id: account_ids).pluck(:target_account_id).map(&:to_i).uniq
       followed_acc_ids.delete(current_acc_id) if followed_acc_ids
