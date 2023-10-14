@@ -53,7 +53,8 @@ module Mammoth::Api::V1
 							image_url: community.image.url,
 							collection_id: community.collection_id,
 							created_at: community.created_at,
-							updated_at: community.updated_at
+							updated_at: community.updated_at,
+							is_recommended: community.is_recommended
 						}
 					end
 					render json: data
@@ -78,7 +79,8 @@ module Mammoth::Api::V1
 							image_url: community.image.url,
 							collection_id: community.collection_id,
 							created_at: community.created_at,
-							updated_at: community.updated_at
+							updated_at: community.updated_at,
+							is_recommended: community.is_recommended
 						}
 					end
 					render json: data
@@ -118,7 +120,8 @@ module Mammoth::Api::V1
 							image_url: community.image.url,
 							collection_id: community.collection_id,
 							created_at: community.created_at,
-							updated_at: community.updated_at
+							updated_at: community.updated_at,
+							is_recommended: community.is_recommended
 						}
 					end
 					render json: {data: data,
@@ -202,7 +205,9 @@ module Mammoth::Api::V1
 			@community.name = community_params[:name]	if community_params[:name].present?
 			@community.position = community_params[:position] if community_params[:position].present?
 			@community.description = community_params[:description] if community_params[:description].present?
-			@community.is_country_filtering = community_params[:is_country_filtering] if community_params[:is_country_filtering].present?
+			@community.is_country_filtering = community_params[:is_country_filtering].present? ? true : false
+			@community.is_recommended = community_params[:is_recommended].present? ? true : false
+
 			@community.collection_id = collection.id
 
 			social_media_json = nil
@@ -569,6 +574,7 @@ module Mammoth::Api::V1
 				:collection_id,
 				:position,
 				:is_country_filtering,
+				:is_recommended,
 				fields: [:name, :value],
         fields_attributes: [:name, :value],
 			)
