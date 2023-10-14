@@ -17,6 +17,10 @@ module Mammoth
       joins(mammoth_communities_users: { user: :account }).where(account: {id: acc_id})
     }
 
+    scope :get_public_communities, -> (){
+      where(is_recommended: true)
+    }
+
   	IMAGE_LIMIT = 15.megabytes
 
   	IMAGE_MIME_TYPES = %w(image/jpeg image/png image/gif image/heic image/heif image/webp image/avif).freeze
