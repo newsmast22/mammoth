@@ -384,6 +384,8 @@ module Mammoth
         .pluck("accounts.id")
     }
 
+ 
+
     scope :filter_block_mute_inactive_acc_id, ->(account_id) {
       excluded_account_ids = excluded_account_ids(account_id)
       where.not(account_id: excluded_account_ids)
@@ -440,8 +442,7 @@ module Mammoth
       where("LOWER(statuses.text) like '%#{words}%'")
     }
 
-    scope :filter_banned_statuses, -> { left_joins(:community_filter_statuses)
-                                        .where(community_filter_statuses: { id: nil }) }
+    scope :filter_banned_statuses, -> { Rails.cache.fetch("filter_statuses_ids") { where.not(id: excluded_from_timeline_account_ids) } }
 
     def blocked_by_community_admin?
       return false unless self.communities.present?
@@ -451,6 +452,10 @@ module Mammoth
                     .or(Block.where(account_id: admin_ids, target_account_id: account_id))
       blocked.any?
     end
+
+    scope :excluded_from_timeline_account_ids, -> {
+      Rails.cache.fetch("bunned_statuses_ids") { joins(:community_filter_statuses).pluck(:status_id) }
+    }
     
     def get_community_admins
       community_admins = self.communities.get_community_admins
