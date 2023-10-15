@@ -406,7 +406,6 @@ module Mammoth
       selected_filters = user.selected_filters_for_user
       common_filter_by_selected_filters(selected_filters) 
     }
-     
     scope :common_filter_by_selected_filters, ->(selected_filters) {
       return self if selected_filters.blank?
     
@@ -420,7 +419,6 @@ module Mammoth
         .with_voice(selected_voices)
         .with_media(selected_media)
     }
-    
     scope :with_countries, ->(country_alpha2_name) {
       return self if country_alpha2_name.blank?
       joins(:account).where(account: { country: country_alpha2_name })

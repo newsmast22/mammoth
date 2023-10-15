@@ -95,7 +95,8 @@ module Mammoth
     end
 
     def included_by_community_statuses
-      Rails.cache.fetch("community_statuses:#{id}") { statuses.pluck(:id) }
+      statuses.order(id: :desc).limit(400).pluck(:id)
+      # redis.zrange("feed:community_statuses:#{id}", 0, -1, with_scores: false)
     end
 
     def last_status_at
@@ -184,6 +185,5 @@ module Mammoth
       }
 
     end
-
   end
 end
