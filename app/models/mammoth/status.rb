@@ -34,7 +34,13 @@ module Mammoth
     scope :fetching_400_statuses, -> { where(created_at: 1.week.ago..).limit(200) }
     scope :included_by_recommend_status, ->(accounts) { 
       where(id: accounts.flat_map(&:recommended_statuses))
-    }    
+    }  
+
+    scope :included_by_community, ->(community) { 
+      where(id: community.included_by_community_statuses)
+    }  
+    
+    
     scope :fetch_all_blocked_status_ids, -> (blocked_status_ids) {
       where(id: blocked_status_ids).or(where(reblog_of_id:blocked_status_ids ))
     }
@@ -454,7 +460,7 @@ module Mammoth
     scope :excluded_from_timeline_account_ids, -> {
       Rails.cache.fetch("bunned_statuses_ids") { joins(:community_filter_statuses).pluck(:status_id) }
     }
-    
+  
     def get_community_admins
       community_admins = self.communities.get_community_admins
       community_admins.concat(self.reblog&.communities.get_community_admins) if self.reblog?

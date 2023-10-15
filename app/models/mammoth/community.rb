@@ -94,6 +94,10 @@ module Mammoth
         .where(users: { is_active: true })
     end
 
+    def included_by_community_statuses
+      Rails.cache.fetch("community_statuses:#{id}") { statuses.pluck(:id) }
+    end
+
     def last_status_at
       community_statuses.order(created_at: :desc).first&.created_at
     end    
