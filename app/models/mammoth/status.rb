@@ -78,7 +78,7 @@ module Mammoth
 
     scope :filter_recommended_community, -> {
       joins(communities_statuses: :community)
-      .where.not(mammoth_communities: { is_recommended: true })
+      .where(mammoth_communities: { is_recommended: true })
     }
 
     scope :filter_statuses_without_current_user_with_acc_ids, -> (account_ids, current_acc_id) {
@@ -383,8 +383,6 @@ module Mammoth
         .where(users: { is_active: false} )
         .pluck("accounts.id")
     }
-
- 
 
     scope :filter_block_mute_inactive_acc_id, ->(account_id) {
       excluded_account_ids = excluded_account_ids(account_id)
