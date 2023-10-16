@@ -99,6 +99,10 @@ module Mammoth
       # redis.zrange("feed:community_statuses:#{id}", 0, -1, with_scores: false)
     end
 
+    def last_statuses_400_id_and_reblog_id
+      statuses.select(:id, :reblog_of_id).order(id: :desc).limit(400)
+    end
+
     def last_status_at
       community_statuses.order(created_at: :desc).first&.created_at
     end    
