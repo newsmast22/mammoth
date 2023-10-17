@@ -112,6 +112,19 @@ module Mammoth
       .not_muted(acc_ids)
     }
 
+    scope :filter_block_inactive_statuses_by_acc_ids, -> (acc_ids) {
+      joins(:account)
+        .left_joins(account: :user)
+        .where(user: { id: nil })
+        .where.not(account: { domain: nil })
+        .or(joins(:account)
+          .left_joins(account: :user)
+          .where.not(user: { id: nil })
+          .where.not(user: { is_active: false })
+          .where(account: { domain: nil }))
+      .not_blocked(acc_ids)
+    }
+
     scope :not_blocked, ->(acc_ids) {
       where.not(account_id: Block.where(account_id: acc_ids).pluck(:target_account_id))
       .where.not(account_id: Block.where(target_account_id: acc_ids).pluck(:account_id))
@@ -301,7 +314,7 @@ module Mammoth
 
       left_joins(:status_pins)
       .where(deleted_at: nil, reply: false, account_id: profile_id)
-      .filter_block_mute_inactive_statuses_by_acc_ids(account_id)
+      .filter_block_inactive_statuses_by_acc_ids(account_id)
       .pin_statuses_fileter(max_id)
     }
 
