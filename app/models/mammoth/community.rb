@@ -129,11 +129,6 @@ module Mammoth
       self.header = {data: data} if data.present?
     end
 
-    def self.community_followers_for_local_distribution
-        joins(community_users: {user: :account})
-        .where(accounts: { domain: nil })
-        .where('users.current_sign_in_at > ?', User::ACTIVE_DURATION.ago)
-    end
 
     def self.find_normalized(slug)
       find_by(slug: slug) || (raise ActiveRecord::RecordNotFound, "Couldn't find a record with slug: #{slug}")

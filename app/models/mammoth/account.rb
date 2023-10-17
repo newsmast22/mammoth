@@ -54,6 +54,12 @@ module Mammoth
           .where('users.current_sign_in_at > ?', User::ACTIVE_DURATION.ago)
       }
 
+    scope :get_communities_follower_by_commu_id, ->(community_ids) {
+      joins(users: :user_communities)
+        .where(domain: nil, user_communities: {community_id: community_ids})
+        .where('users.current_sign_in_at > ?', User::ACTIVE_DURATION.ago)
+    }
+
     def recommended_statuses
       redis.zrange("feed:recommended:#{id}", 0, -1, with_scores: false)
     end
