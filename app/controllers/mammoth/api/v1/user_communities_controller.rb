@@ -113,7 +113,7 @@ module Mammoth::Api::V1
         communities.each do |community|
           Mammoth::UserCommunity.where(community_id: community.id, user_id: current_user.id).first_or_create
         end
-        Newsmast::CommunityMergeWorker.perform_async(communities&.pluck[:id], current_user&.account&.id)
+        Newsmast::CommunityMergeWorker.perform_async(communities&.pluck(:id), current_user&.account&.id)
         render json: {message: 'User with community successfully joined!'}
       else
         render json: { error: 'no communities found' }
@@ -125,7 +125,7 @@ module Mammoth::Api::V1
       communities = collection.communities
       unless communities.blank?
         Mammoth::UserCommunity.where(user_id: current_user.id, community_id: collection.communities.pluck(:id).map(&:to_i)).destroy_all
-        Newsmast::CommunityUnmergeWorker.perform_async(communities&.pluck[:id], current_user&.account&.id)
+        Newsmast::CommunityUnmergeWorker.perform_async(communities&.pluck(:id), current_user&.account&.id)
         render json: {message: 'User with community successfully joined!'}
       else
         render json: { error: 'no communities found' }
