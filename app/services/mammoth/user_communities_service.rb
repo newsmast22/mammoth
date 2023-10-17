@@ -133,15 +133,15 @@ class Mammoth::UserCommunitiesService < BaseService
 
   def self.virtual_user_community_details
     { 
-      community_followed_user_counts: nil,
+      community_followed_user_counts: 0,
       community_name: ENV['NEWSMAST_COLLECTION'].capitalize,
       community_description:  "All posts from the communities of Newsmast.",
       collection_name: ENV['NEWSMAST_COLLECTION'].capitalize,
       community_url: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/my_server_newsmast_cover_photos/newsmast_community_profile_photo.png",
       community_header_url: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/my_server_newsmast_cover_photos/newsmast_community_cover_photo.png",
       community_slug: ENV['NEWSMAST_COLLECTION'],
-      is_joined: nil,
-      is_admin: nil,
+      is_joined: false,
+      is_admin: false,
       is_virtual: true
     }
   end
@@ -162,7 +162,7 @@ class Mammoth::UserCommunitiesService < BaseService
         description: "All posts from the communities of Newsmast.",
         image_url: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/my_server_newsmast_cover_photos/newsmast_community_profile_photo.png",
         collection_id: nil,
-        followers: nil,
+        followers: 0,
         created_at: Time.now,
         updated_at: Time.now,
         is_default_checked: false
