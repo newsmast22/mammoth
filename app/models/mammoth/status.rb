@@ -439,17 +439,17 @@ module Mammoth
     
     scope :with_contributor_role, ->(id) {
       return self if id.blank?
-      joins(:account).where("account.about_me_title_option_ids @> ARRAY[?]::integer[]", id)
+      joins(:account).where("accounts.about_me_title_option_ids @> ARRAY[?]::integer[]", id)
     }
     
     scope :with_voice, ->(id) {
       return self if id.blank?
-      joins(:account).where("account.about_me_title_option_ids && ARRAY[?]::integer[]", id)
+      joins(:account).where("accounts.about_me_title_option_ids && ARRAY[?]::integer[]", id)
     }
     
     scope :with_media, ->(id) {
       return self if id.blank?
-      joins(:account).where("account.about_me_title_option_ids && ARRAY[?]::integer[]", id)
+      joins(:account).where("accounts.about_me_title_option_ids && ARRAY[?]::integer[]", id)
     }
     
     scope :filter_with_words, ->(words) {
