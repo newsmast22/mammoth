@@ -32,10 +32,10 @@ module Mammoth
     scope :blocked_account_status_ids, -> (blocked_account_ids) {where(account_id: blocked_account_ids, reply: false)}
     scope :blocked_reblog_status_ids, -> (blocked_status_ids) {where(reblog_of_id: blocked_status_ids, reply: false)}
     scope :fetching_400_statuses, -> { where(created_at: 1.week.ago..).limit(200) }
-    scope :included_by_recommend_status, ->(accounts) { 
-      where(id: accounts.flat_map(&:recommended_statuses))
-    }  
-
+    scope :included_by_recommend_status, ->(accounts) {
+      where(id: accounts.flat_map { |account| account&.recommended_statuses }.uniq)
+    }
+    
     scope :included_by_community, ->(community) { 
       where(id: community.included_by_community_statuses)
     }  
