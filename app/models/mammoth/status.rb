@@ -476,6 +476,11 @@ module Mammoth
       Mammoth::Status.joins(communities_statuses: :community)
       .where(community: { is_recommended: true }, id: self.id).any?
     end
+
+    def is_bot_acc?
+      Mammoth::Status.joins(account: :users)
+      .where(users: { email: "posts@#{ENV['LOCAL_DOMAIN']}" }, id: self.id).any?
+    end
   
     def get_community_admins
       community_admins = self.communities.get_community_admins
