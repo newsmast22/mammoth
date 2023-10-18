@@ -101,6 +101,7 @@ module Mammoth::Api::V1
         render json: {message: 'User with community successfully joined!'}
       else
         Newsmast::CommunityUnmergeWorker.perform_async([@community&.id], current_user&.account&.id)
+        return render json: {message: 'User with community unsuccessfully unjoied!'} if @joined_user_community.is_primary === true
         @joined_user_community.destroy
         render json: {message: 'User with community successfully unjoied!'}
       end
@@ -159,6 +160,8 @@ module Mammoth::Api::V1
     end
 
     private
+
+
 
     def prepare_service
       @service = Mammoth::UserCommunitiesService.new(params, current_user)
