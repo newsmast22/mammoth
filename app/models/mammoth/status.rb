@@ -471,11 +471,21 @@ module Mammoth
     scope :excluded_from_timeline_account_ids, -> {
       Rails.cache.fetch("bunned_statuses_ids") { joins(:community_filter_statuses).pluck(:status_id) }
     }
+
+    def is_recommended_community?
+      Mammoth::Status.joins(communities_statuses: :community)
+      .where(community: { is_recommended: true }, id: self.id).any?
+    end
   
     def get_community_admins
       community_admins = self.communities.get_community_admins
       community_admins.concat(self.reblog&.communities.get_community_admins) if self.reblog?
       community_admins.uniq
+    end
+
+    def get_recommended_communities
+      Mammoth::Community.joins(community_statuses: :community)
+      .where(community: { is_recommended: true }, community_statuses: { status_id: self.id })
     end
 
     def is_valid_my_community?
