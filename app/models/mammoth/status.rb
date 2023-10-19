@@ -133,9 +133,9 @@ module Mammoth
     scope :not_muted, ->(acc_ids) {
       where.not(account_id: Mute.where(account_id: acc_ids).pluck(:target_account_id))
     }
-    scope :not_belong_to_any_community, -> {
+    scope :not_belong_to_any_community, ->(community_id) {
       left_joins(:communities_statuses)
-      .where(communities_statuses: {community_id: nil})
+      .where(communities_statuses: {community_id: [nil, community_id] })
     }
 
     scope :belong_to_community, ->(community) {
@@ -475,6 +475,12 @@ module Mammoth
     def is_recommended_community?
       Mammoth::Status.joins(communities_statuses: :community)
       .where(community: { is_recommended: true }, id: self.id).any?
+    end
+
+    def another_recommended_community?(community_id)
+      Mammoth::Status.joins(communities_statuses: :community)
+      .where(community: { is_recommended: true }, id: self.id)
+      .where.not(community: { id: community_id }).any?
     end
 
     def is_bot_acc?
