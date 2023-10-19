@@ -3,15 +3,18 @@ module Mammoth::Api::V1
     class CollectionsController < Api::BaseController
         before_action :require_user!, except: [:index]
         before_action :prepare_service, only: [ :index ]
-        before_action -> { doorkeeper_authorize! :read , :write}
+        before_action -> { doorkeeper_authorize! :read , :write}, except: [:index]
         before_action :set_collection, only: %i[show update destroy]
 
         def index
-          @user  = Mammoth::User.find(current_user.id)
-          #when user register
-          if @user.is_account_setup_finished == false
-            Mammoth::UserCommunity.where(user_id: current_user.id).destroy_all
+          unless current_user.nil?
+            @user  = Mammoth::User.find(current_user.id)
+            #when user register
+            if @user.is_account_setup_finished == false
+              Mammoth::UserCommunity.where(user_id: current_user.id).destroy_all
+            end
           end
+          
           data = @service.get_collections
           render json: data
         end

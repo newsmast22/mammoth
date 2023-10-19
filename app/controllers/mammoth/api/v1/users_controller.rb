@@ -1,8 +1,8 @@
 module Mammoth::Api::V1
   class UsersController < Api::BaseController
-		before_action -> { doorkeeper_authorize! :read , :write}
+		before_action -> { doorkeeper_authorize! :read , :write}, except: [:get_profile_detail_info_by_account, :get_profile_detail_statuses_by_account]
     before_action :generate_otp, only: [:change_email_phone]
-    before_action :require_user!, except: [:global_suggestion]
+    before_action :require_user!, except: [:global_suggestion, :get_profile_detail_info_by_account, :get_profile_detail_statuses_by_account]
 
     require 'aws-sdk-sns'
 
@@ -268,27 +268,33 @@ module Mammoth::Api::V1
 
     def get_profile_detail_info_by_account
       account = Account.find(params[:id])
-      get_user_details_info(params[:id], account)
+      if current_user.nil?
+        public_profile_detail(account)
+      else
+        get_user_details_info(params[:id], account)
+      end
     end
 
     def get_profile_detail_statuses_by_account
       
-      if !params[:max_id].nil? || params[:max_id].present? 
-        params[:max_id] = Mammoth::Status.new.check_pinned_status(params[:max_id], current_account.id)
-      end
+      current_account_id =  current_user.nil? ? 1 : current_account.id
 
-      profile_acc = Account.find(params[:id])
+        if !params[:max_id].nil? || params[:max_id].present? 
+          params[:max_id] = Mammoth::Status.new.check_pinned_status(params[:max_id], current_account_id)
+        end
 
-      statuses = Mammoth::Status.user_profile_timeline(current_account.id ,profile_acc.id, params[:max_id] , page_no = nil )
+        profile_acc = Account.find(params[:id])
 
-      render json: statuses,root: 'statuses_data', each_serializer: Mammoth::StatusSerializer,adapter: :json,
-      meta:{
-        pagination:
-          { 
-            total_objects: nil,
-            has_more_objects: 5 <= statuses.size ? true : false
-          } 
-      }
+        statuses = Mammoth::Status.user_profile_timeline(current_account_id ,profile_acc.id, params[:max_id] , page_no = nil )
+
+        render json: statuses,root: 'statuses_data', each_serializer: Mammoth::StatusSerializer,adapter: :json,
+        meta:{
+          pagination:
+            { 
+              total_objects: nil,
+              has_more_objects: 5 <= statuses.size ? true : false
+            } 
+        }
   
     end
 
@@ -486,14 +492,27 @@ module Mammoth::Api::V1
       )
     end
 
+    def public_profile_detail(account_info)
+      account_data = single_serialize(account_info, Mammoth::CredentialAccountSerializer)
+      render json: {
+        data:{
+          account_data: account_data.merge(:is_requested => false,:is_my_account => false, :is_followed => false),
+          community_images_url: [],
+          following_images_url: [],
+          is_admin: false,
+          community_slug: "",
+          account_type: "end-user"
+        }
+      }
+    end
+
     def get_user_details_info(target_account_id, account_info)
       
-      role_name = current_user_role
+      role_name = current_user.nil? ? nil : current_user_role
 
       community_images = []
       following_account_images = []
-      is_my_account = current_account.id == account_info.id ? true : false
-      account_followed_ids = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
+      is_my_account = current_user.nil? ? false : current_account.id == account_info.id ? true : false
 
       #begin::get collection images
       @user  = Mammoth::User.find(current_user.id)
