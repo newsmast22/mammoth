@@ -520,6 +520,10 @@ module Mammoth
       status_id
     end
 
+    def is_followed_other_admin(community)
+      !get_admins_from_follow.empty? && community.is_contain_admin?(self.get_admins_from_follow.pluck(:id))
+    end
+    
     def get_admins_from_follow
       Mammoth::Account.where(id: self.account.get_followed_admins)
     end

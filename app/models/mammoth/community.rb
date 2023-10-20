@@ -81,6 +81,12 @@ module Mammoth
       .pluck('users.account_id')
     }
 
+    def is_contain_admin?(account_ids)
+      Mammoth::Account.joins(users: :community_admins)
+      .where(community_admins: {community_id: self.id})
+      .where(id: account_ids).any?
+    end
+
     def get_community_admins
       community_admins.joins(:user)
       .where(community_id: self.id)
