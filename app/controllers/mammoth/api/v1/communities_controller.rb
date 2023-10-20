@@ -1,12 +1,13 @@
 module Mammoth::Api::V1
 	class CommunitiesController < Api::BaseController
-		before_action :require_user!
-		before_action -> { doorkeeper_authorize! :read , :write}
+		before_action :require_user!, except: [:index]
+		before_action -> { doorkeeper_authorize! :read , :write}, except: [:index]
 		before_action :set_community, only: %i[show update destroy update_is_country_filter_on]
 
 		def index
 			data = []
 
+			return return_public_communities if current_user.nil?
 			role_name = current_user_role
 
 			is_rss_account = false
@@ -28,8 +29,6 @@ module Mammoth::Api::V1
 																							)
 																							.order("mammoth_communities.position ASC,mammoth_communities.name ASC")
 																							.group("mammoth_communities.id")
-
-				@communities = @communities.get_public_communities() if role_name === "Owner"
 
 				if user_communities_ids.any?
 					primary_community =  user&.user_communities.where(is_primary: true).last
@@ -480,6 +479,57 @@ module Mammoth::Api::V1
 		end
 
 		private
+
+		def return_public_communities
+
+			data = []
+
+			@communities = Mammoth::Community.joins("
+				LEFT JOIN mammoth_communities_users ON mammoth_communities_users.community_id = mammoth_communities.id"
+				)
+				.select("mammoth_communities.*,COUNT(mammoth_communities_users.id) as follower_counts"
+				)
+				.order("mammoth_communities.position ASC,mammoth_communities.name ASC")
+				.group("mammoth_communities.id").get_public_communities()
+
+			@communities.each do |community|
+				data << {
+					id: community.id,
+					position: community.position,
+					name: community.name,
+					slug: community.slug,
+					followers: community.follower_counts,
+					is_country_filtering: community.is_country_filtering,
+					is_country_filter_on: community.is_country_filter_on,
+					header_url: community.header.url,
+					is_joined: false, 
+					is_primary: false,
+					image_file_name: community.image_file_name,
+					image_content_type: community.image_content_type,
+					image_file_size: community.image_file_size,
+					image_updated_at: community.image_updated_at,
+					description: community.description,
+					image_url: community.image.url,
+					collection_id: community.collection_id,
+					created_at: community.created_at,
+					updated_at: community.updated_at,
+					is_recommended: community.is_recommended
+				}
+			end
+
+			if params[:collection_id].nil?
+				render json: data
+			else
+				@collection  = Mammoth::Collection.where(slug: params[:collection_id]).last
+				render json: {data: data,
+					collection_data:{
+						collection_image_url: @collection.image.url,
+						collection_name: @collection.name
+					}
+				}
+			end
+			
+		end
 
 		def return_community
 			render json: @community
