@@ -516,7 +516,19 @@ module Mammoth::Api::V1
 					is_recommended: community.is_recommended
 				}
 			end
-			render json: data
+
+			if params[:collection_id].nil?
+				render json: data
+			else
+				@collection  = Mammoth::Collection.where(slug: params[:collection_id]).last
+				render json: {data: data,
+					collection_data:{
+						collection_image_url: @collection.image.url,
+						collection_name: @collection.name
+					}
+				}
+			end
+			
 		end
 
 		def return_community

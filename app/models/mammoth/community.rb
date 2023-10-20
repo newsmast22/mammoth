@@ -182,7 +182,37 @@ module Mammoth
           is_joined: user_communities_ids.include?(community.id),
           is_admin: is_community_admin,
       }
-
     end
+
+    def self.get_public_community_detail_profile(community_slug)
+      all_community_hash = Mammoth::CollectionService.all_collection
+
+      community = Mammoth::Community.new(
+				name: ENV['ALL_COLLECTION'].capitalize,
+				description: all_community_hash[:description],
+				collection_id: nil,
+				image: nil,
+				header: nil,
+				slug: ENV['ALL_COLLECTION'],
+				id: all_community_hash[:id]
+			)
+
+      community = Mammoth::Community.find_by!(slug: community_slug) unless community_slug == ENV['ALL_COLLECTION']
+
+      community_followed_user_counts = Mammoth::UserCommunity.where(community_id: community.id).size
+
+      result = {
+        community_followed_user_counts: community_followed_user_counts,
+        community_name: community.name,
+        community_description: community.description,
+        collection_name: community.try(:collection).try(:name).nil? ? " " : community.try(:collection).try(:name), 
+        community_url: community.try(:image).present? ? community.image.url : all_community_hash[:image_url] ,
+        community_header_url: community.try(:header).present? ? community.try(:header).try(:url) : all_community_hash[:collection_detail_image_url],
+        community_slug: community.slug,
+        is_joined: false,
+        is_admin: false,
+    }
+    end
+
   end
 end

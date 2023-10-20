@@ -1,8 +1,8 @@
 module Mammoth::Api::V1
 	class CommunityStatusesController < Api::BaseController
-		before_action -> { authorize_if_got_token! :read, :'read:statuses' }, except: [:create, :update, :destroy]
+		before_action -> { authorize_if_got_token! :read, :'read:statuses' }, only: [:create, :update, :destroy, :translate_text]
   	before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only:   [:create, :update, :destroy, :translate_text]
-		before_action :require_user!, except: [:show, :context, :link_preview]
+		before_action :require_user!, except: [:show, :context, :link_preview, :get_community_details_profile]
     before_action :set_status, only: [:show, :context]
 		before_action :set_thread, only: [:create]
 
@@ -84,6 +84,8 @@ module Mammoth::Api::V1
 				@result = Mammoth::UserCommunitiesService.virtual_user_community_details
 			elsif params[:id] == ENV['ALL_COLLECTION']
         @result = Mammoth::CollectionService.virtual_all_collection_details
+			elsif current_user.nil?
+				@result = Mammoth::Community.get_public_community_detail_profile(params[:id])
 			else 
 				@community = Mammoth::Community.find_by!(slug: params[:id])
 				@result = Mammoth::Community.get_community_info_details(current_user_role,current_user, params[:id])
