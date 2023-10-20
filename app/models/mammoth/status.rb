@@ -520,5 +520,13 @@ module Mammoth
       status_id
     end
 
+    def get_admins_from_follow
+      Mammoth::Account.where(id: self.account.get_followed_admins)
+    end
+
+    def belong_to_other?(community_id)
+      !communities_statuses.where(community_id: [community_id, nil])
+                          .where(status_id: self.id).any?
+    end
   end
 end

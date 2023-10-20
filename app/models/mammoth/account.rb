@@ -60,6 +60,23 @@ module Mammoth
         .where('users.current_sign_in_at > ?', User::ACTIVE_DURATION.ago)
     }
 
+    def get_owned_communities
+      Mammoth::Community.joins(community_admins: { user: :account })
+        .where(account: {id: self.id})
+    end
+
+    def is_community_admin?
+      get_owned_communities.any?
+    end
+
+    def get_followed_admins
+      Follow.where(account_id: get_all_community_admins.pluck(:id), target_account_id: self.id).pluck(:account_id)
+    end
+
+    def get_all_community_admins
+      Mammoth::Account.joins(users: :community_admins)
+    end
+
     def recommended_statuses
       redis.zrange("feed:recommended:#{id}", 0, -1, with_scores: false)
     end
