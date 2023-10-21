@@ -520,6 +520,10 @@ module Mammoth
       status_id
     end
 
+    def self.get_statues_by_commu_slug(community_slug)
+      joins(communities_statuses: :community).where(community: {slug: community_slug})
+    end
+
     def is_followed_other_admin(community)
       !get_admins_from_follow.empty? && community.is_contain_admin?(self.get_admins_from_follow.pluck(:id))
     end
