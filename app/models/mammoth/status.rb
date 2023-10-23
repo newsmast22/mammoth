@@ -521,7 +521,9 @@ module Mammoth
     end
 
     def self.get_statues_by_commu_slug(community_slug)
-      joins(communities_statuses: :community).where(community: {slug: community_slug})
+      Mammoth::Status
+        .left_joins(communities_statuses: :community)
+        .where(community: { slug: [community_slug, nil] })
     end
 
     def is_followed_other_admin(community)
@@ -533,8 +535,10 @@ module Mammoth
     end
 
     def belong_to_other?(community_id)
-      !communities_statuses.where(community_id: [community_id, nil])
-                          .where(status_id: self.id).any?
-    end
+      Mammoth::Status
+        .left_joins(:communities_statuses)
+        .where(communities_statuses: { community_id: [community_id, nil] }, id: self.id)
+        .none?
+    end    
   end
 end
