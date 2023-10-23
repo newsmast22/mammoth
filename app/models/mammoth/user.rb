@@ -181,13 +181,16 @@ module Mammoth
     private
 
     def self.fetch_suggestion_accounts(flag, current_user,limit, offset) 
-
+      account = Account.find(current_user.account_id)
+      blocked_muted_accs = account.block_relationships.pluck(:target_account_id) + account.blocked_by_relationships.pluck(:account_id) + account.mute_relationships.pluck(:target_account_id)
       sql_query = " (accounts.is_recommended = true OR accounts.is_popular = true) AND " if flag === "registeration"
       sql_query = " (users.current_sign_in_at > '#{User::ACTIVE_DURATION.ago}') AND " if flag === "my_community" || flag === "global"
 
+      blocked_muted_sql = " AND (accounts.id NOT IN ( #{blocked_muted_accs.join(', ')}) )" if blocked_muted_accs.any? 
+
       @accounts = Account.joins("LEFT JOIN users on accounts.id = users.account_id")
       .where("users.role_id IS NULL AND accounts.id != #{current_user.account_id} 
-              AND #{sql_query} (accounts.actor_type IS NULL OR accounts.actor_type = 'Person') "
+              AND #{sql_query} (accounts.actor_type IS NULL OR accounts.actor_type = 'Person') #{blocked_muted_sql}"
       )
       .order(username: :asc).limit(limit).offset(offset)
     end
