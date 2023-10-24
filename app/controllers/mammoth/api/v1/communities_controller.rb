@@ -484,13 +484,14 @@ module Mammoth::Api::V1
 
 			data = []
 
+			@collection  = Mammoth::Collection.where(slug: params[:collection_id]).last unless params[:collection_id].nil? 
+
 			@communities = Mammoth::Community.joins("
 				LEFT JOIN mammoth_communities_users ON mammoth_communities_users.community_id = mammoth_communities.id"
 				)
-				.select("mammoth_communities.*,COUNT(mammoth_communities_users.id) as follower_counts"
-				)
+				.select("mammoth_communities.*,COUNT(mammoth_communities_users.id) as follower_counts")
 				.order("mammoth_communities.position ASC,mammoth_communities.name ASC")
-				.group("mammoth_communities.id").get_public_communities()
+				.group("mammoth_communities.id").get_public_communities(@collection)
 
 			@communities.each do |community|
 				data << {
@@ -520,7 +521,6 @@ module Mammoth::Api::V1
 			if params[:collection_id].nil?
 				render json: data
 			else
-				@collection  = Mammoth::Collection.where(slug: params[:collection_id]).last
 				render json: {data: data,
 					collection_data:{
 						collection_image_url: @collection.image.url,
