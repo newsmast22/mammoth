@@ -221,7 +221,7 @@ module Mammoth
    
     scope :following_timeline, ->(param) do
         following_timeline_logic(param.acc_id)
-        .filter_banned_statuses
+        .filter_banned_statuses_old
         .filter_statuses_by_timeline_setting(param.user_id)
         .where(reply: false)
         .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
@@ -242,7 +242,7 @@ module Mammoth
       .where(deleted_at: nil)
       .where(reply: false)
       .where.not(account_id: param.account.id)
-      .filter_banned_statuses
+      .filter_banned_statuses_old
       .filter_block_mute_inactive_statuses_by_acc_ids(acc_ids)
       .pagination(param.page_no, param.max_id)
 
@@ -261,7 +261,7 @@ module Mammoth
       .filter_statuses_by_community_timeline_setting(param.user.id)
       .filter_with_primary_timeline_logic(param.account, param.user, param.community)
       .where(reply: false, deleted_at: nil)
-      .filter_banned_statuses
+      .filter_banned_statuses_old
       .filter_block_mute_inactive_statuses_by_acc_ids(acc_ids)
       .pagination(param.page_no, param.max_id)
     }
@@ -270,7 +270,7 @@ module Mammoth
 
       fetching_400_statuses
       .joins(communities_statuses: :community)
-      .filter_banned_statuses
+      .filter_banned_statuses_old
       .where.not(mammoth_communities: { slug: "breaking_news" })
       .filter_statuses_without_rss
       .where(deleted_at: nil)
@@ -285,7 +285,7 @@ module Mammoth
   
     scope :newsmast_timeline, -> (param) {
       fetching_400_statuses
-      .filter_banned_statuses
+      .filter_banned_statuses_old
       .where(local: true, deleted_at: nil, reply: false, is_rss_content: false)
       .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
       .pagination(param.page_no, param.max_id)
@@ -299,7 +299,7 @@ module Mammoth
     scope :federated_timeline, -> (param) {
      
       fetching_400_statuses
-      .filter_banned_statuses
+      .filter_banned_statuses_old
       .where(local: false, deleted_at: nil, reply: false)
       .filter_block_mute_inactive_statuses_by_acc_ids(param.acc_id)
       .pagination(param.page_no, param.max_id)
@@ -329,7 +329,7 @@ module Mammoth
       .filter_statuses_without_rss
       .where.not(mammoth_communities: { slug: "breaking_news" })
       .where(community_users: { user_id: param.user_id })
-      .filter_banned_statuses
+      .filter_banned_statuses_old
       .where(deleted_at: nil)
       .filter_statuses_by_timeline_setting(param.user_id)
       .filter_block_mute_inactive_statuses_by_acc_ids(acc_ids)
@@ -456,6 +456,8 @@ module Mammoth
       return self if words.blank?
       where("LOWER(statuses.text) like '%#{words}%'")
     }
+
+    scope :filter_banned_statuses_old, -> { left_joins(:community_filter_statuses).where(community_filter_statuses: { id: nil }) }
 
     scope :filter_banned_statuses, -> { Rails.cache.fetch("filter_statuses_ids") { where.not(id: excluded_from_timeline_account_ids) } }
 
