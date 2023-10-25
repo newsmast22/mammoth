@@ -17,7 +17,7 @@ class Mammoth::TagSerializer < ActiveModel::Serializer
   end
 
   def post_count
-    0
+    Mammoth::StatusTag.where(tag_id: object.id).count
     #object.statuses.count
   end
 
