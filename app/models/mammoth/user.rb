@@ -184,7 +184,9 @@ module Mammoth
       account = Account.find(current_user.account_id)
       blocked_muted_accs = account.block_relationships.pluck(:target_account_id) + account.blocked_by_relationships.pluck(:account_id) + account.mute_relationships.pluck(:target_account_id)
       sql_query = " (accounts.is_recommended = true OR accounts.is_popular = true) AND " if flag === "registeration"
-      sql_query = " (users.current_sign_in_at > '#{User::ACTIVE_DURATION.ago}') AND " if flag === "my_community" || flag === "global"
+      sql_query = " (users.current_sign_in_at > '#{User::ACTIVE_DURATION.ago}' AND accounts.domain IS NULL) AND " if flag === "my_community"
+      sql_query = " (accounts.last_webfingered_at > '#{Time.now - 7.days}' AND accounts.domain IS NOT NULL) AND " if flag === "global"
+
 
       blocked_muted_sql = " AND (accounts.id NOT IN ( #{blocked_muted_accs.join(', ')}) )" if blocked_muted_accs.any? 
 

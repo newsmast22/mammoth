@@ -18,8 +18,12 @@ module Mammoth
     }
 
     scope :get_public_communities, -> (collection = nil){
-      where(is_recommended: true) if collection.nil?
-      where(collection_id: collection.id) unless collection.nil?
+      if collection.nil?
+        where(is_recommended: true)
+
+      else
+        where(collection_id: collection.id)
+      end
     }
 
   	IMAGE_LIMIT = 15.megabytes
