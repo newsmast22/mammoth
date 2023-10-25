@@ -17,7 +17,8 @@ class Mammoth::TagSerializer < ActiveModel::Serializer
   end
 
   def post_count
-    object.statuses.count
+    0
+    #object.statuses.count
   end
 
   def name
