@@ -35,9 +35,11 @@ module Mammoth::Api::V1
 
       default_limit = limit - 1
 
-      @accounts = Mammoth::User.search_global_users(limit , offset, keywords, current_account)  
+      @accounts = Mammoth::User.search_global_users(limit , offset, keywords, current_account) 
 
-      render json:  @accounts.take(default_limit), root: 'data', 
+      @accounts = @accounts.take(default_limit) unless keywords.nil?
+
+      render json:  @accounts, root: 'data', 
                     each_serializer: Mammoth::AccountSerializer, current_user: current_user, adapter: :json, 
                     meta: { 
                       has_more_objects: @accounts.size > default_limit ? true : false,

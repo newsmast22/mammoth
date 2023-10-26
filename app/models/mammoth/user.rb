@@ -137,7 +137,7 @@ module Mammoth
       end
 
       unless filtered_accounts.any? || !@search_keywords.nil?
-        fetch_suggestion_accounts("global", current_account.user, @search_limit, @search_offset)     
+        @accounts = accounts_scope(current_account, false).offset(offset).limit(limit)
       end
       #end::search from other instance
 
@@ -148,13 +148,9 @@ module Mammoth
     def self.users_suggestion(current_user, is_registeration = false, limit, offset, seach_words)
 
       if is_registeration
-
         fetch_suggestion_accounts("registeration", current_user, limit, offset)
-
       elsif seach_words.nil?
-
-        fetch_suggestion_accounts("my_community", current_user, limit, offset)
-
+        @accounts = accounts_scope(current_user.account, true).offset(offset).limit(limit)
       else
 
         user = Mammoth::User.find(current_user.id)
@@ -180,13 +176,19 @@ module Mammoth
 
     private
 
+    def self.accounts_scope(current_account,is_local)
+      Account.discoverable.tap do |scope|
+        scope.merge!(Account.local)                                          if is_local
+        scope.merge!(Account.by_recent_status)                               
+        scope.merge!(Account.not_excluded_by_account(current_account))       if current_account
+        scope.merge!(Account.not_domain_blocked_by_account(current_account)) if current_account && !is_local
+      end
+    end
+
     def self.fetch_suggestion_accounts(flag, current_user,limit, offset) 
       account = Account.find(current_user.account_id)
       blocked_muted_accs = account.block_relationships.pluck(:target_account_id) + account.blocked_by_relationships.pluck(:account_id) + account.mute_relationships.pluck(:target_account_id)
       sql_query = " (accounts.is_recommended = true OR accounts.is_popular = true) AND " if flag === "registeration"
-      sql_query = " (users.current_sign_in_at > '#{User::ACTIVE_DURATION.ago}' AND accounts.domain IS NULL) AND " if flag === "my_community"
-      sql_query = " (accounts.last_webfingered_at > '#{Time.now - 7.days}' AND accounts.domain IS NOT NULL) AND " if flag === "global"
-
 
       blocked_muted_sql = " AND (accounts.id NOT IN ( #{blocked_muted_accs.join(', ')}) )" if blocked_muted_accs.any? 
 
