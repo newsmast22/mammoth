@@ -150,7 +150,7 @@ module Mammoth
       if is_registeration
         fetch_suggestion_accounts("registeration", current_user, limit, offset)
       elsif seach_words.nil?
-        @accounts = accounts_scope(current_user.account, true).offset(offset).limit(limit)
+        fetch_suggestion_accounts("my_community", current_user, limit, offset)
       else
 
         user = Mammoth::User.find(current_user.id)
@@ -189,6 +189,7 @@ module Mammoth
       account = Account.find(current_user.account_id)
       blocked_muted_accs = account.block_relationships.pluck(:target_account_id) + account.blocked_by_relationships.pluck(:account_id) + account.mute_relationships.pluck(:target_account_id)
       sql_query = " (accounts.is_recommended = true OR accounts.is_popular = true) AND " if flag === "registeration"
+      sql_query = " (users.current_sign_in_at > '#{User::ACTIVE_DURATION.ago}' AND accounts.domain IS NULL) AND " if flag === "my_community"
 
       blocked_muted_sql = " AND (accounts.id NOT IN ( #{blocked_muted_accs.join(', ')}) )" if blocked_muted_accs.any? 
 
