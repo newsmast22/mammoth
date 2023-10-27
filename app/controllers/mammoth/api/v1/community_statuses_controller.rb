@@ -656,7 +656,7 @@ module Mammoth::Api::V1
 				
 				return render json: status, serializer: Mammoth::StatusSerializer unless ENV['TRANSLATION_ENABLED'] == "true"
 
-				unless status.nil? || status.try(:text).nil? || status.try(:text).blank? || !status.try(:translated_text).nil? || !status.try(:translated_text).blank? 
+				unless status.nil? || status.try(:text).nil? || status.try(:text).blank?
 					status = call_translate_text_service(status)
 				end
 				render json: status, serializer: Mammoth::StatusSerializer
