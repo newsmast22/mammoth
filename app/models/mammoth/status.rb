@@ -476,6 +476,7 @@ module Mammoth
 
     def is_recommended_community?
       Mammoth::Status.joins(communities_statuses: :community)
+      .where.not(community: {slug: "breaking_news"})
       .where(community: { is_recommended: true }, id: self.id).any?
     end
 
