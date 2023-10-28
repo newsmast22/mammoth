@@ -8,6 +8,14 @@ module Mammoth
       end
       
       def translate_text(text)
+
+      # Check if the string contains any HTML tags
+      contains_html_tags = /<("[^"]*"|'[^']*'|[^'">])*>/.match?(text)
+
+      if contains_html_tags
+        text = PlainTextFormatter.new(text, false).to_s
+      end
+
         HTTParty.post(@base_url, 
           :body => {
             "prompt": text
