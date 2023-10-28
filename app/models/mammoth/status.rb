@@ -474,6 +474,12 @@ module Mammoth
       Rails.cache.fetch("bunned_statuses_ids") { joins(:community_filter_statuses).pluck(:status_id) }
     }
 
+    def is_breaking_news?
+      Mammoth::Status.joins(communities_statuses: :community)
+      .where(community: {slug: "breaking_news"})
+      .where(id: self.id).any?
+    end
+
     def is_recommended_community?
       Mammoth::Status.joins(communities_statuses: :community)
       .where.not(community: {slug: "breaking_news"})
