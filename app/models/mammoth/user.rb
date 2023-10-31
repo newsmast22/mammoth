@@ -150,7 +150,7 @@ module Mammoth
       if is_registeration
         fetch_suggestion_accounts("registeration", current_user, limit, offset)
       elsif seach_words.nil?
-        fetch_suggestion_accounts("my_community", current_user, limit, offset)
+        @accounts = accounts_scope(current_user.account, true).offset(offset).limit(limit)
       else
 
         user = Mammoth::User.find(current_user.id)
