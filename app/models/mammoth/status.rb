@@ -322,7 +322,7 @@ module Mammoth
             query.where(visibility: [:public, :unlisted, :private])
           end
 
-      query.pin_statuses_filter(max_id)
+      query.pin_statuses_fileter(max_id)
     }
 
     scope :my_community_timeline, -> (param) {
