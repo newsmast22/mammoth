@@ -137,7 +137,9 @@ module Mammoth
       end
 
       unless filtered_accounts.any? || !@search_keywords.nil?
-        @accounts = accounts_scope(current_account, false).offset(offset).limit(limit)
+        ActiveRecord::Base.connected_to(role: :reading, prevent_writes: true) do
+          @accounts = accounts_scope(current_account, false).offset(offset).limit(limit)
+        end
       end
       #end::search from other instance
 
