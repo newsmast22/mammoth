@@ -312,17 +312,10 @@ module Mammoth
 
     scope :user_profile_timeline, -> (account_id, profile_id, max_id = nil , page_no = nil ) {
 
-      query = left_joins(:status_pins)
+      left_joins(:status_pins)
       .where(deleted_at: nil, reply: false, account_id: profile_id)
       .filter_block_inactive_statuses_by_acc_ids(account_id)
-
-      query = if account_id == profile_id
-            query.where(visibility: [:public, :unlisted, :private, :direct])
-          else
-            query.where(visibility: [:public, :unlisted, :private])
-          end
-
-      query.pin_statuses_fileter(max_id)
+      .pin_statuses_fileter(max_id)
     }
 
     scope :my_community_timeline, -> (param) {
