@@ -315,6 +315,7 @@ module Mammoth
       left_joins(:status_pins)
       .where(deleted_at: nil, reply: false, account_id: profile_id)
       .filter_block_inactive_statuses_by_acc_ids(account_id)
+      .where(visibility: account_id == profile_id ? [:public, :unlisted, :private, :direct] : [:public, :unlisted])
       .pin_statuses_fileter(max_id)
     }
 
