@@ -138,6 +138,7 @@ module Mammoth
 
       unless filtered_accounts.any? || !@search_keywords.nil?
         ActiveRecord::Base.connected_to(role: :reading, prevent_writes: true) do
+          offset = @search_offset.to_i == 0 ? 0 : @search_offset.to_i + 1
           @accounts = accounts_scope(current_account, false).offset(offset).limit(limit)
         end
       end
