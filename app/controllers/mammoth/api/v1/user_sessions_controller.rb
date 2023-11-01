@@ -26,6 +26,7 @@ module Mammoth::Api::V1
           step: "dob",
           otp_code: @otp_code,
         )
+        @user.account.update!(discoverable: true)
       elsif !@user.confirmed_at.present?
         @user.update!(otp_code: @otp_code)
         @user.account.update!(username: user_params[:username])
@@ -44,6 +45,8 @@ module Mammoth::Api::V1
           step: "dob",
           otp_code: @otp_code,
         )
+        @user.account.update!(discoverable: true)
+        @user.account.update!(username: user_params[:username])
       end
       
       Mammoth::Mailer.with(user: @user).account_confirmation.deliver_now
@@ -75,6 +78,7 @@ module Mammoth::Api::V1
           step: "dob",
         )
         @user.save(validate: false)
+        @user.account.update!(discoverable: true)
         set_sns_publich(user_params[:phone])
       elsif !@user.confirmed_at.present?
         @user.update!(otp_code: @otp_code)
@@ -96,6 +100,7 @@ module Mammoth::Api::V1
           wait_list_id: nil,
           step: "dob",
         )
+        @user.account.update!(discoverable: true)
       end
 
       render json: {data: @user}

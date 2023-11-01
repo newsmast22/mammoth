@@ -137,7 +137,10 @@ module Mammoth
       end
 
       unless filtered_accounts.any? || !@search_keywords.nil?
-        @accounts = accounts_scope(current_account, false).offset(offset).limit(limit)
+        ActiveRecord::Base.connected_to(role: :reading, prevent_writes: true) do
+          offset = @search_offset.to_i == 0 ? 0 : @search_offset.to_i + 1
+          @accounts = accounts_scope(current_account, false).offset(offset).limit(limit)
+        end
       end
       #end::search from other instance
 
@@ -150,7 +153,7 @@ module Mammoth
       if is_registeration
         fetch_suggestion_accounts("registeration", current_user, limit, offset)
       elsif seach_words.nil?
-        fetch_suggestion_accounts("my_community", current_user, limit, offset)
+        @accounts = accounts_scope(current_user.account, true).offset(offset).limit(limit)
       else
 
         user = Mammoth::User.find(current_user.id)
