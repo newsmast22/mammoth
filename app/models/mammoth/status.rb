@@ -480,7 +480,7 @@ module Mammoth
 
     def is_all_timeline?
       Mammoth::Status.joins(communities_statuses: :community)
-                      .where(id: self.id)
+                      .where(id: self.id, reply: false, community_feed_id: nil, group_id: nil)
                       .where.not(community: { slug: "breaking_news", id: nil }).any?
     end
 
