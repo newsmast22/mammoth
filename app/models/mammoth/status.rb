@@ -478,6 +478,12 @@ module Mammoth
       Rails.cache.fetch("bunned_statuses_ids") { joins(:community_filter_statuses).pluck(:status_id) }
     }
 
+    def is_all_timeline?
+      Mammoth::Status.joins(communities_statuses: :community)
+                      .where(id: self.id)
+                      .where.not(community: { slug: "breaking_news", id: nil }).any?
+    end
+
     def is_breaking_news?
       Mammoth::Status.joins(communities_statuses: :community)
       .where(community: {slug: "breaking_news"})
