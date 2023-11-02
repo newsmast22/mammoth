@@ -281,6 +281,8 @@ module Mammoth
     scope :all_timeline_logic, -> {
       joins(:communities_statuses)
       .where.not(communities_statuses: { community_id: 3, id: nil })
+      .order(id: :desc)
+      .limit(400)
     }
   
     scope :newsmast_timeline, -> (param) {
