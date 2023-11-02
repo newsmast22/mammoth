@@ -279,8 +279,8 @@ module Mammoth
     }
 
     scope :all_timeline_logic, -> {
-      joins(communities_statuses: :community)
-      .where.not(mammoth_communities: { slug: "breaking_news" })
+      joins(:communities_statuses)
+      .where.not(communities_statuses: { community_id: 3, id: nil })
     }
   
     scope :newsmast_timeline, -> (param) {
@@ -311,12 +311,13 @@ module Mammoth
     }
 
     scope :user_profile_timeline, -> (account_id, profile_id, max_id = nil , page_no = nil ) {
-
+      
       left_joins(:status_pins)
       .where(deleted_at: nil, reply: false, account_id: profile_id)
       .filter_block_inactive_statuses_by_acc_ids(account_id)
       .where(visibility: account_id == profile_id ? [:public, :unlisted, :private, :direct] : [:public, :unlisted])
       .pin_statuses_fileter(max_id)
+
     }
 
     scope :my_community_timeline, -> (param) {
