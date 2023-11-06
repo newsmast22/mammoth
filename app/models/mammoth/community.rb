@@ -192,6 +192,7 @@ module Mammoth
           community_slug: community.slug,
           is_joined: user_communities_ids.include?(community.id),
           is_admin: is_community_admin,
+					community_admin_followed_count: community.community_admin_followed_count
       }
     end
 
@@ -222,6 +223,7 @@ module Mammoth
         community_slug: community.slug,
         is_joined: false,
         is_admin: false,
+				community_admin_followed_count: community.community_admin_followed_count
     }
     end
 

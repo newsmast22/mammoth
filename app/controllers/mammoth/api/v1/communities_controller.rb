@@ -53,8 +53,7 @@ module Mammoth::Api::V1
 							collection_id: community.collection_id,
 							created_at: community.created_at,
 							updated_at: community.updated_at,
-							is_recommended: community.is_recommended,
-							community_admin_followed_count: community.community_admin_followed_count
+							is_recommended: community.is_recommended
 						}
 					end
 					render json: data
@@ -80,8 +79,7 @@ module Mammoth::Api::V1
 							collection_id: community.collection_id,
 							created_at: community.created_at,
 							updated_at: community.updated_at,
-							is_recommended: community.is_recommended,
-							community_admin_followed_count: community.community_admin_followed_count
+							is_recommended: community.is_recommended
 						}
 					end
 					render json: data
@@ -122,8 +120,7 @@ module Mammoth::Api::V1
 							collection_id: community.collection_id,
 							created_at: community.created_at,
 							updated_at: community.updated_at,
-							is_recommended: community.is_recommended,
-							community_admin_followed_count: community.community_admin_followed_count
+							is_recommended: community.is_recommended
 						}
 					end
 					render json: {data: data,
