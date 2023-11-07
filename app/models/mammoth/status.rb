@@ -481,7 +481,7 @@ module Mammoth
     def is_all_timeline?
       Mammoth::Status.joins(communities_statuses: :community)
                       .where(id: self.id, reply: false, community_feed_id: nil, group_id: nil)
-                      .where.not(community: { slug: "breaking_news", id: nil }).any?
+                      .where.not(community: { slug: "breaking_news" }).any?
     end
 
     def is_breaking_news?
@@ -505,6 +505,10 @@ module Mammoth
     def is_bot_acc?
       Mammoth::Status.joins(account: :users)
       .where(users: { email: "posts@#{ENV['LOCAL_DOMAIN']}" }, id: self.id).any?
+    end
+
+    def belong_to_community?(community_id)
+      Mammoth::CommunityStatus.where(community_id: community_id, status_id: self.id).any?
     end
   
     def get_community_admins
