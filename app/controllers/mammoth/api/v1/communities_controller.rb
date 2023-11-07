@@ -484,8 +484,9 @@ module Mammoth::Api::V1
 			user_ids = Mammoth::CommunityAdmin.where(community_id: community.id).pluck(:user_id)
 			account_ids = Mammoth::User.where(id: user_ids).pluck(:account_id)
 			followed_accounts = Follow.where(account_id: account_ids).pluck(:target_account_id).uniq
-			accounts = Account.left_joins(:user).where(id: followed_accounts)
-			
+			accounts = Account.left_joins(:user).where(id: followed_accounts).order("id desc")
+			accounts = accounts.where("accounts.id < :max_id", max_id: params[:max_id]) if params[:max_id].present?
+
 			before_limit_statuses = accounts
 			accounts = accounts.limit(10)
 
