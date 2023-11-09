@@ -559,9 +559,10 @@ module Mammoth
 
     def belong_to_other?(community_id)
       Mammoth::Status
-        .left_joins(:communities_statuses)
-        .where(communities_statuses: { community_id: [community_id, nil] }, id: self.id)
-        .none?
-    end    
+        .left_outer_joins(:communities_statuses)
+        .where("statuses.deleted_at IS NULL")
+        .where("(mammoth_communities_statuses.community_id = ? OR mammoth_communities_statuses.id IS NULL)", community_id)
+        .where(id: self.id).count == 0
+    end
   end
 end
