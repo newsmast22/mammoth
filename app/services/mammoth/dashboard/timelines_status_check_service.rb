@@ -46,7 +46,7 @@ module Mammoth
     def check_endpoints!
       Mammoth::Dashboard::EndPoint.all.each do |endpoint|
         response = fetch_api_data(endpoint.end_point_url, endpoint.http_method, endpoint.access_token)
-        create_monitoring_status(endpoint, response)
+        check_monitoring_status(endpoint, response)
       end
     end
 
@@ -55,7 +55,7 @@ module Mammoth
       HTTParty.send(http_method.downcase, url, headers: { 'Authorization' => "Bearer #{access_token}" })
     end
 
-    def create_monitoring_status(endpoint, response)
+    def check_monitoring_status(endpoint, response)
       response_body = JSON.parse(response&.body)
       last_status_posted_datetime = response_body&.first&.dig('created_at')
 
