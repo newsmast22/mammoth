@@ -182,7 +182,8 @@ module Mammoth
     def self.accounts_scope(current_account,is_local)
       Account.discoverable.tap do |scope|
         scope.merge!(Account.local)                                          if is_local
-        scope.merge!(Account.by_recent_status)                               
+        scope.merge!(Account.by_recent_status) 
+        scope.merge!(Account.where.not(id: current_account))                               
         scope.merge!(Account.not_excluded_by_account(current_account))       if current_account
         scope.merge!(Account.not_domain_blocked_by_account(current_account)) if current_account && !is_local
       end
