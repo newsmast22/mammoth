@@ -1,3 +1,4 @@
+require 'benchmark'
 module Mammoth
   class Dashboard::TimelinesStatusCheckService < BaseService
     FIVE_MINUTES_AGO = 5.minutes.freeze
@@ -47,9 +48,17 @@ module Mammoth
 
     def check_endpoints!
       Mammoth::Dashboard::EndPoint.all.each do |endpoint|
-        response = fetch_api_data(endpoint.end_point_url, endpoint.http_method, endpoint.access_token)
-        check_monitoring_status(endpoint, response)
+        prepare_result(endpoint)
+        check_monitoring_status(endpoint, @response)
       end
+    end
+
+    def prepare_result(endpoint)
+      query_time = Benchmark.measure do
+        @response = fetch_api_data(endpoint.end_point_url, endpoint.http_method, endpoint.access_token)
+      end 
+      puts "#{endpoint.name} process time : #{format('%.4f', query_time.real)} seconds"
+      return @response
     end
 
     def fetch_api_data(url, http_method, access_token)
@@ -78,7 +87,6 @@ module Mammoth
         endpoint.update(max_active: max_active_seconds)
       end
     end
-    
 
     def create_operational_status(endpoint, response)
       endpoint.monitoring_statuses.create(
