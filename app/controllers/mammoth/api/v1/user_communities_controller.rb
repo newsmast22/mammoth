@@ -161,8 +161,6 @@ module Mammoth::Api::V1
 
     private
 
-
-
     def prepare_service
       @service = Mammoth::UserCommunitiesService.new(params, current_user)
     end
