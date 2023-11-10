@@ -69,8 +69,16 @@ module Mammoth
       get_owned_communities.any?
     end
 
+    def is_joined_community?(community_id)
+      Mammoth::UserCommunity.where(user_id: self.user.id, community_id: community_id).any?
+    end
+
     def get_followed_admins
       Follow.where(account_id: get_all_community_admins.pluck(:id), target_account_id: self.id).pluck(:account_id)
+    end
+
+    def get_joined_communities
+      Mammoth::Community.joins(:community_users).where(community_users: { user_id: self.user.id })
     end
 
     def get_all_community_admins
