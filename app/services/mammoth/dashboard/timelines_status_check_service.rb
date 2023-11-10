@@ -1,5 +1,7 @@
 module Mammoth
   class Dashboard::TimelinesStatusCheckService < BaseService
+    FIVE_MINUTES_AGO = 5.minutes.freeze
+
     def call
       setup_protocol_and_domain
       login_account!
@@ -56,15 +58,27 @@ module Mammoth
     end
 
     def check_monitoring_status(endpoint, response)
-      response_body = JSON.parse(response&.body)
-      last_status_posted_datetime = response_body&.first&.dig('created_at')
-
-      if last_status_posted_datetime.present? && DateTime.parse(last_status_posted_datetime) >= 5.minutes.ago
+      response_body = JSON.parse(response&.body) rescue nil
+      latest_feed_created_at = response_body&.first&.dig('created_at')
+    
+      last_status_posted_datetime = latest_feed_created_at&.to_datetime
+    
+      update_max_active(endpoint, last_status_posted_datetime)
+      
+      if last_status_posted_datetime.present? && last_status_posted_datetime >= FIVE_MINUTES_AGO.ago
         create_operational_status(endpoint, response)
       else
         create_non_operational_status(endpoint, response, last_status_posted_datetime)
       end
     end
+    
+    def update_max_active(endpoint, last_status_posted_datetime)
+      if last_status_posted_datetime.present?
+        max_active_seconds = DateTime.now.to_time - last_status_posted_datetime.to_time
+        endpoint.update(max_active: max_active_seconds)
+      end
+    end
+    
 
     def create_operational_status(endpoint, response)
       endpoint.monitoring_statuses.create(
