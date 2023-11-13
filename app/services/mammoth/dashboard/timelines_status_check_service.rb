@@ -69,13 +69,11 @@ module Mammoth
     def check_monitoring_status(endpoint, response)
       response_body = JSON.parse(response&.body) rescue nil
       latest_feed_created_at = response_body&.first&.dig('created_at')
-    
-      last_status_posted_datetime = latest_feed_created_at&.to_datetime
       
-      if last_status_posted_datetime.present? && last_status_posted_datetime >= endpoint.max_active.seconds.ago
+      if latest_feed_created_at.present? && latest_feed_created_at.to_time.utc >= endpoint.max_active.seconds.ago.to_time.utc
         create_operational_status(endpoint, response)
       else
-        create_non_operational_status(endpoint, response, last_status_posted_datetime)
+        create_non_operational_status(endpoint, response, latest_feed_created_at)
       end
     end
 
