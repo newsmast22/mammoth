@@ -2,6 +2,7 @@ require 'benchmark'
 module Mammoth
   class Dashboard::TimelinesStatusCheckService < BaseService
     FIVE_MINUTES_AGO = 5.minutes.freeze
+    PUBLIC_TIMELINES = ['/api/v1/timelines/newsmast/public/community', '/api/v1/timelines/newsmast/public/all_communities'].freeze
 
     def call
       setup_protocol_and_domain
@@ -26,7 +27,7 @@ module Mammoth
 
       response = authenticate(username, password, client_id, client_secret, redirect_uri, scope)
       access_token = response['access_token']
-      Mammoth::Dashboard::EndPoint.update_all(access_token: access_token)
+      Mammoth::Dashboard::EndPoint.where.not(end_point_url: PUBLIC_TIMELINES).update_all(access_token: access_token)
     end
 
     def authenticate(username, password, client_id, client_secret, redirect_uri, scope)
