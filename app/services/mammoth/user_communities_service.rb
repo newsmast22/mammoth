@@ -15,7 +15,7 @@ class Mammoth::UserCommunitiesService < BaseService
   def get_user_communities
     @user = Mammoth::User.find(@current_user.id)
     @communities = @user&.communities || []
-    @communities_count = @communities.count 
+    @user_communitiess = Mammoth::UserCommunity.where(user_id: @current_user.id)
     @user_communities = Mammoth::UserCommunity.find_by(user_id: @current_user.id,is_primary: true)
     @data = []
     
@@ -37,7 +37,8 @@ class Mammoth::UserCommunitiesService < BaseService
           followers: Mammoth::UserCommunity.where(community_id: community.id).size,
           created_at: community.created_at,
           updated_at: community.updated_at,
-          is_default_checked: false
+          is_default_checked: false,
+          community_hashtags: get_community_hashtags(community.id)
         }
       end
 
@@ -62,7 +63,8 @@ class Mammoth::UserCommunitiesService < BaseService
             followers: Mammoth::UserCommunity.where(community_id: new_community.id).size,
             created_at: new_community.created_at,
             updated_at: new_community.updated_at,
-            is_default_checked: false
+            is_default_checked: false,
+            community_hashtags: get_community_hashtags(community.id)
           }
           @data = @data.sort_by {|h| [h[:slug] == new_community.slug ? 0 : 1,h[:slug]]}
         end
@@ -76,6 +78,7 @@ class Mammoth::UserCommunitiesService < BaseService
 
     end
     return @data
+    #return @user_communitiess
   end
 
   def fetch_status_communities(status_id)
@@ -119,7 +122,8 @@ class Mammoth::UserCommunitiesService < BaseService
             followers: Mammoth::UserCommunity.where(community_id: status_community.id).size,
             created_at: status_community.created_at,
             updated_at: status_community.updated_at,
-            is_default_checked: true
+            is_default_checked: true,
+            community_hashtags: get_community_hashtags(status_community.id)
           }
         end
 
@@ -149,7 +153,7 @@ class Mammoth::UserCommunitiesService < BaseService
   def virtual_community
     if @is_virtual == 'true' || @is_virtual.nil?
       @data.unshift( {
-        id: @communities_count + 1,
+        id: @communities.count  + 1,
         user_id: @user.id.to_s,
         is_primary: false,
         is_virtual: true,
@@ -169,4 +173,11 @@ class Mammoth::UserCommunitiesService < BaseService
       } )
     end
   end
+
+  private
+
+  def get_community_hashtags(community_id)
+    Mammoth::CommunityHashtag.where(community_id: community_id, is_incoming: false).pluck(:hashtag)
+  end
+
 end

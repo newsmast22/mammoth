@@ -81,9 +81,6 @@ module Mammoth
       def create_community_status
         begin
           @community_status = Mammoth::CommunityStatus.new(status: @status, community_id: @cid)
-          # unless @image.blank?
-          #   @community_status.image = URI.open(@image)
-          # end
           @community_status.save
         rescue
           puts 'RSS Feed CommunityStatus creation failed!'
