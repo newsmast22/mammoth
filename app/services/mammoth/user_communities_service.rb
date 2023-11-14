@@ -64,7 +64,7 @@ class Mammoth::UserCommunitiesService < BaseService
             created_at: new_community.created_at,
             updated_at: new_community.updated_at,
             is_default_checked: false,
-            community_hashtags: get_community_hashtags(community.id)
+            community_hashtags: get_community_hashtags(new_community.id)
           }
           @data = @data.sort_by {|h| [h[:slug] == new_community.slug ? 0 : 1,h[:slug]]}
         end
@@ -177,7 +177,7 @@ class Mammoth::UserCommunitiesService < BaseService
   private
 
   def get_community_hashtags(community_id)
-    Mammoth::CommunityHashtag.where(community_id: community_id, is_incoming: false).pluck(:hashtag)
+    Mammoth::CommunityHashtag.where(community_id: community_id, is_incoming: false).pluck(:hashtag).map{|a| "##{a}" }
   end
 
 end

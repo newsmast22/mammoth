@@ -151,6 +151,8 @@ Mammoth::Engine.routes.draw do
 
       resources :notification_tokens, only: :create
 
+      resources :mammoth_settings, only: [:index, :create]
+
       resources :app_versions,only: [] do 
         collection do
           post 'check_version' => 'app_versions#check_version', as: 'check_version'
