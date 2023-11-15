@@ -19,7 +19,7 @@ module Mammoth
             .group('accounts.id')
             .order("accounts.id desc")
         end
-        community.update(community_admin_followed_count: account_data.length) if account_data.present?
+        community.update(participants_count: account_data.length) if account_data.present?
       end
     end
     

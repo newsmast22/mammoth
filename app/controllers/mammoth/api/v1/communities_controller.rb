@@ -481,17 +481,18 @@ module Mammoth::Api::V1
 		def get_participants_list
 			community = Mammoth::Community.find_by(slug: params[:id])
 			accounts = Rails.cache.read("#{community.slug}-participants")
-			accounts = accounts.where("accounts.id < :max_id", max_id: params[:max_id]) if params[:max_id].present?
+			if accounts.present?
+				accounts = accounts.where("accounts.id < :max_id", max_id: params[:max_id]) if params[:max_id].present?
+				accounts = accounts.limit(11)
 
-			before_limit_statuses = accounts
-			accounts = accounts.limit(10)
-
-			render json: accounts, root: 'data', 
-									each_serializer: Mammoth::AccountSerializer, current_user: current_user, adapter: :json, 
-									meta: { 
-										total_objects: before_limit_statuses.length,
-										has_more_objects: 10 <= before_limit_statuses.length ? true : false
-									}
+				render json: accounts.limit(10), root: 'data', 
+										each_serializer: Mammoth::AccountSerializer, current_user: current_user, adapter: :json, 
+										meta: { 
+											has_more_objects: accounts.length > 10 ? true : false
+										}
+			else
+				render json: { data: [] }, status: :ok
+			end
 		end		
 
 		private
