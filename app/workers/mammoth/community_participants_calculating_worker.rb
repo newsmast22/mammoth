@@ -3,8 +3,8 @@ module Mammoth
   class CommunityParticipantsCalculatingWorker
     include Sidekiq::Worker
 
-    def perform
-      Mammoth::CommunityParticipantsCalculatingService.new.call
+    def perform(slug)
+      Mammoth::CommunityParticipantsCalculatingService.new.call(slug)
     rescue ActiveRecord::RecordNotFound
       false
     end
