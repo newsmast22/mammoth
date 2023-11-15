@@ -63,7 +63,7 @@ module Mammoth
 
           media_attachment = @account.media_attachments.create!(media_attachment_params)
 
-          @status = Mammoth::PostStatusService.new.call(
+          @status = PostStatusService.new.call(
             @account,
             text:              title,
             spoiler_text:      desc,
@@ -73,7 +73,7 @@ module Mammoth
             community_ids: [@cid],
             media_ids: [media_attachment.id]
           )
-        rescue
+        rescue 
           puts 'RSS Feed Status creation failed!'
         end
       end
