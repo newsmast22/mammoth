@@ -17,6 +17,7 @@ Mammoth::Engine.routes.draw do
           post 'update_is_country_filter_on' => 'communities#update_is_country_filter_on', as: 'update_is_country_filter_on'
           get 'get_community_follower_list' =>  'communities#get_community_follower_list', as: 'get_community_follower_list'
           get 'get_participants_list' =>  'communities#get_participants_list', as: 'get_participants_list'
+          get 'get_admin_following_list' =>  'communities#get_admin_following_list', as: 'get_admin_following_list'
         end
       end
 

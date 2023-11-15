@@ -493,6 +493,22 @@ module Mammoth::Api::V1
 			else
 				render json: { data: [] }, status: :ok
 			end
+		end	
+			
+		def get_admin_following_list
+				community = Mammoth::Community.find_by(slug: params[:id])
+				user_ids = Mammoth::CommunityAdmin.where(community_id: community.id).pluck(:user_id)
+				account_ids = Mammoth::User.where(id: user_ids).pluck(:account_id)
+				followed_accounts = Follow.where(account_id: account_ids).pluck(:target_account_id).uniq
+				accounts = Account.left_joins(:user).where(id: followed_accounts).order("id desc")
+				accounts = accounts.where("accounts.id < :max_id", max_id: params[:max_id]) if params[:max_id].present?
+				accounts = accounts.limit(11)
+
+				render json: accounts.limit(10), root: 'data', 
+										each_serializer: Mammoth::AccountSerializer, current_user: current_user, adapter: :json, 
+										meta: { 
+											has_more_objects: accounts.length > 10 ? true : false
+										}
 		end		
 
 		private
