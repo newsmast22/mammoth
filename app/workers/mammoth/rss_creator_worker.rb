@@ -47,7 +47,7 @@ module Mammoth
             @image = get_image_url(item, link) || item.image || fallback_image_url
             
             create_status(title, desc, link)
-            # create_community_status if @status
+            create_community_status if @status
           end
         end
       rescue => e
@@ -63,7 +63,7 @@ module Mammoth
 
           media_attachment = @account.media_attachments.create!(media_attachment_params)
 
-          @status = Mammoth::PostStatusService.new.call(
+          @status = PostStatusService.new.call(
             @account,
             text:              title,
             spoiler_text:      desc,
@@ -73,7 +73,7 @@ module Mammoth
             community_ids: [@cid],
             media_ids: [media_attachment.id]
           )
-        rescue
+        rescue 
           puts 'RSS Feed Status creation failed!'
         end
       end
@@ -81,9 +81,6 @@ module Mammoth
       def create_community_status
         begin
           @community_status = Mammoth::CommunityStatus.new(status: @status, community_id: @cid)
-          # unless @image.blank?
-          #   @community_status.image = URI.open(@image)
-          # end
           @community_status.save
         rescue
           puts 'RSS Feed CommunityStatus creation failed!'

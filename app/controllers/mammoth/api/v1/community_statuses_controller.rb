@@ -80,6 +80,7 @@ module Mammoth::Api::V1
 		end
 
 		def get_community_details_profile
+			Mammoth::CommunityParticipantsCalculatingWorker.new.perform(params[:id]) if params[:id].present?
 			if params[:id] == ENV['NEWSMAST_COLLECTION']
 				@result = Mammoth::UserCommunitiesService.virtual_user_community_details
 			elsif params[:id] == ENV['ALL_COLLECTION']

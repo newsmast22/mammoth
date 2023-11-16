@@ -16,7 +16,8 @@ Mammoth::Engine.routes.draw do
           post 'get_communities_with_collections' => 'communities#get_communities_with_collections', as: 'get_communities_with_collections'
           post 'update_is_country_filter_on' => 'communities#update_is_country_filter_on', as: 'update_is_country_filter_on'
           get 'get_community_follower_list' =>  'communities#get_community_follower_list', as: 'get_community_follower_list'
-          get 'get_community_admin_follow_list' =>  'communities#get_community_admin_follow_list', as: 'get_community_admin_follow_list'
+          get 'get_participants_list' =>  'communities#get_participants_list', as: 'get_participants_list'
+          get 'get_admin_following_list' =>  'communities#get_admin_following_list', as: 'get_admin_following_list'
         end
       end
 
@@ -150,6 +151,8 @@ Mammoth::Engine.routes.draw do
       resources :following_tags, only: :index
 
       resources :notification_tokens, only: :create
+
+      resources :mammoth_settings, only: [:index, :create]
 
       resources :app_versions,only: [] do 
         collection do

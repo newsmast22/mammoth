@@ -1,7 +1,7 @@
 require 'benchmark'
 module Mammoth
   class Dashboard::TimelinesStatusCheckService < BaseService
-    FIVE_MINUTES_AGO = 5.minutes.freeze
+    PUBLIC_TIMELINES = ['/api/v1/timelines/newsmast/public/community', '/api/v1/timelines/newsmast/public/all_communities'].freeze
 
     def call
       setup_protocol_and_domain
@@ -26,7 +26,7 @@ module Mammoth
 
       response = authenticate(username, password, client_id, client_secret, redirect_uri, scope)
       access_token = response['access_token']
-      Mammoth::Dashboard::EndPoint.update_all(access_token: access_token)
+      Mammoth::Dashboard::EndPoint.where.not(end_point_url: PUBLIC_TIMELINES).update_all(access_token: access_token)
     end
 
     def authenticate(username, password, client_id, client_secret, redirect_uri, scope)
@@ -69,22 +69,11 @@ module Mammoth
     def check_monitoring_status(endpoint, response)
       response_body = JSON.parse(response&.body) rescue nil
       latest_feed_created_at = response_body&.first&.dig('created_at')
-    
-      last_status_posted_datetime = latest_feed_created_at&.to_datetime
-    
-      update_max_active(endpoint, last_status_posted_datetime)
       
-      if last_status_posted_datetime.present? && last_status_posted_datetime >= FIVE_MINUTES_AGO.ago
+      if latest_feed_created_at.present? && latest_feed_created_at.to_time.utc >= endpoint.max_active.seconds.ago.to_time.utc
         create_operational_status(endpoint, response)
       else
-        create_non_operational_status(endpoint, response, last_status_posted_datetime)
-      end
-    end
-    
-    def update_max_active(endpoint, last_status_posted_datetime)
-      if last_status_posted_datetime.present?
-        max_active_seconds = DateTime.now.to_time - last_status_posted_datetime.to_time
-        endpoint.update(max_active: max_active_seconds)
+        create_non_operational_status(endpoint, response, latest_feed_created_at)
       end
     end
 

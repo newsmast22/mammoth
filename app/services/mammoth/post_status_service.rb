@@ -61,8 +61,31 @@ class Mammoth::PostStatusService < BaseService
     @visibility   = :unlisted if @visibility&.to_sym == :public && @account.silenced?
     @scheduled_at = @options[:scheduled_at]&.to_datetime
     @scheduled_at = nil if scheduled_in_the_past?
+    # Add community's hastag when statuses were RSS content
+    generate_rss_content_comminity_hashtags if !@options[:community_ids].blank? && @options[:is_rss_content]
+
   rescue ArgumentError
     raise ActiveRecord::RecordInvalid
+  end
+
+  def generate_rss_content_comminity_hashtags
+
+    @community_ids = validate_communites!
+   
+    if @community_ids.size > 0
+      @community_ids = Mammoth::Community.where(id: @community_ids).pluck(:id).to_a.uniq
+      community_hash_tags = Mammoth::CommunityHashtag.where(community_id: @community_ids, is_incoming: false)
+      post = @text
+      community_hash_tags.each do |community_hash_tag|
+        post += " ##{community_hash_tag.hashtag}"
+       end
+       @text = post
+    end
+  end
+
+  def validate_communites!
+    return [] if @options[:community_ids].blank? 
+    @options[:community_ids]
   end
 
   def process_status!
