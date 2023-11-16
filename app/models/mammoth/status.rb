@@ -549,6 +549,12 @@ module Mammoth
         .where(community: { slug: [community_slug, nil] })
     end
 
+    def self.get_statuses_by_commu_id(community_id)
+      Mammoth::Status
+      .joins(:communities_statuses)
+      .where(communities_statuses: { community_id: community_id })
+    end
+
     def is_followed_other_admin(community)
       !get_admins_from_follow.empty? && community.is_contain_admin?(self.get_admins_from_follow.pluck(:id))
     end
