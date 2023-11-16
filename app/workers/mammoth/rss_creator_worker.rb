@@ -47,7 +47,7 @@ module Mammoth
             @image = get_image_url(item, link) || item.image || fallback_image_url
             
             create_status(title, desc, link)
-            # create_community_status if @status
+            create_community_status if @status
           end
         end
       rescue => e
