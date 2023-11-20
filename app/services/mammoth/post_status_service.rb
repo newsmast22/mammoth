@@ -35,7 +35,7 @@ class Mammoth::PostStatusService < BaseService
 
     validate_media!
     preprocess_attributes!
-
+    
     if scheduled?
       schedule_status!
     else
@@ -62,7 +62,7 @@ class Mammoth::PostStatusService < BaseService
     @scheduled_at = @options[:scheduled_at]&.to_datetime
     @scheduled_at = nil if scheduled_in_the_past?
     # Add community's hastag when statuses were RSS content
-    generate_rss_content_comminity_hashtags if !@options[:community_ids].blank? && @options[:is_rss_content]
+    # generate_rss_content_comminity_hashtags if !@options[:community_ids].blank? && @options[:is_rss_content]
 
   rescue ArgumentError
     raise ActiveRecord::RecordInvalid
