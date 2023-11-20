@@ -95,8 +95,7 @@ module Mammoth
         Rails.env,
         endpoint.name,
         endpoint.max_active,
-        last_status_posted_datetime,
-        ENV['LOGIN_USER_NAME']
+        last_status_posted_datetime
       ).deliver_now
     end
   end
