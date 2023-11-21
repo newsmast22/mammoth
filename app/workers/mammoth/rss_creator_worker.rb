@@ -42,11 +42,11 @@ module Mammoth
 
             next if @account.statuses.find_by(rss_link: link)
           
-            title  = item.title rescue ''
+            text  = item.title rescue ''
             desc   = item.summary rescue ''
             @image = get_image_url(item, link) || item.image || fallback_image_url
             
-            create_status(title, desc, link)
+            create_status(text, desc, link)
             create_community_status if @status
           end
         end
@@ -63,19 +63,31 @@ module Mammoth
 
           media_attachment = @account.media_attachments.create!(media_attachment_params)
 
+          community_slug = Mammoth::Community.where(id: @cid).last.slug
+
           @status = PostStatusService.new.call(
             @account,
-            text:              title,
-            spoiler_text:      desc,
+            text:              generate_rss_content_comminity_hashtags(title, community_slug),
+            spoiler_text:      generate_rss_content_comminity_hashtags(desc, community_slug),
             rss_link:          link,
             is_rss_content:    true,
             community_feed_id: @cfeed_id,
-            community_ids: [@cid],
+            community_ids: [community_slug],
             media_ids: [media_attachment.id]
           )
-        rescue 
-          puts 'RSS Feed Status creation failed!'
+        rescue StandardError => e
+          puts "RSS Feed Status creation failed! => error: #{e.inspect}"
         end
+      end
+
+      def generate_rss_content_comminity_hashtags(text, community_slug)
+        @community_ids = Mammoth::Community.where(slug: community_slug).pluck(:id).to_a.uniq
+        community_hash_tags = Mammoth::CommunityHashtag.where(community_id: @community_ids, is_incoming: false)
+        post = text
+        community_hash_tags.each do |community_hash_tag|
+          post += " ##{community_hash_tag.hashtag}"
+        end
+        return text = post
       end
 
       def create_community_status
