@@ -73,7 +73,8 @@ module Mammoth
             is_rss_content:    true,
             community_feed_id: @cfeed_id,
             community_ids: [community_slug],
-            media_ids: [media_attachment.id]
+            media_ids: [media_attachment.id],
+            text_count: title.blank? ? 0 : title.length
           )
         rescue StandardError => e
           puts "RSS Feed Status creation failed! => error: #{e.inspect}"
