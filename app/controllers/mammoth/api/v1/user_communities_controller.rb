@@ -5,7 +5,7 @@ module Mammoth::Api::V1
     before_action -> { doorkeeper_authorize! :write, :read }
 
     def index
-      ActiveRecord::Base.connected_to(role: :reading, prevent_writes: true) do
+      ActiveRecord::Base.connected_to(role: :reading) do
         data = @service.get_user_communities
         if data.count > 0
           render json: data

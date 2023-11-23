@@ -74,7 +74,9 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
   end
 
   def statuses_count
-    object.statuses.where(reply: false).count
+    ActiveRecord::Base.connected_to(role: :reading) do
+      object.statuses.without_replies.count
+    end
   end
 
   def step
@@ -213,23 +215,27 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
   end
 
   def primary_community_slug
-    if object.try(:user).present?
-      user_communities = Mammoth::UserCommunity.where(user_id: object.user.id,is_primary: true).last
-      if user_communities.present?
-        Mammoth::Community.find(user_communities.community_id).slug
-      else
-        ""
+    ActiveRecord::Base.connected_to(role: :reading) do
+      if object.try(:user).present?
+        user_communities = Mammoth::UserCommunity.where(user_id: object.user.id,is_primary: true).last
+        if user_communities.present?
+          user_communities&.community&.slug
+        else
+          ""
+        end
       end
     end
   end
 
   def primary_community_name
-    if object.try(:user).present?
-      user_communities = Mammoth::UserCommunity.where(user_id: object.user.id,is_primary: true).last
-      if user_communities.present?
-        Mammoth::Community.find(user_communities.community_id).name
-      else
-        ""
+    ActiveRecord::Base.connected_to(role: :reading) do
+      if object.try(:user).present?
+        user_communities = Mammoth::UserCommunity.where(user_id: object.user.id,is_primary: true).last
+        if user_communities.present?
+          user_communities&.community&.name
+        else
+          ""
+        end
       end
     end
   end

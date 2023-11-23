@@ -5,7 +5,8 @@ module Mammoth::Api::V1
 		before_action :set_community, only: %i[show update destroy update_is_country_filter_on]
 
 		def index
-			ActiveRecord::Base.connected_to(role: :reading, prevent_writes: true) do	
+			ActiveRecord::Base.connected_to(role: :reading) do
+
 				data = []
 
 				return return_public_communities if current_user.nil?
@@ -134,12 +135,13 @@ module Mammoth::Api::V1
 						render json: data
 					end
 				end
-			end	
+
+			end
 		end
 
 		def show
-			ActiveRecord::Base.connected_to(role: :reading, prevent_writes: true) do	
-		
+			ActiveRecord::Base.connected_to(role: :reading) do
+
 				if @community.present?
 					is_admin = false
 
@@ -180,7 +182,8 @@ module Mammoth::Api::V1
 					data = {error: "Record not found"}
 				end
 				render json: data
-			end	
+				end
+			end
 		end
 
 		def create
@@ -299,11 +302,6 @@ module Mammoth::Api::V1
 				communities_statuses_ids.each do |status_id|
 					StatusStat.where(status_id: status_id).destroy_all
 				end
-
-				# to delete status_tag join table => only status_ids
-				# communities_statuses_ids.each do |status_id|
-				# 	Mammoth::StatusTag.where(status_id: status_id).destroy_all
-				# end
 
 				Mammoth::CommunityStatus.where(community_id: community.id).destroy_all
 
