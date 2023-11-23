@@ -182,7 +182,6 @@ module Mammoth::Api::V1
 					data = {error: "Record not found"}
 				end
 				render json: data
-				end
 			end
 		end
 
