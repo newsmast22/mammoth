@@ -82,22 +82,20 @@ module Mammoth::Api::V1
 		end
 
 		def get_community_details_profile
-			ActiveRecord::Base.connected_to(role: :reading, prevent_writes: true) do
-				Mammoth::CommunityParticipantsCalculatingWorker.new.perform(params[:id]) if params[:id].present?
-				if params[:id] == ENV['NEWSMAST_COLLECTION']
-					@result = Mammoth::UserCommunitiesService.virtual_user_community_details
-				elsif params[:id] == ENV['ALL_COLLECTION']
-					@result = Mammoth::CollectionService.virtual_all_collection_details
-				elsif current_user.nil?
-					@result = Mammoth::Community.get_public_community_detail_profile(params[:id])
-				else 
-					@community = Mammoth::Community.find_by!(slug: params[:id])
-					@result = Mammoth::Community.get_community_info_details(current_user_role,current_user, params[:id])
-				end 
-				render json: {
-					data: @result
-				}
+			Mammoth::CommunityParticipantsCalculatingWorker.new.perform(params[:id]) if params[:id].present?
+			if params[:id] == ENV['NEWSMAST_COLLECTION']
+				@result = Mammoth::UserCommunitiesService.virtual_user_community_details
+			elsif params[:id] == ENV['ALL_COLLECTION']
+				@result = Mammoth::CollectionService.virtual_all_collection_details
+			elsif current_user.nil?
+				@result = Mammoth::Community.get_public_community_detail_profile(params[:id])
+			else 
+				@community = Mammoth::Community.find_by!(slug: params[:id])
+				@result = Mammoth::Community.get_community_info_details(current_user_role,current_user, params[:id])
 			end 
+			render json: {
+				data: @result
+			}
 		end
 
 		def get_community_detail_statues
