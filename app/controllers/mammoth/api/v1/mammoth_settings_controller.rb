@@ -5,7 +5,9 @@ module Mammoth::Api::V1
     before_action :set_settings, only: [:index]
 
 		def index 
-			return_setting_json
+			ActiveRecord::Base.connected_to(role: :reading, prevent_writes: true) do
+				return_setting_json
+			end
 		end
 
 		def create 

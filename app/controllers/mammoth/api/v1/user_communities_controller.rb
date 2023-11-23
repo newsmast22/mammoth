@@ -5,11 +5,13 @@ module Mammoth::Api::V1
     before_action -> { doorkeeper_authorize! :write, :read }
 
     def index
-      data = @service.get_user_communities
-      if data.count > 0
-        render json: data
-      else
-        render json: { error: 'no communities found' }
+      ActiveRecord::Base.connected_to(role: :reading, prevent_writes: true) do
+        data = @service.get_user_communities
+        if data.count > 0
+          render json: data
+        else
+          render json: { error: 'no communities found' }
+        end
       end
     end
 
