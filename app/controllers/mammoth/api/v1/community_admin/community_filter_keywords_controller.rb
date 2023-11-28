@@ -6,19 +6,19 @@ module Mammoth::Api::V1::CommunityAdmin
     before_action :set_community_id, only: %i[create index]
 
     def index
+      ActiveRecord::Base.connected_to(role: :reading, prevent_writes: true) do
+        # Assign limit = 5 as 6 if limit is nil
+        # Limit always plus one 
+        # Addition plus one to get has_more_object
 
-      # Assign limit = 5 as 6 if limit is nil
-      # Limit always plus one 
-      # Addition plus one to get has_more_object
+        limit = params[:limit].present? ? params[:limit].to_i + 1 : 6
+        offset = params[:offset].present? ? params[:offset] : 0
 
-      limit = params[:limit].present? ? params[:limit].to_i + 1 : 6
-      offset = params[:offset].present? ? params[:offset] : 0
+        default_limit = limit - 1
 
-      default_limit = limit - 1
-
-      @community_filter_keywords = Mammoth::CommunityFilterKeyword.get_all_community_filter_keywords(account_id: current_account.id, community_id: @community.id, offset: offset, limit: limit)
-      return_format_json(offset, default_limit)
-
+        @community_filter_keywords = Mammoth::CommunityFilterKeyword.get_all_community_filter_keywords(account_id: current_account.id, community_id: @community.id, offset: offset, limit: limit)
+        return_format_json(offset, default_limit)
+      end  
     end
 
     def create
@@ -34,9 +34,9 @@ module Mammoth::Api::V1::CommunityAdmin
     end
 
     def show
-
-      return_community_filter_keyword
-
+      ActiveRecord::Base.connected_to(role: :reading, prevent_writes: true) do
+        return_community_filter_keyword
+      end
     end
 
     def update

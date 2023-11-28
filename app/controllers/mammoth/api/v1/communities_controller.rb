@@ -5,177 +5,184 @@ module Mammoth::Api::V1
 		before_action :set_community, only: %i[show update destroy update_is_country_filter_on]
 
 		def index
-			data = []
+			ActiveRecord::Base.connected_to(role: :reading) do
 
-			return return_public_communities if current_user.nil?
-			role_name = current_user_role
+				data = []
 
-			is_rss_account = false
-			if role_name == "rss-account"
-				is_rss_account = true
-			end
-			
-			if params[:collection_id].nil?
-
-				#Begin::check user have selected community 
-				user = Mammoth::User.find(current_user.id)
-				user_communities_ids = user&.user_communities.pluck(:community_id).map(&:to_i) || []
-				#End::check user have selected community 
-
-      	@communities = Mammoth::Community.joins("
-																							LEFT JOIN mammoth_communities_users ON mammoth_communities_users.community_id = mammoth_communities.id"
-																							)
-																							.select("mammoth_communities.*,COUNT(mammoth_communities_users.id) as follower_counts"
-																							)
-																							.order("mammoth_communities.position ASC,mammoth_communities.name ASC")
-																							.group("mammoth_communities.id")
-
-				if user_communities_ids.any?
-					primary_community =  user&.user_communities.where(is_primary: true).last
-					@communities.each do |community|
-						data << {
-							id: community.id,
-							position: community.position,
-							name: community.name,
-							slug: community.slug,
-							followers: community.follower_counts,
-							is_country_filtering: is_rss_account == true ? false : community.is_country_filtering,
-							is_country_filter_on: is_rss_account == true ? false : community.is_country_filter_on,
-							header_url: community.header.url,
-							is_joined: user_communities_ids.include?(community.id), 
-							is_primary: primary_community.present? ? primary_community.community_id == community.id  : false,
-							image_file_name: community.image_file_name,
-							image_content_type: community.image_content_type,
-							image_file_size: community.image_file_size,
-							image_updated_at: community.image_updated_at,
-							description: community.description,
-							image_url: community.image.url,
-							collection_id: community.collection_id,
-							created_at: community.created_at,
-							updated_at: community.updated_at,
-							is_recommended: community.is_recommended
-						}
-					end
-					render json: data
-				else
-					@communities.each do |community|
-						data << {
-							id: community.id,
-							position: community.position,
-							name: community.name,
-							slug: community.slug,
-							followers: community.follower_counts,
-							is_country_filtering: is_rss_account == true ? false : community.is_country_filtering,
-							is_country_filter_on: is_rss_account == true ? false : community.is_country_filter_on,
-							header_url: community.header.url,
-							is_joined: false, 
-							is_primary: false,
-							image_file_name: community.image_file_name,
-							image_content_type: community.image_content_type,
-							image_file_size: community.image_file_size,
-							image_updated_at: community.image_updated_at,
-							description: community.description,
-							image_url: community.image.url,
-							collection_id: community.collection_id,
-							created_at: community.created_at,
-							updated_at: community.updated_at,
-							is_recommended: community.is_recommended
-						}
-					end
-					render json: data
-				end
-			else
-				@user_communities = Mammoth::User.find(current_user.id).user_communities
-				user_communities_ids  = @user_communities.pluck(:community_id).map(&:to_i)
-				primary_community =  @user_communities.where(is_primary: true).last
-				@collection  = Mammoth::Collection.where(slug: params[:collection_id]).last
-				unless @collection.nil?
-
-					@communities= @collection.communities.joins("
-												LEFT JOIN mammoth_communities_users ON mammoth_communities_users.community_id = mammoth_communities.id"
-												)
-												.select("mammoth_communities.*,COUNT(mammoth_communities_users.id) as follower_counts"
-												)
-												.order("mammoth_communities.position ASC,mammoth_communities.name ASC")
-												.group("mammoth_communities.id")
-
-					@communities.each do |community|
-						data << {
-							id: community.id,
-							position: community.position,
-							name: community.name,
-							slug: community.slug,
-							followers: community.follower_counts,
-							is_country_filtering: is_rss_account == true ? false : community.is_country_filtering,
-							is_country_filter_on: is_rss_account == true ? false : community.is_country_filter_on,
-							header_url: community.header.url,
-							is_joined: user_communities_ids.include?(community.id), 
-							is_primary: primary_community.present? ? primary_community.community_id == community.id  : false,
-							image_file_name: community.image_file_name,
-							image_content_type: community.image_content_type,
-							image_file_size: community.image_file_size,
-							image_updated_at: community.image_updated_at,
-							description: community.description,
-							image_url: community.image.url,
-							collection_id: community.collection_id,
-							created_at: community.created_at,
-							updated_at: community.updated_at,
-							is_recommended: community.is_recommended
-						}
-					end
-					render json: {data: data,
-					collection_data:{
-						collection_image_url: @collection.image.url,
-						collection_name: @collection.name
-					}
-				}
-				else # No record found!
-					render json: data
-				end
-			end
-		end
-
-		def show
-			if @community.present?
-				is_admin = false
-
+				return return_public_communities if current_user.nil?
 				role_name = current_user_role
 
 				is_rss_account = false
 				if role_name == "rss-account"
 					is_rss_account = true
 				end
+				
+				if params[:collection_id].nil?
 
-				field_datas = []
-				if @community.fields.present?
-						@community.fields.each do |key, value|
-							field_datas << {
-								name: value["name"],
-								value: get_social_media_fields(value["name"],value["value"])
+					#Begin::check user have selected community 
+					user = Mammoth::User.find(current_user.id)
+					user_communities_ids = user&.user_communities.pluck(:community_id).map(&:to_i) || []
+					#End::check user have selected community 
+
+					@communities = Mammoth::Community.joins("
+																								LEFT JOIN mammoth_communities_users ON mammoth_communities_users.community_id = mammoth_communities.id"
+																								)
+																								.select("mammoth_communities.*,COUNT(mammoth_communities_users.id) as follower_counts"
+																								)
+																								.order("mammoth_communities.position ASC,mammoth_communities.name ASC")
+																								.group("mammoth_communities.id")
+
+					if user_communities_ids.any?
+						primary_community =  user&.user_communities.where(is_primary: true).last
+						@communities.each do |community|
+							data << {
+								id: community.id,
+								position: community.position,
+								name: community.name,
+								slug: community.slug,
+								followers: community.follower_counts,
+								is_country_filtering: is_rss_account == true ? false : community.is_country_filtering,
+								is_country_filter_on: is_rss_account == true ? false : community.is_country_filter_on,
+								header_url: community.header.url,
+								is_joined: user_communities_ids.include?(community.id), 
+								is_primary: primary_community.present? ? primary_community.community_id == community.id  : false,
+								image_file_name: community.image_file_name,
+								image_content_type: community.image_content_type,
+								image_file_size: community.image_file_size,
+								image_updated_at: community.image_updated_at,
+								description: community.description,
+								image_url: community.image.url,
+								collection_id: community.collection_id,
+								created_at: community.created_at,
+								updated_at: community.updated_at,
+								is_recommended: community.is_recommended
 							}
-						end		
+						end
+						render json: data
+					else
+						@communities.each do |community|
+							data << {
+								id: community.id,
+								position: community.position,
+								name: community.name,
+								slug: community.slug,
+								followers: community.follower_counts,
+								is_country_filtering: is_rss_account == true ? false : community.is_country_filtering,
+								is_country_filter_on: is_rss_account == true ? false : community.is_country_filter_on,
+								header_url: community.header.url,
+								is_joined: false, 
+								is_primary: false,
+								image_file_name: community.image_file_name,
+								image_content_type: community.image_content_type,
+								image_file_size: community.image_file_size,
+								image_updated_at: community.image_updated_at,
+								description: community.description,
+								image_url: community.image.url,
+								collection_id: community.collection_id,
+								created_at: community.created_at,
+								updated_at: community.updated_at,
+								is_recommended: community.is_recommended
+							}
+						end
+						render json: data
+					end
+				else
+					@user_communities = Mammoth::User.find(current_user.id).user_communities
+					user_communities_ids  = @user_communities.pluck(:community_id).map(&:to_i)
+					primary_community =  @user_communities.where(is_primary: true).last
+					@collection  = Mammoth::Collection.where(slug: params[:collection_id]).last
+					unless @collection.nil?
+
+						@communities= @collection.communities.joins("
+													LEFT JOIN mammoth_communities_users ON mammoth_communities_users.community_id = mammoth_communities.id"
+													)
+													.select("mammoth_communities.*,COUNT(mammoth_communities_users.id) as follower_counts"
+													)
+													.order("mammoth_communities.position ASC,mammoth_communities.name ASC")
+													.group("mammoth_communities.id")
+
+						@communities.each do |community|
+							data << {
+								id: community.id,
+								position: community.position,
+								name: community.name,
+								slug: community.slug,
+								followers: community.follower_counts,
+								is_country_filtering: is_rss_account == true ? false : community.is_country_filtering,
+								is_country_filter_on: is_rss_account == true ? false : community.is_country_filter_on,
+								header_url: community.header.url,
+								is_joined: user_communities_ids.include?(community.id), 
+								is_primary: primary_community.present? ? primary_community.community_id == community.id  : false,
+								image_file_name: community.image_file_name,
+								image_content_type: community.image_content_type,
+								image_file_size: community.image_file_size,
+								image_updated_at: community.image_updated_at,
+								description: community.description,
+								image_url: community.image.url,
+								collection_id: community.collection_id,
+								created_at: community.created_at,
+								updated_at: community.updated_at,
+								is_recommended: community.is_recommended
+							}
+						end
+						render json: {data: data,
+						collection_data:{
+							collection_image_url: @collection.image.url,
+							collection_name: @collection.name
+						}
+					}
+					else # No record found!
+						render json: data
+					end
 				end
-				is_admin = Mammoth::CommunityAdmin.where(community_id:@community.id,user_id: current_user.id).exists?
-				data = {
-					id: @community.id,
-					position: @community.position,
-					name: @community.name,
-					slug: @community.slug,
-					image_url: @community.image.url,
-					header_url: @community.header.url,
-					description: @community.description,
-					collection_id: @community.collection_id,
-					created_at: @community.created_at,
-					updated_at: @community.updated_at,
-					is_country_filtering: is_rss_account == true ? false : @community.is_country_filtering,
-					is_admin: is_admin,
-					is_country_filter_on: is_rss_account == true ? false : @community.is_country_filter_on,
-					fields: field_datas
-				}
-			else		
-				data = {error: "Record not found"}
+
 			end
-			render json: data
+		end
+
+		def show
+			ActiveRecord::Base.connected_to(role: :reading) do
+
+				if @community.present?
+					is_admin = false
+
+					role_name = current_user_role
+
+					is_rss_account = false
+					if role_name == "rss-account"
+						is_rss_account = true
+					end
+
+					field_datas = []
+					if @community.fields.present?
+							@community.fields.each do |key, value|
+								field_datas << {
+									name: value["name"],
+									value: get_social_media_fields(value["name"],value["value"])
+								}
+							end		
+					end
+					is_admin = Mammoth::CommunityAdmin.where(community_id:@community.id,user_id: current_user.id).exists?
+					data = {
+						id: @community.id,
+						position: @community.position,
+						name: @community.name,
+						slug: @community.slug,
+						image_url: @community.image.url,
+						header_url: @community.header.url,
+						description: @community.description,
+						collection_id: @community.collection_id,
+						created_at: @community.created_at,
+						updated_at: @community.updated_at,
+						is_country_filtering: is_rss_account == true ? false : @community.is_country_filtering,
+						is_admin: is_admin,
+						is_country_filter_on: is_rss_account == true ? false : @community.is_country_filter_on,
+						fields: field_datas
+					}
+				else		
+					data = {error: "Record not found"}
+				end
+				render json: data
+			end
 		end
 
 		def create
@@ -295,11 +302,6 @@ module Mammoth::Api::V1
 					StatusStat.where(status_id: status_id).destroy_all
 				end
 
-				# to delete status_tag join table => only status_ids
-				# communities_statuses_ids.each do |status_id|
-				# 	Mammoth::StatusTag.where(status_id: status_id).destroy_all
-				# end
-
 				Mammoth::CommunityStatus.where(community_id: community.id).destroy_all
 
 				user_communities = Mammoth::UserCommunity.where(community_id: community.id)
@@ -346,90 +348,92 @@ module Mammoth::Api::V1
 		end
 
 		def get_communities_with_collections 
-			data = []
+			ActiveRecord::Base.connected_to(role: :reading, prevent_writes: true) do	
+				data = []
 
-			user = Mammoth::User.find(current_user.id)
+				user = Mammoth::User.find(current_user.id)
 
-			if params[:collection_slugs].present?
-				collections  = Mammoth::Collection.where(slug: params[:collection_slugs]).order(position: :ASC)
-			else
-				collections  = Mammoth::Collection.all.order(position: :ASC)
-			end
-
-			user_communities_ids = user&.user_communities.pluck(:community_id).map(&:to_i) || []
-			user_primary_community = user&.user_communities.where(is_primary: true).last
-			
-			if user_primary_community.present?
-				user_primary_community_id = user_primary_community.community_id
-			else
-				user_primary_community_id = 0
-			end
-			
-			collections.each do |collection|
-				unless collection.communities.blank?
-					# communities = collection.communities.order(position: :ASC)
-					communities = collection.communities.joins("
-						LEFT JOIN mammoth_communities_users ON mammoth_communities_users.community_id = mammoth_communities.id"
-						)
-						.select("mammoth_communities.*,COUNT(mammoth_communities_users.id) as follower_counts"
-						)
-						.order("mammoth_communities.position ASC,mammoth_communities.name ASC")
-						.group("mammoth_communities.id")
-
-					community_data = []
-					community_joined_count = 0
-					is_included_primary_community = false
-
-					communities.each do |community|
-
-						if user_communities_ids.include?(community.id)
-							community_joined_count += 1
-						end
-
-						if user_primary_community_id == community.id
-							is_included_primary_community = true
-						end
-																		
-						community_data << {
-							id: community.id,
-							position: community.position,
-							name: community.name,
-							slug: community.slug,
-							followers: community.follower_counts,
-							is_joined: user_communities_ids.include?(community.id),
-							is_primary: user_primary_community_id == community.id,
-							image_file_name: community.image_file_name,
-							image_content_type: community.image_content_type,
-							image_file_size: community.image_file_size,
-							image_updated_at: community.image_updated_at,
-							description: community.description,
-							collection_id: community.collection_id,
-							created_at: community.created_at,
-							updated_at: community.updated_at,
-							is_country_filtering: community.is_country_filtering,
-							fields: community.fields,
-							header_file_name: community.header_file_name,
-							header_content_type: community.image_file_name,
-							header_file_size: community.header_file_size,
-							header_updated_at: community.header_updated_at,
-							is_country_filter_on: community.is_country_filter_on,
-							community_image_url: community.image.url,
-							community_header_url: community.header.url
-						}
-					end
-
-					data << {
-							collection_id: collection.id,
-							is_included_primary_community: is_included_primary_community,
-							position: collection.position,
-							collection_name: collection.name,
-							collection_slug: collection.slug,
-							is_joined_all: communities.size == community_joined_count ? true : false,
-							communities: community_data
-						}
+				if params[:collection_slugs].present?
+					collections  = Mammoth::Collection.where(slug: params[:collection_slugs]).order(position: :ASC)
+				else
+					collections  = Mammoth::Collection.all.order(position: :ASC)
 				end
-			end
-			render json: data
+
+				user_communities_ids = user&.user_communities.pluck(:community_id).map(&:to_i) || []
+				user_primary_community = user&.user_communities.where(is_primary: true).last
+				
+				if user_primary_community.present?
+					user_primary_community_id = user_primary_community.community_id
+				else
+					user_primary_community_id = 0
+				end
+				
+				collections.each do |collection|
+					unless collection.communities.blank?
+						# communities = collection.communities.order(position: :ASC)
+						communities = collection.communities.joins("
+							LEFT JOIN mammoth_communities_users ON mammoth_communities_users.community_id = mammoth_communities.id"
+							)
+							.select("mammoth_communities.*,COUNT(mammoth_communities_users.id) as follower_counts"
+							)
+							.order("mammoth_communities.position ASC,mammoth_communities.name ASC")
+							.group("mammoth_communities.id")
+
+						community_data = []
+						community_joined_count = 0
+						is_included_primary_community = false
+
+						communities.each do |community|
+
+							if user_communities_ids.include?(community.id)
+								community_joined_count += 1
+							end
+
+							if user_primary_community_id == community.id
+								is_included_primary_community = true
+							end
+																			
+							community_data << {
+								id: community.id,
+								position: community.position,
+								name: community.name,
+								slug: community.slug,
+								followers: community.follower_counts,
+								is_joined: user_communities_ids.include?(community.id),
+								is_primary: user_primary_community_id == community.id,
+								image_file_name: community.image_file_name,
+								image_content_type: community.image_content_type,
+								image_file_size: community.image_file_size,
+								image_updated_at: community.image_updated_at,
+								description: community.description,
+								collection_id: community.collection_id,
+								created_at: community.created_at,
+								updated_at: community.updated_at,
+								is_country_filtering: community.is_country_filtering,
+								fields: community.fields,
+								header_file_name: community.header_file_name,
+								header_content_type: community.image_file_name,
+								header_file_size: community.header_file_size,
+								header_updated_at: community.header_updated_at,
+								is_country_filter_on: community.is_country_filter_on,
+								community_image_url: community.image.url,
+								community_header_url: community.header.url
+							}
+						end
+
+						data << {
+								collection_id: collection.id,
+								is_included_primary_community: is_included_primary_community,
+								position: collection.position,
+								collection_name: collection.name,
+								collection_slug: collection.slug,
+								is_joined_all: communities.size == community_joined_count ? true : false,
+								communities: community_data
+							}
+					end
+				end
+				render json: data
+			end	
 		end
 
 		def update_is_country_filter_on
@@ -479,9 +483,31 @@ module Mammoth::Api::V1
 		end
 
 		def get_participants_list
-			community = Mammoth::Community.find_by(slug: params[:id])
-			accounts = Rails.cache.read("#{community.slug}-participants")
-			if accounts.present?
+			ActiveRecord::Base.connected_to(role: :reading, prevent_writes: true) do
+				community = Mammoth::Community.find_by(slug: params[:id])
+				accounts = Rails.cache.read("#{community.slug}-participants")
+				if accounts.present?
+					accounts = accounts.where("accounts.id < :max_id", max_id: params[:max_id]) if params[:max_id].present?
+					accounts = accounts.limit(11)
+
+					render json: accounts.limit(10), root: 'data', 
+											each_serializer: Mammoth::AccountSerializer, current_user: current_user, adapter: :json, 
+											meta: { 
+												has_more_objects: accounts.length > 10 ? true : false
+											}
+				else
+					render json: { data: [] }, status: :ok
+				end
+			end
+		end	
+			
+		def get_admin_following_list
+			ActiveRecord::Base.connected_to(role: :reading, prevent_writes: true) do	
+				community = Mammoth::Community.find_by(slug: params[:id])
+				user_ids = Mammoth::CommunityAdmin.where(community_id: community.id).pluck(:user_id)
+				account_ids = Mammoth::User.where(id: user_ids).pluck(:account_id)
+				followed_accounts = Follow.where(account_id: account_ids).pluck(:target_account_id).uniq
+				accounts = Account.left_joins(:user).where(id: followed_accounts).order("id desc")
 				accounts = accounts.where("accounts.id < :max_id", max_id: params[:max_id]) if params[:max_id].present?
 				accounts = accounts.limit(11)
 
@@ -490,25 +516,7 @@ module Mammoth::Api::V1
 										meta: { 
 											has_more_objects: accounts.length > 10 ? true : false
 										}
-			else
-				render json: { data: [] }, status: :ok
-			end
-		end	
-			
-		def get_admin_following_list
-			community = Mammoth::Community.find_by(slug: params[:id])
-			user_ids = Mammoth::CommunityAdmin.where(community_id: community.id).pluck(:user_id)
-			account_ids = Mammoth::User.where(id: user_ids).pluck(:account_id)
-			followed_accounts = Follow.where(account_id: account_ids).pluck(:target_account_id).uniq
-			accounts = Account.left_joins(:user).where(id: followed_accounts).order("id desc")
-			accounts = accounts.where("accounts.id < :max_id", max_id: params[:max_id]) if params[:max_id].present?
-			accounts = accounts.limit(11)
-
-			render json: accounts.limit(10), root: 'data', 
-									each_serializer: Mammoth::AccountSerializer, current_user: current_user, adapter: :json, 
-									meta: { 
-										has_more_objects: accounts.length > 10 ? true : false
-									}
+			end						
 		end		
 
 		private

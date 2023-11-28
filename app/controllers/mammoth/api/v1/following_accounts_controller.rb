@@ -9,22 +9,23 @@ module Mammoth::Api::V1
     FOLLOWING_ACCOUNTS_LIMIT = 10
 
     def index
+      ActiveRecord::Base.connected_to(role: :reading, prevent_writes: true) do
+        offset = params[:offset].present? ? params[:offset] : 0
+        limit = params[:limit].present? ? params[:limit].to_i + 1 : 6
+        default_limit = limit - 1
 
-      offset = params[:offset].present? ? params[:offset] : 0
-      limit = params[:limit].present? ? params[:limit].to_i + 1 : 6
-      default_limit = limit - 1
+        accounts = Mammoth::Account.following_accouts(params[:account_id],current_account.id, offset,limit)
 
-      accounts = Mammoth::Account.following_accouts(params[:account_id],current_account.id, offset,limit)
-
-      render json: accounts.limit(params[:limit]),root: 'data', each_serializer: Mammoth::AccountSerializer, current_user: current_user, adapter: :json, 
-					meta: {
-						pagination:
-						{ 
-							total_objects: nil,
-							has_more_objects: accounts.size > default_limit ? true : false,
-              offset: offset.to_i
-						} 
-					}
+        render json: accounts.limit(params[:limit]),root: 'data', each_serializer: Mammoth::AccountSerializer, current_user: current_user, adapter: :json, 
+            meta: {
+              pagination:
+              { 
+                total_objects: nil,
+                has_more_objects: accounts.size > default_limit ? true : false,
+                offset: offset.to_i
+              } 
+            }
+      end    
     end
 
     private

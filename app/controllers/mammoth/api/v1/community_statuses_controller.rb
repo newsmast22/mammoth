@@ -20,24 +20,26 @@ module Mammoth::Api::V1
 		DESCENDANTS_DEPTH_LIMIT = 20
 
 		def context
-			ancestors_limit         = CONTEXT_LIMIT
-			descendants_limit       = CONTEXT_LIMIT
-			descendants_depth_limit = nil
-	
-			if current_account.nil?
-				ancestors_limit         = ANCESTORS_LIMIT
-				descendants_limit       = DESCENDANTS_LIMIT
-				descendants_depth_limit = DESCENDANTS_DEPTH_LIMIT
+			ActiveRecord::Base.connected_to(role: :reading, prevent_writes: true) do
+				ancestors_limit         = CONTEXT_LIMIT
+				descendants_limit       = CONTEXT_LIMIT
+				descendants_depth_limit = nil
+		
+				if current_account.nil?
+					ancestors_limit         = ANCESTORS_LIMIT
+					descendants_limit       = DESCENDANTS_LIMIT
+					descendants_depth_limit = DESCENDANTS_DEPTH_LIMIT
+				end
+		
+				ancestors_results   = @status.in_reply_to_id.nil? ? [] : @status.ancestors(ancestors_limit, current_account)
+				descendants_results = @status.descendants(descendants_limit, current_account, descendants_depth_limit)
+				loaded_ancestors    = cache_collection(ancestors_results, Status)
+				loaded_descendants  = cache_collection(descendants_results, Status)
+				order_reply_statues_desc = 	loaded_descendants.sort_by{|e| e[:created_at]}
+				@context = Context.new(ancestors: loaded_ancestors, descendants: order_reply_statues_desc)
+				statuses = [@status] + @context.ancestors + @context.descendants
+				render json: @context, serializer: Mammoth::ContextSerializer, relationships: StatusRelationshipsPresenter.new(statuses, current_user&.account_id)
 			end
-	
-			ancestors_results   = @status.in_reply_to_id.nil? ? [] : @status.ancestors(ancestors_limit, current_account)
-			descendants_results = @status.descendants(descendants_limit, current_account, descendants_depth_limit)
-			loaded_ancestors    = cache_collection(ancestors_results, Status)
-			loaded_descendants  = cache_collection(descendants_results, Status)
-			order_reply_statues_desc = 	loaded_descendants.sort_by{|e| e[:created_at]}
-			@context = Context.new(ancestors: loaded_ancestors, descendants: order_reply_statues_desc)
-			statuses = [@status] + @context.ancestors + @context.descendants
-			render json: @context, serializer: Mammoth::ContextSerializer, relationships: StatusRelationshipsPresenter.new(statuses, current_user&.account_id)
 		end
 
 		def index
@@ -84,16 +86,16 @@ module Mammoth::Api::V1
 			if params[:id] == ENV['NEWSMAST_COLLECTION']
 				@result = Mammoth::UserCommunitiesService.virtual_user_community_details
 			elsif params[:id] == ENV['ALL_COLLECTION']
-        @result = Mammoth::CollectionService.virtual_all_collection_details
+				@result = Mammoth::CollectionService.virtual_all_collection_details
 			elsif current_user.nil?
 				@result = Mammoth::Community.get_public_community_detail_profile(params[:id])
 			else 
 				@community = Mammoth::Community.find_by!(slug: params[:id])
 				@result = Mammoth::Community.get_community_info_details(current_user_role,current_user, params[:id])
 			end 
-		render json: {
-			data: @result
-		} 
+			render json: {
+				data: @result
+			}
 		end
 
 		def get_community_detail_statues

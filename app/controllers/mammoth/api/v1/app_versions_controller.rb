@@ -5,15 +5,17 @@ module Mammoth::Api::V1
 		before_action :set_app_version, only: %i[check_version]
 
 		def check_version
-			unless @app_version.nil?
-				app_version_history = Mammoth::AppVersionHistory.where(app_version_id: @app_version.id,os_type: params[:os_type]).last
-				if app_version_history.present?
-					render json: app_version_history
+			ActiveRecord::Base.connected_to(role: :reading, prevent_writes: true) do
+				unless @app_version.nil?
+					app_version_history = Mammoth::AppVersionHistory.where(app_version_id: @app_version.id,os_type: params[:os_type]).last
+					if app_version_history.present?
+						render json: app_version_history
+					else
+						render json: {error: "Record not found"}, status: 404
+					end
 				else
 					render json: {error: "Record not found"}, status: 404
 				end
-			else
-				render json: {error: "Record not found"}, status: 404
 			end
 		end
 
