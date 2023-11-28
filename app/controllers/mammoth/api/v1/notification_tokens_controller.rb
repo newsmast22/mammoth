@@ -5,7 +5,9 @@ module Mammoth::Api::V1
 		before_action :set_notification_token, only: %i[create]
 
     def index
-      render json: @notification_token
+      ActiveRecord::Base.connected_to(role: :reading, prevent_writes: true) do
+        render json: @notification_token
+      end
     end
 
     def create
@@ -26,7 +28,9 @@ module Mammoth::Api::V1
     end
 
     def show
-      render json: @notification_token
+      ActiveRecord::Base.connected_to(role: :reading, prevent_writes: true) do
+        render json: @notification_token
+      end
     end
 
     def update 
