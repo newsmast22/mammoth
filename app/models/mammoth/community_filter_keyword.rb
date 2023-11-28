@@ -6,6 +6,25 @@ module Mammoth
 
     validates :keyword, uniqueness: { :if => :community_id?, :scope => [:community_id, :is_filter_hashtag] }
 
+    def is_banned?(status_id, keyword)
+      is_status_banned = false
+      text = Mammoth::Status.where("id = ?", status_id).last.text
+
+      return is_status_banned = false if text.blank?
+      
+      # Case : 1 ) Filter keyword is only one word?
+      if one_word?(keyword.downcase)
+        is_status_banned = text.downcase.split(' ').include?(keyword.downcase)
+
+      # Case : 2 ) Filter keyword is two or more words?  
+      elsif keyword_matches_string(keyword.downcase, text.downcase)
+        is_status_banned = true
+      end
+
+      return is_status_banned
+    end
+
+
     def self.get_all_community_filter_keywords(account_id:, community_id:, offset:, limit:)
 
       community_filter_keywords = Mammoth::CommunityFilterKeyword.where("
@@ -42,6 +61,24 @@ module Mammoth
         'community_filter_keyword_request' => "update"
       }
       community_statuses = Mammoth::CommunityFilterStatusesCreateWorker.perform_async(json)
+    end
+
+    def keyword_matches_string(keyword, string)
+      # Escape special characters in the keyword for regex matching
+      escaped_keyword = Regexp.escape(keyword)
+    
+      # Create a regular expression pattern with word boundaries
+      pattern = /\b#{escaped_keyword}\b/i # Use 'i' for case-insensitive matching
+    
+      # Check if the pattern matches anywhere in the string
+      match = string.match(pattern)
+    
+      # Return true if there's a match, false otherwise
+      !match.nil?
+    end
+
+    def one_word?(string)
+      string.split(/\s+/).length == 1
     end
 
   end
