@@ -81,7 +81,7 @@ module Mammoth
           if community_filter_keyword.is_filter_hashtag
             is_status_banned = Mammoth::Status.where(id: status_id).last.tags.where(name: community_filter_keyword.keyword.downcase.gsub("#", "")).exists?
           else 
-            is_status_banned = Mammoth::CommunityFilterKeyword.new.is_banned?(status_id, community_filter_keyword.keyword.downcase)
+            is_status_banned = Mammoth::Status.where(id: status_id).last.search_word_ban(community_filter_keyword.keyword.downcase)
           end
           
           if is_status_banned
