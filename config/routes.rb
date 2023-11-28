@@ -161,7 +161,11 @@ Mammoth::Engine.routes.draw do
       end
 
       namespace :community_admin do
-        resources :community_filter_keywords
+        resources :community_filter_keywords do
+          member do
+            post :unban_statuses
+          end
+        end
       end
       
     end

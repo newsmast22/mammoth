@@ -52,6 +52,11 @@ module Mammoth::Api::V1::CommunityAdmin
       render json: {message: 'community_filter_keyword delect success!'}, status: 200 
 
     end
+
+    def unban_statuses
+      Mammoth::CommunityFilterStatus.where(community_filter_keyword_id: params[:id])&.destroy_all
+      render json: {}, status: 200
+    end
     
     private
 
