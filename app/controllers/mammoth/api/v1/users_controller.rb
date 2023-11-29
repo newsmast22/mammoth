@@ -301,52 +301,55 @@ module Mammoth::Api::V1
     end
 
     def show
-      @account = current_account
-      community_images = []
-      following_account_images = []
+      ActiveRecord::Base.connected_to(role: :reading) do
 
-      #begin::get collection images
-      @user  = Mammoth::User.find(current_user.id)
-			@user_communities= @user.user_communities
-			unless @user_communities.empty?
-        community_ids = @user_communities.pluck(:community_id).map(&:to_i)
-        communities = Mammoth::Community.where(id: community_ids).take(2)
-        communities.each do |community|
-					community_images << community.image.url
-				end
+        @account = current_account
+        community_images = []
+        following_account_images = []
+
+        #begin::get collection images
+        @user  = Mammoth::User.find(current_user.id)
+        @user_communities= @user.user_communities
+        unless @user_communities.empty?
+          community_ids = @user_communities.pluck(:community_id).map(&:to_i)
+          communities = Mammoth::Community.where(id: community_ids).take(2)
+          communities.each do |community|
+            community_images << community.image.url
+          end
+        end
+        #end::get community images
+
+        #begin:get following images
+        followed_account_ids = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
+        if followed_account_ids.any?
+          Account.where(id: followed_account_ids).take(2).each do |following_account|
+            following_account_images << following_account.avatar.url
+          end
+        end
+        #end:get following images
+
+        #begin::check community admin & communnity_slug
+        is_admin = false
+        community_slug = ""
+        community_admin = Mammoth::CommunityAdmin.where(user_id: current_user.id).last
+        if community_admin.present?
+          is_admin = true
+          community_slug = community_admin.community.slug
+        end
+        #end::check community admin & communnity_slug
+
+        data = {
+          do_not_format_note: true
+        }
+
+        render json: @account,root: 'data', serializer: Mammoth::CredentialAccountSerializer, data: data ,adapter: :json,
+        meta:{
+          community_images_url: community_images,
+          following_images_url: following_account_images,
+          is_admin: is_admin,
+          community_slug: community_slug 
+        }
       end
-      #end::get community images
-
-      #begin:get following images
-      followed_account_ids = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
-      if followed_account_ids.any?
-        Account.where(id: followed_account_ids).take(2).each do |following_account|
-					following_account_images << following_account.avatar.url
-				end
-      end
-      #end:get following images
-
-      #begin::check community admin & communnity_slug
-      is_admin = false
-      community_slug = ""
-      community_admin = Mammoth::CommunityAdmin.where(user_id: current_user.id).last
-      if community_admin.present?
-        is_admin = true
-        community_slug = community_admin.community.slug
-      end
-      #end::check community admin & communnity_slug
-
-      data = {
-        do_not_format_note: true
-      }
-
-      render json: @account,root: 'data', serializer: Mammoth::CredentialAccountSerializer, data: data ,adapter: :json,
-      meta:{
-        community_images_url: community_images,
-        following_images_url: following_account_images,
-        is_admin: is_admin,
-        community_slug: community_slug 
-      }
     end
 
     def logout
@@ -509,64 +512,66 @@ module Mammoth::Api::V1
     end
 
     def get_user_details_info(target_account_id, account_info)
-      
-      role_name = current_user.nil? ? nil : current_user_role
+      ActiveRecord::Base.connected_to(role: :reading) do
 
-      community_images = []
-      following_account_images = []
-      is_my_account = current_user.nil? ? false : current_account.id == account_info.id ? true : false
+        role_name = current_user.nil? ? nil : current_user_role
 
-      #begin::get collection images
-      @user  = Mammoth::User.find(current_user.id)
-			@user_communities= @user.user_communities
-			unless @user_communities.empty?
-        community_ids = @user_communities.pluck(:community_id).map(&:to_i)
-        communities = Mammoth::Community.where(id: community_ids).take(2)
-        communities.each do |community|
-					community_images << community.image.url
-				end
-      end
-      #end::get community images
+        community_images = []
+        following_account_images = []
+        is_my_account = current_user.nil? ? false : current_account.id == account_info.id ? true : false
 
-      #begin:get following images
-      followed_account_ids = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
-      if followed_account_ids.any?
-        Account.where(id: followed_account_ids).take(2).each do |following_account|
-					following_account_images << following_account.avatar.url
-				end
-      end
-      #end:get following images
+        #begin::get collection images
+        @user  = Mammoth::User.find(current_user.id)
+        @user_communities= @user.user_communities
+        unless @user_communities.empty?
+          community_ids = @user_communities.pluck(:community_id).map(&:to_i)
+          communities = Mammoth::Community.where(id: community_ids).take(2)
+          communities.each do |community|
+            community_images << community.image.url
+          end
+        end
+        #end::get community images
 
-      #begin::check community admin & communnity_slug
-      is_admin = false
-      community_slug = ""
-      community_admin = Mammoth::CommunityAdmin.where(user_id: current_user.id).last
-      if community_admin.present?
-        is_admin = true
-        community_slug = community_admin.community.slug
-      end
-      #end::check community admin & communnity_slug
+        #begin:get following images
+        followed_account_ids = Follow.where(account_id: current_account.id).pluck(:target_account_id).map(&:to_i)
+        if followed_account_ids.any?
+          Account.where(id: followed_account_ids).take(2).each do |following_account|
+            following_account_images << following_account.avatar.url
+          end
+        end
+        #end:get following images
 
-      #begin::check account requested or not
-      follow_request = Account.requested_map(target_account_id, current_account.id)
+        #begin::check community admin & communnity_slug
+        is_admin = false
+        community_slug = ""
+        community_admin = Mammoth::CommunityAdmin.where(user_id: current_user.id).last
+        if community_admin.present?
+          is_admin = true
+          community_slug = community_admin.community.slug
+        end
+        #end::check community admin & communnity_slug
 
-      following = Account.following_map(target_account_id, current_account.id)
+        #begin::check account requested or not
+        follow_request = Account.requested_map(target_account_id, current_account.id)
 
-      is_requested = follow_request.present? ? true : false
-      is_following = following.present? ? true : false
-      #end::check account requested or not
+        following = Account.following_map(target_account_id, current_account.id)
 
-      account_data = single_serialize(account_info, Mammoth::CredentialAccountSerializer)
-      render json: {
-        data:{
-          account_data: account_data.merge(:is_requested => is_requested,:is_my_account => is_my_account, :is_followed => is_following),
-          community_images_url: community_images,
-          following_images_url: following_account_images,
-          is_admin: is_admin,
-          community_slug: community_slug,
-          account_type: role_name
+        is_requested = follow_request.present? ? true : false
+        is_following = following.present? ? true : false
+        #end::check account requested or not
+
+        account_data = single_serialize(account_info, Mammoth::CredentialAccountSerializer)
+        render json: {
+          data:{
+            account_data: account_data.merge(:is_requested => is_requested,:is_my_account => is_my_account, :is_followed => is_following),
+            community_images_url: community_images,
+            following_images_url: following_account_images,
+            is_admin: is_admin,
+            community_slug: community_slug,
+            account_type: role_name
+          }
         }
-      }
+      end
     end
 
     def get_user_details_statuses(account_id, account_info)

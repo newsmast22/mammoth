@@ -5,26 +5,27 @@ module Mammoth::Api::V1
 		before_action :set_community_feed, only: %i[show update destroy]
 
     def index
+      ActiveRecord::Base.connected_to(role: :reading, prevent_writes: true) do
+        # Assign limit = 5 as 6 if limit is nil
+        # Limit always plus one 
+        # Addition plus one to get has_more_object
 
-      # Assign limit = 5 as 6 if limit is nil
-      # Limit always plus one 
-      # Addition plus one to get has_more_object
+        limit = params[:limit].present? ? params[:limit].to_i + 1 : 6
+        offset = params[:offset].present? ? params[:offset] : 0
 
-      limit = params[:limit].present? ? params[:limit].to_i + 1 : 6
-      offset = params[:offset].present? ? params[:offset] : 0
+        community = Mammoth::Community.find_by(slug: params[:id])
+        role_name = current_user_role
 
-      community = Mammoth::Community.find_by(slug: params[:id])
-      role_name = current_user_role
+        if role_name == "rss-account"
+        @community_feeds = Mammoth::CommunityFeed.feeds_for_rss_account(community.id, current_user.account.id , offset, limit)
+        else # community-admin
+          @community_feeds = Mammoth::CommunityFeed.feeds_for_admin(community.id, offset, limit)
+        end
 
-      if role_name == "rss-account"
-       @community_feeds = Mammoth::CommunityFeed.feeds_for_rss_account(community.id, current_user.account.id , offset, limit)
-      else # community-admin
-        @community_feeds = Mammoth::CommunityFeed.feeds_for_admin(community.id, offset, limit)
+        default_limit = limit - 1
+
+        return_format_json(offset, default_limit)
       end
-
-      default_limit = limit - 1
-
-      return_format_json(offset, default_limit)
     end
 
     def show

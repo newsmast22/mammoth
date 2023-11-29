@@ -484,6 +484,11 @@ module Mammoth
                       .where.not(community: { slug: "breaking_news" }).any?
     end
 
+    def search_word_ban(keyword)
+      regex = /(?:^|\s)#{Regexp.escape(keyword)}(?:\s|[#,.]|(?=\z))/i 
+      !!(text =~ regex)
+    end
+
     def is_breaking_news?
       Mammoth::Status.joins(communities_statuses: :community)
       .where(community: {slug: "breaking_news"})
