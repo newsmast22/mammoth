@@ -1,7 +1,7 @@
 module Mammoth::Api::V1
   class UserSessionsController < Api::BaseController
 
-    before_action -> { doorkeeper_authorize! :write, :'write:accounts' }, except: [:connect_with_instance]
+    before_action -> { doorkeeper_authorize! :write, :'write:accounts' }, except: [:connect_with_instance, :create_user_object]
     before_action :check_enabled_registrations, only: [:create]
     before_action :generate_otp, except: [:verify_otp, :verify_reset_password_otp, :update_password]
     before_action :find_by_email_phone, only: [:get_reset_password_otp, :verify_reset_password_otp, :reset_password]
@@ -181,6 +181,12 @@ module Mammoth::Api::V1
           code: params[:code]
         }
         result = Mammoth::FediverseLoginService.new.call(login_params, client_token)
+
+        # Update Application access token from PWA and Mobile header
+        pattern = /^Bearer /
+        header  = request.headers['Authorization']
+        header_token = header.gsub(pattern, '') if header && header.match(pattern)
+        client_token.update(token: header_token)
 
         render json: result[:data], status: result[:status_code] 
       else 
