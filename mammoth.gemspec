@@ -34,7 +34,7 @@ Gem::Specification.new do |spec|
   # For more information and examples about making a new gem, check out our
   # guide at: https://bundler.io/guides/creating_gem.html
 
-  spec.add_dependency "rails", "~> 6.1"
+  spec.add_dependency "rails", "~> 7.0"
   spec.add_dependency "byebug"
   spec.add_dependency "feedjira"
   spec.add_dependency 'httparty'
