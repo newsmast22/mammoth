@@ -21,7 +21,7 @@ module Mammoth::Api::V1
         @search = Search.new(my_community_search_results)
         render json: @search.statuses, root: 'data', each_serializer: Mammoth::StatusSerializer, current_user: current_user, adapter: :json
       end
-      rescue Mastodon::SyntaxError
+    rescue Mastodon::SyntaxError
       unprocessable_entity
     rescue ActiveRecord::RecordNotFound
       not_found
@@ -167,7 +167,7 @@ module Mammoth::Api::V1
       SearchService.new.call(
         params[:words],
         current_account,
-        limit_param(RESULTS_LIMIT),
+        limit_param(10),
         search_params.merge(resolve: truthy_param?(:resolve), exclude_unreviewed: truthy_param?(:exclude_unreviewed), following: truthy_param?(:following))
       )
     end
@@ -178,13 +178,13 @@ module Mammoth::Api::V1
       Newsmast::MyCommunitySearchService.new.call(
         params[:words],
         current_account,
-        limit_param(RESULTS_LIMIT),
+        limit_param(10),
         search_params.merge(resolve: truthy_param?(:resolve), exclude_unreviewed: truthy_param?(:exclude_unreviewed), following: truthy_param?(:following))
       )
     end
 
     def search_params
-      params.permit(:type, :offset, :min_id, :max_id, :account_id, :following)
+      params.permit(:type, :offset, :min_id, :max_id, :account_id, :following, :words)
     end
 
     # def get_integer_array_from_list(obj_list)
