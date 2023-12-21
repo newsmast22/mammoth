@@ -162,6 +162,8 @@ module Mammoth::Api::V1
     end
 
     def search_results
+      params[:type] ||= "statuses"
+      
       SearchService.new.call(
         params[:words],
         current_account,
@@ -171,6 +173,8 @@ module Mammoth::Api::V1
     end
 
     def my_community_search_results
+      params[:type] ||= "statuses"
+  
       Newsmast::MyCommunitySearchService.new.call(
         params[:words],
         current_account,
