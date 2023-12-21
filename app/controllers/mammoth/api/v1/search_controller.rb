@@ -8,7 +8,7 @@ module Mammoth::Api::V1
     def get_all_community_status_timelines
       ActiveRecord::Base.connected_to(role: :reading, prevent_writes: true) do
         @search = Search.new(search_results)
-        render json: @search.statuses, root: 'data', each_serializer: StatusSerializer, current_user: current_user, adapter: :json
+        render json: @search.statuses, root: 'data', each_serializer: Mammoth::StatusSerializer, current_user: current_user, adapter: :json
       end
     rescue Mastodon::SyntaxError
       unprocessable_entity
@@ -19,7 +19,7 @@ module Mammoth::Api::V1
     def get_my_community_status_timelines
       ActiveRecord::Base.connected_to(role: :reading, prevent_writes: true) do
         @search = Search.new(my_community_search_results)
-        render json: @search.statuses, root: 'data', each_serializer: StatusSerializer, current_user: current_user, adapter: :json
+        render json: @search.statuses, root: 'data', each_serializer: Mammoth::StatusSerializer, current_user: current_user, adapter: :json
       end
       rescue Mastodon::SyntaxError
       unprocessable_entity
@@ -152,7 +152,7 @@ module Mammoth::Api::V1
     private
 
     def validate_search_params!
-      params.require(:word)
+      params.require(:words)
 
       return if user_signed_in?
 
@@ -163,7 +163,7 @@ module Mammoth::Api::V1
 
     def search_results
       SearchService.new.call(
-        params[:word],
+        params[:words],
         current_account,
         limit_param(RESULTS_LIMIT),
         search_params.merge(resolve: truthy_param?(:resolve), exclude_unreviewed: truthy_param?(:exclude_unreviewed), following: truthy_param?(:following))
@@ -172,7 +172,7 @@ module Mammoth::Api::V1
 
     def my_community_search_results
       Newsmast::MyCommunitySearchService.new.call(
-        params[:word],
+        params[:words],
         current_account,
         limit_param(RESULTS_LIMIT),
         search_params.merge(resolve: truthy_param?(:resolve), exclude_unreviewed: truthy_param?(:exclude_unreviewed), following: truthy_param?(:following))
