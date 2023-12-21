@@ -54,6 +54,7 @@ module Mammoth
 
             create_status(text, desc, link)
             create_community_status if @status
+            crawl_Link(link) if @status
           end
         end
       rescue => e
@@ -83,6 +84,14 @@ module Mammoth
         rescue StandardError => e
           puts "RSS Feed Status creation failed! => error: #{e.inspect}"
         end
+      end
+
+      def crawl_Link(link)
+        assign_text = @status.text
+        @status.text = assign_text +" "+link
+        fetch_card = FetchLinkCardService.new.call(@status)
+      rescue ActiveRecord::RecordNotFound
+        true
       end
 
       def generate_rss_content_comminity_hashtags(text)
