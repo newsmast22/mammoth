@@ -7,15 +7,14 @@ module Mammoth::Api::V1
     before_action :set_collection, only: %i[show update destroy]
 
     def index
-      ActiveRecord::Base.connected_to(role: :reading, prevent_writes: true) do
-        unless current_user.nil?
-          @user  = Mammoth::User.find(current_user.id)
-          #when user register
-          if @user.is_account_setup_finished == false
-            Mammoth::UserCommunity.where(user_id: current_user.id).destroy_all
-          end
+      unless current_user.nil?
+        @user  = Mammoth::User.find(current_user.id)
+        #when user register
+        if @user.is_account_setup_finished == false
+          Mammoth::UserCommunity.where(user_id: current_user.id).destroy_all
         end
-        
+      end
+      ActiveRecord::Base.connected_to(role: :reading, prevent_writes: true) do
         data = @service.get_collections
         render json: data
       end

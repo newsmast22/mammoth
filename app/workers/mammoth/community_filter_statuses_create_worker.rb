@@ -33,9 +33,9 @@ module Mammoth
               tag = Tag.find_by(name: filter.keyword.downcase.gsub('#', ''))
               ban_statuses(tag.statuses, filter) if tag
             else
-              status_list = Mammoth::Status.where("LOWER(text) ~* ?", "\\m#{filter.keyword.downcase}\\M").order(created_at: :desc).limit(400)
+              status_list = Mammoth::Status.order(created_at: :desc).limit(400)
               status_list.each do |status|   
-                loop_ban_statuses(status, filter)
+                loop_ban_statuses(status, filter) if status.search_word_ban(filter.keyword.downcase)
               end
             end
           end
