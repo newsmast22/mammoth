@@ -169,6 +169,9 @@ module Mammoth::Api::V1
 
     def create_user_object 
 
+      return render json: {error: "Access denied"}, status: 422 unless ENV['NEWSMAST_APP_KEY'].present? && ENV['NEWSMAST_APP_SECRET'].present?
+      client_application = Doorkeeper::Application.find_by(uid: ENV['NEWSMAST_APP_KEY'], secret: ENV['NEWSMAST_APP_SECRET'])
+      client_token = Doorkeeper::AccessToken.where(resource_owner_id: client_application.owner_id, application_id: client_application.id).where.not(last_used_at: nil).last
       if params[:instance].present? && params[:client_id].present? && params[:client_secret].present? && params[:redirect_uris].present? && params[:code].present?
         login_params = {
           instance: params[:instance],
@@ -177,7 +180,13 @@ module Mammoth::Api::V1
           redirect_uris: params[:redirect_uris],
           code: params[:code]
         }
-        result = Mammoth::FediverseLoginService.new.call(login_params, doorkeeper_token)
+        result = Mammoth::FediverseLoginService.new.call(login_params, client_token)
+
+        # Update Application access token from PWA and Mobile header
+        # pattern = /^Bearer /
+        # header  = request.headers['Authorization']
+        # header_token = header.gsub(pattern, '') if header && header.match(pattern)
+        # client_token.update(token: header_token)
 
         render json: result[:data], status: result[:status_code] 
       else 
