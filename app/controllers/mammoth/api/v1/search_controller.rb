@@ -162,6 +162,9 @@ module Mammoth::Api::V1
 
     def search_results
       params[:type] ||= "statuses"
+      unless params[:words].present?
+        params[:words] = ""
+      end
       
       SearchService.new.call(
         params[:words],
@@ -173,6 +176,9 @@ module Mammoth::Api::V1
 
     def my_community_search_results
       params[:type] ||= "statuses"
+      unless params[:words].present?
+        params[:words] = ""
+      end
   
       Newsmast::MyCommunitySearchService.new.call(
         params[:words],
