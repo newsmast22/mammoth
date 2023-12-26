@@ -2,7 +2,7 @@
 module Mammoth::Api::V1
 
   class SearchController < Api::V2::SearchController
-    before_action -> { authorize_if_got_token! :read, :'read:search' }
+    before_action :require_user!
     before_action :validate_search_params!
 
     def get_all_community_status_timelines
@@ -152,8 +152,7 @@ module Mammoth::Api::V1
     private
 
     def validate_search_params!
-      params.require(:words)
-
+    
       return if user_signed_in?
 
       return render json: { error: 'Search queries pagination is not supported without authentication' }, status: 401 if params[:offset].present?
