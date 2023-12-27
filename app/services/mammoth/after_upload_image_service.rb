@@ -14,7 +14,6 @@ module Mammoth
       return unless check_api_usage_limit
       return unless create_image_at_alttext_ai
       update_image_alt
-      puts "successfully updated alt text : #{@media_attachment.id}"
     rescue StandardError => e
       puts "Error: #{e.message}"
     end
@@ -36,12 +35,9 @@ module Mammoth
     end
 
     def update_image_alt
-      puts "update_image_alt for media_id >> #{@media_attachment.id}"
       @media_attachment.reload
       if @alttext_return&.alt_text.present?
         @media_attachment.update_column(:auto_generated_description, @alttext_return.alt_text)
-      else
-        puts "Generated alt text is nil: #{@media_attachment}"
       end
     end
 
