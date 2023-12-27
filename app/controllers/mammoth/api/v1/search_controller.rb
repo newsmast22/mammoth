@@ -169,7 +169,7 @@ module Mammoth::Api::V1
       SearchService.new.call(
         params[:words],
         current_account,
-        limit_param(10),
+        limit_param(20),
         search_params.merge(resolve: truthy_param?(:resolve), exclude_unreviewed: truthy_param?(:exclude_unreviewed), following: truthy_param?(:following))
       )
     end
@@ -183,7 +183,7 @@ module Mammoth::Api::V1
       Newsmast::MyCommunitySearchService.new.call(
         params[:words],
         current_account,
-        limit_param(10),
+        limit_param(20),
         search_params.merge(resolve: truthy_param?(:resolve), exclude_unreviewed: truthy_param?(:exclude_unreviewed), following: truthy_param?(:following))
       )
     end
