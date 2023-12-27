@@ -55,7 +55,8 @@ module Mammoth::Api::V1
 								collection_id: community.collection_id,
 								created_at: community.created_at,
 								updated_at: community.updated_at,
-								is_recommended: community.is_recommended
+								is_recommended: community.is_recommended,
+								bot_account: community.bot_account
 							}
 						end
 						render json: data
@@ -81,7 +82,8 @@ module Mammoth::Api::V1
 								collection_id: community.collection_id,
 								created_at: community.created_at,
 								updated_at: community.updated_at,
-								is_recommended: community.is_recommended
+								is_recommended: community.is_recommended,
+								bot_account: community.bot_account
 							}
 						end
 						render json: data
@@ -122,7 +124,8 @@ module Mammoth::Api::V1
 								collection_id: community.collection_id,
 								created_at: community.created_at,
 								updated_at: community.updated_at,
-								is_recommended: community.is_recommended
+								is_recommended: community.is_recommended,
+								bot_account: community.bot_account
 							}
 						end
 						render json: {data: data,
@@ -191,6 +194,7 @@ module Mammoth::Api::V1
 			@community.name = community_params[:name]
 			@community.slug = community_params[:slug]
 			@community.description = community_params[:description]
+			@community.bot_account = community_params[:bot_account]
 			@community.collection_id = collection.id
 			@community.save
 
@@ -213,6 +217,7 @@ module Mammoth::Api::V1
 			@community.description = community_params[:description] if community_params[:description].present?
 			@community.is_country_filtering = community_params[:is_country_filtering].present? ? true : false
 			@community.is_recommended = community_params[:is_recommended].present? ? true : false
+			@community.bot_account = community_params[:bot_account] if community_params[:bot_account].present?
 
 			@community.collection_id = collection.id
 
@@ -666,6 +671,7 @@ module Mammoth::Api::V1
 				:position,
 				:is_country_filtering,
 				:is_recommended,
+				:bot_account,
 				fields: [:name, :value],
         fields_attributes: [:name, :value],
 			)

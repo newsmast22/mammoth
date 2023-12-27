@@ -6,6 +6,8 @@ module Mammoth
     belongs_to :community, optional: true
     belongs_to :status
 
+    after_create :boost_bot_status
+
     scope :filter_out_breaking_news, ->(breaking_news_id) { where.not(community_id: breaking_news_id) }
 
     IMAGE_LIMIT = 15.megabytes
@@ -58,6 +60,21 @@ module Mammoth
 
     validates_attachment_content_type :image, content_type: IMAGE_MIME_TYPES
     validates_attachment_size :image, less_than: IMAGE_LIMIT
+
+    def boost_bot_status
+      return unless ENV['BOOST_COMMUNITY_BOT_ENABLED'] == 'true'
+
+      community_bot_account = get_community_bot_account(self.community_id)
+      return if community_bot_account.nil?
+      
+      Mammoth::BoostCommunityBotWorker.perform_async(self.status_id, community_bot_account)
+    end
+
+    private 
+
+    def get_community_bot_account(community_id)
+      Mammoth::Community.where(id: community_id).last&.bot_account
+    end
 
   end
 end
