@@ -7,7 +7,7 @@ class Mammoth::StatusSerializer < ActiveModel::Serializer
   attributes :id,:community_id,:community_name,:community_slug,:created_at, :in_reply_to_id, :in_reply_to_account_id,
              :sensitive, :spoiler_text, :visibility, :language, :is_only_for_followers,
              :uri, :url, :replies_count, :reblogs_count,:is_rss_content,:rss_host_url,
-             :favourites_count, :edited_at,:image_url,:rss_link,:is_meta_preview,:translated_text
+             :favourites_count, :edited_at,:image_url,:rss_link,:is_meta_preview,:translated_text,:meta_title
 
   attribute :favourited, if: :current_user?
   attribute :reblogged, if: :current_user?
@@ -31,6 +31,11 @@ class Mammoth::StatusSerializer < ActiveModel::Serializer
   has_one :preview_card, key: :card, serializer: REST::PreviewCardSerializer
   has_one :preloadable_poll, key: :poll, serializer: REST::PollSerializer
 
+
+  def meta_title
+    return " " unless object.is_rss_content? && object.local?
+    object.text[0, object.text_count.to_i]
+  end
 
   def community_name
     community_status =  Mammoth::CommunityStatus.where(status_id: object.id).last
