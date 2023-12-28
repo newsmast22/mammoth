@@ -75,7 +75,7 @@ module Mammoth
             text:              generate_rss_content_comminity_hashtags(title),
             spoiler_text:      desc,
             rss_link:          link,
-            sensitive:         false,
+            sensitive:         false, 
             is_rss_content:    true,
             community_feed_id: @cfeed_id,
             community_ids:     [@community_slug],
