@@ -75,11 +75,12 @@ module Mammoth
             text:              generate_rss_content_comminity_hashtags(title),
             spoiler_text:      desc,
             rss_link:          link,
+            sensitive:         false,
             is_rss_content:    true,
             community_feed_id: @cfeed_id,
-            community_ids: [@community_slug],
-            media_ids: [media_attachment.id],
-            text_count: title.blank? ? 0 : title.length
+            community_ids:     [@community_slug],
+            media_ids:         [media_attachment.id],
+            text_count:        title.blank? ? 0 : title.length
           )
         rescue StandardError => e
           puts "RSS Feed Status creation failed! => error: #{e.inspect}"
@@ -89,7 +90,6 @@ module Mammoth
       def crawl_Link(link)
         assign_text = @status.text
         @status.text = assign_text +" "+link
-        puts "@status.tex==================> #{@status.text}"
         FetchLinkCardService.new.call(@status)
       rescue ActiveRecord::RecordNotFound
         true
