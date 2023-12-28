@@ -73,7 +73,8 @@ module Mammoth
           @status = PostStatusService.new.call(
             @account,
             text:              generate_rss_content_comminity_hashtags(title),
-            spoiler_text:      desc,
+            #spoiler_text:      desc,
+            spoiler_text:      "",
             rss_link:          link,
             sensitive:         false, 
             is_rss_content:    true,
