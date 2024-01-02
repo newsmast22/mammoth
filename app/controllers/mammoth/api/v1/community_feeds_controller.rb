@@ -39,7 +39,8 @@ module Mammoth::Api::V1
             name: community_feed_params[:name],
             slug: community_feed_params[:name].downcase.parameterize(separator: '_'),
             custom_url: community_feed_params[:custom_url],
-            account_id: current_user.account.id
+            account_id: current_user.account.id,
+            del_schedule: community_feed_params[:del_schedule]
         )
       if @community_feed
         render json: @community_feed
@@ -52,6 +53,7 @@ module Mammoth::Api::V1
     def update
       @community_feed.name = community_feed_params[:name]
       @community_feed.custom_url = community_feed_params[:custom_url]
+      @community_feed.del_schedule = community_feed_params[:del_schedule]
       @community_feed.save 
       if @community_feed
         render json: @community_feed
@@ -104,7 +106,8 @@ module Mammoth::Api::V1
         :name,
         :slug,
         :custom_url,
-        :community_id
+        :community_id,
+        :del_schedule
       )
     end
 
