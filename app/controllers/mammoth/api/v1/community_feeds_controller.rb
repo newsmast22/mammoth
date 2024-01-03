@@ -22,6 +22,8 @@ module Mammoth::Api::V1
           @community_feeds = Mammoth::CommunityFeed.feeds_for_admin(community.id, offset, limit)
         end
 
+        #@community_feeds = Mammoth::CommunityFeed.where(community_id: community.id)
+
         default_limit = limit - 1
 
         return_format_json(offset, default_limit)
@@ -74,7 +76,7 @@ module Mammoth::Api::V1
       unless @community_feeds.empty?
 
         render json: @community_feeds.limit(default_limit), root: 'data', 
-        each_serializer: Mammoth::CommunityFeedSerializer, current_user: current_user, adapter: :json, 
+        each_serializer: Mammoth::CommunityFeedSerializer, is_feed_count: true, adapter: :json, 
         meta: {
           pagination:
           { 
