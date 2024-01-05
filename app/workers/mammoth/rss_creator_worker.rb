@@ -141,9 +141,10 @@ module Mammoth
         SearchService.new.call(
           text,
           account,
-          limit_param(20),
+          1,
           search_params.merge(resolve: false, exclude_unreviewed: false, following: false)
         )
       end
+
   end
 end
