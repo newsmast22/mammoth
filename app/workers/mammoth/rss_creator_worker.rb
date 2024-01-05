@@ -48,9 +48,9 @@ module Mammoth
             @community_slug = Mammoth::Community.where(id: @cid).last.slug
 
             # Check dose text already exists or not?
-            existing_status = Status.where(text: @text).exists?
+            # existing_status = Status.where(text: text).exists?
 
-            return true if existing_status
+            # return true if existing_status
 
             create_status(text, desc, link)
             create_community_status if @status
