@@ -47,10 +47,9 @@ module Mammoth
             @image = get_image_url(item, link) || item.image || fallback_image_url
             @community_slug = Mammoth::Community.where(id: @cid).last.slug
 
-            # Check dose text already exists or not?
-            # existing_status = Status.where(text: text).exists?
-
-            # return true if existing_status
+            # Check status conent duplication
+            @search = Search.new(search_results(generate_comminity_hashtags(text), @account))
+            return true if @search.statuses.count > 0
 
             create_status(text, desc, link)
             create_community_status if @status
@@ -72,7 +71,7 @@ module Mammoth
 
           @status = PostStatusService.new.call(
             @account,
-            text:              generate_rss_content_comminity_hashtags(title),
+            text:              generate_comminity_hashtags(title),
             #spoiler_text:      desc,
             spoiler_text:      "",
             rss_link:          link,
@@ -96,7 +95,7 @@ module Mammoth
         true
       end
 
-      def generate_rss_content_comminity_hashtags(text)
+      def generate_comminity_hashtags(text)
         @community_ids = Mammoth::Community.where(slug: @community_slug).pluck(:id).to_a.uniq
         community_hash_tags = Mammoth::CommunityHashtag.where(community_id: @community_ids, is_incoming: false)
         post = text
@@ -125,6 +124,26 @@ module Mammoth
         rescue 
           url
         end
+      end
+
+      def search_results(text, account)
+
+        search_params = {
+          type: "statuses",
+          offset: 0,
+          min_id: nil,
+          max_id: nil,
+          account_id: account.id,
+          following: false,
+          words: text
+        }
+
+        SearchService.new.call(
+          text,
+          account,
+          limit_param(20),
+          search_params.merge(resolve: false, exclude_unreviewed: false, following: false)
+        )
       end
   end
 end
