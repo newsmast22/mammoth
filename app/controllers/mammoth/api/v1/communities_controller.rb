@@ -55,6 +55,7 @@ module Mammoth::Api::V1
 								collection_id: community.collection_id,
 								created_at: community.created_at,
 								updated_at: community.updated_at,
+								is_pinned: !MyPin.find_by(pinned_obj: Community.find(community.id), pin_type: 0, account: current_user&.account).nil?,
 								is_recommended: community.is_recommended,
 								bot_account: community.bot_account
 							}
@@ -82,6 +83,7 @@ module Mammoth::Api::V1
 								collection_id: community.collection_id,
 								created_at: community.created_at,
 								updated_at: community.updated_at,
+								is_pinned: !MyPin.find_by(pinned_obj: Community.find(community.id), pin_type: 0, account: current_user&.account).nil?,
 								is_recommended: community.is_recommended,
 								bot_account: community.bot_account
 							}
@@ -124,6 +126,7 @@ module Mammoth::Api::V1
 								collection_id: community.collection_id,
 								created_at: community.created_at,
 								updated_at: community.updated_at,
+								is_pinned: !MyPin.find_by(pinned_obj: Community.find(community.id), pin_type: 0, account: current_user&.account).nil?,
 								is_recommended: community.is_recommended,
 								bot_account: community.bot_account
 							}

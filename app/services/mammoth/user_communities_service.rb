@@ -38,6 +38,7 @@ class Mammoth::UserCommunitiesService < BaseService
           created_at: community.created_at,
           updated_at: community.updated_at,
           is_default_checked: false,
+          is_pinned: !MyPin.find_by(pinned_obj: Community.find(community.id), pin_type: 0, account: @current_user.account).nil?,
           community_hashtags: get_community_hashtags(community.id)
         }
       end
