@@ -197,7 +197,7 @@ module Mammoth
       }
     end
 
-    def self.get_public_community_detail_profile(community_slug, current_user)
+    def self.get_public_community_detail_profile(community_slug)
       all_community_hash = Mammoth::CollectionService.all_collection
 
       community = Mammoth::Community.new(
