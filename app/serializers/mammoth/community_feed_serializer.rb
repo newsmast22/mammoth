@@ -1,9 +1,12 @@
 class Mammoth::CommunityFeedSerializer < ActiveModel::Serializer
 
-  attributes :id, :name, :slug, :custom_url, :feed_counts
+  attributes :id, :name, :slug, :custom_url, :del_schedule
 
+  attributes :feed_counts
+  
   def feed_counts
-    object.statuses.count
+    return object.feed_counts if instance_options[:is_feed_count]
+    0
   end
   
 end
