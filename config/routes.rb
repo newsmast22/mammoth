@@ -19,6 +19,9 @@ Mammoth::Engine.routes.draw do
           get 'get_participants_list' =>  'communities#get_participants_list', as: 'get_participants_list'
           get 'get_admin_following_list' =>  'communities#get_admin_following_list', as: 'get_admin_following_list'
         end
+        member do
+          get :community_bio
+        end
       end
 
       resources :community_feeds

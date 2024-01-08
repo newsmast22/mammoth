@@ -17,6 +17,10 @@ module Mammoth
       joins(mammoth_communities_users: { user: :account }).where(account: {id: acc_id})
     }
 
+    scope :incoming_hashtags, ->(id){
+      Mammoth::Community.includes(:community_hashtags).find_by(slug: id)
+    }
+
     scope :get_public_communities, -> (collection = nil){
       if collection.nil?
         where(is_recommended: true)
@@ -131,6 +135,8 @@ module Mammoth
 
     validates_attachment_content_type :header, content_type: IMAGE_MIME_TYPES
     validates_attachment_size :header, less_than: IMAGE_LIMIT
+
+    validates :slug, presence: true, uniqueness: { case_sensitive: false, scope: :collection_id, message: "must be unique" }
 
     def header_name=(name)
       self.header_file_name = name if name.present?

@@ -198,6 +198,7 @@ module Mammoth::Api::V1
 			@community.slug = community_params[:slug]
 			@community.description = community_params[:description]
 			@community.bot_account = community_params[:bot_account]
+			@community.bio = community_params[:bio]
 			@community.collection_id = collection.id
 			@community.save
 
@@ -206,7 +207,7 @@ module Mammoth::Api::V1
 				@community.image = image
 				@community.save
 			end
-			if @community
+			if @community.save
 				render json: @community
 			else
 				render json: {error: 'community creation failed!'}
@@ -221,6 +222,7 @@ module Mammoth::Api::V1
 			@community.is_country_filtering = community_params[:is_country_filtering].present? ? true : false
 			@community.is_recommended = community_params[:is_recommended].present? ? true : false
 			@community.bot_account = community_params[:bot_account] if community_params[:bot_account].present?
+			@community.bio = community_params[:bio] if community_params[:bio].present?
 
 			@community.collection_id = collection.id
 
@@ -525,7 +527,12 @@ module Mammoth::Api::V1
 											has_more_objects: accounts.length > 10 ? true : false
 										}
 			end						
-		end		
+		end	
+
+		def community_bio 
+			community_bio = Mammoth::Community.incoming_hashtags(params[:id])
+			render json: community_bio, serializer: Mammoth::CommunityBioSerializer
+		end	
 
 		private
 
@@ -675,6 +682,7 @@ module Mammoth::Api::V1
 				:is_country_filtering,
 				:is_recommended,
 				:bot_account,
+				:bio,
 				fields: [:name, :value],
         fields_attributes: [:name, :value],
 			)
