@@ -181,7 +181,6 @@ module Mammoth
 			user_communities_ids  = @user.user_communities.pluck(:community_id).map(&:to_i)
 
 			community_followed_user_counts = Mammoth::UserCommunity.where(community_id: community.id).size
-
       result = {
           community_followed_user_counts: community_followed_user_counts,
           community_name: role_name == "rss-account" ? current_user.account.display_name : community.name,
@@ -193,11 +192,12 @@ module Mammoth
           is_joined: user_communities_ids.include?(community.id),
           is_admin: is_community_admin,
 					participants_count: community.participants_count,
+          is_pinned: !MyPin.find_by(pinned_obj_type: "Community", pinned_obj_id: community.id, pin_type: 0, account: current_user&.account).nil?,
           admin_following_count: community.admin_following_count
       }
     end
 
-    def self.get_public_community_detail_profile(community_slug)
+    def self.get_public_community_detail_profile(community_slug, current_user)
       all_community_hash = Mammoth::CollectionService.all_collection
 
       community = Mammoth::Community.new(
