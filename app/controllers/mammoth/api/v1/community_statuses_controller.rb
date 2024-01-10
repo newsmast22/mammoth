@@ -40,7 +40,7 @@ module Mammoth::Api::V1
 				statuses = [@status] + @context.ancestors + @context.descendants
 
 				render json: @context,
-								serializer: REST::Newsmast::StatusSerializer, 
+								serializer: REST::ContextSerializer, 
 								relationships: StatusRelationshipsPresenter.new(statuses, current_user&.account_id)
 				end
 		end
