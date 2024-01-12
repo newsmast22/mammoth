@@ -48,7 +48,12 @@ module Mammoth
             @community_slug = Mammoth::Community.where(id: @cid).last.slug
 
             # Check status conent duplication
-            return true if is_status_duplicate?(generate_comminity_hashtags(text))
+            search_text = generate_comminity_hashtags(text)
+            search_text_link = search_text +" "+link
+
+            next if is_status_duplicate?(search_text)
+
+            next if is_status_duplicate?(search_text_link)
 
             create_status(text, desc, link)
             create_community_status if @status
