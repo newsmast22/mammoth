@@ -49,7 +49,7 @@ module Mammoth
           'community_id' => community_id,
           'feed_id' => self.id
         }
-        Mammoth::RSSCreatorWorker.perform_async(json)
+        Mammoth::RSSCreatorWorker.perform_at(2.minutes.from_now,json)
       end
   end
 end
