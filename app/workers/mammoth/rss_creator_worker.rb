@@ -5,7 +5,7 @@ module Mammoth
   class RSSCreatorWorker
     include Sidekiq::Worker
 
-    sidekiq_options backtrace: true, retry: 2, dead: true
+    sidekiq_options backtrace: true, retry: 2, dead: true, lock: :until_executed, on_conflict: :log
 
     def perform(params = {})
       is_callback   = params['is_callback'] == true
@@ -48,8 +48,7 @@ module Mammoth
             @community_slug = Mammoth::Community.where(id: @cid).last.slug
 
             # Check status conent duplication
-            @search = Search.new(search_results(generate_comminity_hashtags(text), @account))
-            return true if @search.statuses.count > 0
+            return true if is_status_duplicate?(generate_comminity_hashtags(text))
 
             create_status(text, desc, link)
             create_community_status if @status
@@ -126,24 +125,8 @@ module Mammoth
         end
       end
 
-      def search_results(text, account)
-
-        search_params = {
-          type: "statuses",
-          offset: 0,
-          min_id: nil,
-          max_id: nil,
-          account_id: account.id,
-          following: false,
-          words: text
-        }
-
-        SearchService.new.call(
-          text,
-          account,
-          1,
-          search_params.merge(resolve: false, exclude_unreviewed: false, following: false)
-        )
+      def is_status_duplicate?(text)
+        Status.where(is_rss_content: true, reply: false).where(text: text).exists?
       end
 
   end
