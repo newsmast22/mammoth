@@ -8,10 +8,10 @@ module Mammoth
     validates :slug, :presence => true, :uniqueness => {:scope => :community_id , conditions: -> { where(deleted_at: nil)} }
 
     scope :feeds_for_admin, -> (community_id, offset, limit) { joins("
-      LEFT JOIN statuses ON statuses.community_feed_id = mammoth_community_feeds.id"
+      LEFT OUTER JOIN statuses ON statuses.community_feed_id = mammoth_community_feeds.id"
       )
       .select("mammoth_community_feeds.id,mammoth_community_feeds.name,mammoth_community_feeds.slug,mammoth_community_feeds.custom_url,
-      mammoth_community_feeds.deleted_at,mammoth_community_feeds.del_schedule,COUNT(statuses.id) as feed_counts"
+      mammoth_community_feeds.deleted_at,mammoth_community_feeds.del_schedule"
       )
       .where("mammoth_community_feeds.community_id = :community_id AND mammoth_community_feeds.deleted_at IS NULL",
         community_id: community_id, 
@@ -23,10 +23,10 @@ module Mammoth
     }
       
     scope :feeds_for_rss_account, ->(community_id, account_id, offset, limit) { joins("
-      LEFT JOIN statuses ON statuses.community_feed_id = mammoth_community_feeds.id"
+      LEFT OUTER JOIN statuses ON statuses.community_feed_id = mammoth_community_feeds.id"
       )
       .select("mammoth_community_feeds.id,mammoth_community_feeds.name,mammoth_community_feeds.slug,mammoth_community_feeds.custom_url,
-      mammoth_community_feeds.deleted_at,mammoth_community_feeds.del_schedule,COUNT(statuses.id) as feed_counts"
+      mammoth_community_feeds.deleted_at,mammoth_community_feeds.del_schedule"
       )
       .where("mammoth_community_feeds.community_id = :community_id AND mammoth_community_feeds.account_id = :account_id AND mammoth_community_feeds.deleted_at IS NULL",
         community_id: community_id, account_id: account_id, 
