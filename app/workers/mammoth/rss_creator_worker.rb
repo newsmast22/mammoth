@@ -93,7 +93,7 @@ module Mammoth
 
       def crawl_Link(link)
         assign_text = @status.text
-        @status.text = assign_text +" "+link
+        @status.text = "#{assign_text&.strip} #{link}"
         FetchLinkCardService.new.call(@status)
       rescue ActiveRecord::RecordNotFound
         true
