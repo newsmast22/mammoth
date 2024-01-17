@@ -199,6 +199,9 @@ module Mammoth::Api::V1
 			@community.description = community_params[:description]
 			@community.bot_account = community_params[:bot_account]
 			@community.bio = community_params[:bio]
+			@community.bot_account = community_params[:bot_account]
+			@community.bot_account_info = community_params[:bot_account_info]
+			@community.guides = community_params[:guides] if community_params[:guides].any?
 			@community.collection_id = collection.id
 			@community.save
 
@@ -221,8 +224,10 @@ module Mammoth::Api::V1
 			@community.description = community_params[:description] if community_params[:description].present?
 			@community.is_country_filtering = community_params[:is_country_filtering].present? ? true : false
 			@community.is_recommended = community_params[:is_recommended].present? ? true : false
-			@community.bot_account = community_params[:bot_account] if community_params[:bot_account].present?
 			@community.bio = community_params[:bio] if community_params[:bio].present?
+			@community.bot_account = community_params[:bot_account] if community_params[:bot_account].present?
+			@community.bot_account_info = community_params[:bot_account_info] if community_params[:bot_account_info].present?
+			@community.guides = community_params[:guides] if community_params[:guides].any?
 
 			@community.collection_id = collection.id
 
@@ -683,8 +688,10 @@ module Mammoth::Api::V1
 				:is_recommended,
 				:bot_account,
 				:bio,
+				:bot_account_info,
 				fields: [:name, :value],
         fields_attributes: [:name, :value],
+				guides:[:position,:title,:description]
 			)
 		end
 	end
