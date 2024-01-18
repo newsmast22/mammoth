@@ -121,7 +121,6 @@ module Mammoth
           .left_joins(account: :user)
           .where.not(user: { id: nil })
           .where.not(user: { is_active: false })
-          .where(account: { domain: nil }))
       .not_blocked(acc_ids)
     }
 
