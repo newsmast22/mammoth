@@ -121,7 +121,7 @@ module Mammoth
           .left_joins(account: :user)
           .where.not(user: { id: nil })
           .where.not(user: { is_active: false }))
-      .not_blocked(acc_ids)
+        .not_blocked(acc_ids)
     }
 
     scope :not_blocked, ->(acc_ids) {
