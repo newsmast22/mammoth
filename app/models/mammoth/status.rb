@@ -120,7 +120,7 @@ module Mammoth
         .or(joins(:account)
           .left_joins(account: :user)
           .where.not(user: { id: nil })
-          .where.not(user: { is_active: false })
+          .where.not(user: { is_active: false }))
       .not_blocked(acc_ids)
     }
 
