@@ -1,7 +1,7 @@
 class Mammoth::FediverseLoginService < BaseService
 
   # Login with other fediverse instances or servers
-  # doorkeeper_token application object
+  # application_token application object
   # @param [Hash] options
   # @option [String] :code
   # @option [String] :redirect_uris
@@ -11,7 +11,7 @@ class Mammoth::FediverseLoginService < BaseService
   # @return [access_token & login essential data]
   require 'net/http'
 
-  def call(options = {}, doorkeeper_token)
+  def call(options = {}, application_token)
     
     uri = URI("https://#{options[:instance]}/oauth/token")
     http = Net::HTTP.new(uri.host, uri.port)
@@ -33,7 +33,7 @@ class Mammoth::FediverseLoginService < BaseService
 
       # The token_data should contain an access token that you can use to make authenticated API requests.
       access_token = token_data['access_token']
-      create_or_fetch_user_by_token(options, access_token, doorkeeper_token)
+      create_or_fetch_user_by_token(options, access_token, application_token)
 
     else
 
@@ -50,7 +50,7 @@ class Mammoth::FediverseLoginService < BaseService
 
   private 
 
-  def create_or_fetch_user_by_token(options = {}, access_token, doorkeeper_token)
+  def create_or_fetch_user_by_token(options = {}, access_token, application_token)
 
     # Fetch user object by access_token
     api_uri = URI("https://#{options[:instance]}/api/v1/accounts/verify_credentials")
@@ -67,7 +67,7 @@ class Mammoth::FediverseLoginService < BaseService
 
     if @user.nil?
       @user = User.new()
-      @user.created_by_application= doorkeeper_token.application
+      @user.created_by_application= application_token.application
       @user.sign_up_ip= " "
       @user.password= nil 
       @user.agreement= true
@@ -104,7 +104,7 @@ class Mammoth::FediverseLoginService < BaseService
       #File.delete("#{user_data["id"]}#{user_data["header"]}.png") if image_exitst(user_data["header"]) === true
     end
 
-    @app = doorkeeper_token.application
+    @app = application_token.application
     @token = Doorkeeper::AccessToken.where(token: access_token).last
     unless @token.present?
       @token = Doorkeeper::AccessToken.new(

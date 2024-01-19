@@ -1,7 +1,7 @@
 module Mammoth::Api::V1
   class UserSessionsController < Api::BaseController
 
-    before_action -> { doorkeeper_authorize! :write, :'write:accounts' }, except: [:connect_with_instance]
+    before_action -> { doorkeeper_authorize! :write, :'write:accounts' }, except: [:connect_with_instance, :create_user_object, :register_with_email, :register_with_phone, :reset_password, :verify_otp]
     before_action :check_enabled_registrations, only: [:create]
     before_action :generate_otp, except: [:verify_otp, :verify_reset_password_otp, :update_password]
     before_action :find_by_email_phone, only: [:get_reset_password_otp, :verify_reset_password_otp, :reset_password]
@@ -10,10 +10,12 @@ module Mammoth::Api::V1
     require 'aws-sdk-sns'
 
     def register_with_email
+      return render json: {error: "Access denied"}, status: 422 unless ENV['NEWSMAST_APP_KEY'].present? && ENV['NEWSMAST_APP_SECRET'].present?
+      application_token = get_application_token
       @user = User.find_by(email: user_params[:email])
       if @user.nil?
         @user = User.create!( 
-          created_by_application: doorkeeper_token.application, 
+          created_by_application: application_token.application, 
           sign_up_ip: request.remote_ip, 
           email: user_params[:email], 
           password: user_params[:password], 
@@ -32,7 +34,7 @@ module Mammoth::Api::V1
         @user.account.update!(username: user_params[:username])
       else
         @user = User.create!( 
-          created_by_application: doorkeeper_token.application, 
+          created_by_application: application_token.application, 
           sign_up_ip: request.remote_ip, 
           email: user_params[:email], 
           password: user_params[:password], 
@@ -58,12 +60,13 @@ module Mammoth::Api::V1
     end
 
     def register_with_phone
-
+      return render json: {error: "Access denied"}, status: 422 unless ENV['NEWSMAST_APP_KEY'].present? && ENV['NEWSMAST_APP_SECRET'].present?
+      application_token = get_application_token
       domain = ENV['LOCAL_DOMAIN'] || Rails.configuration.x.local_domain
       @user = User.find_by(phone: user_params[:phone])
       if @user.nil?
         @user = User.create!(
-          created_by_application: doorkeeper_token.application, 
+          created_by_application: application_token.application, 
           sign_up_ip: request.remote_ip, 
           email: "#{user_params[:phone]}@#{domain}", 
           password: user_params[:password], 
@@ -86,7 +89,7 @@ module Mammoth::Api::V1
         set_sns_publich(user_params[:phone])
       else
         @user = User.create!(
-          created_by_application: doorkeeper_token.application, 
+          created_by_application: application_token.application, 
           sign_up_ip: request.remote_ip, 
           email: "#{user_params[:phone]}@#{domain}", 
           password: user_params[:password], 
@@ -130,9 +133,11 @@ module Mammoth::Api::V1
     end
 
     def reset_password
+      return render json: {error: "Access denied"}, status: 422 unless ENV['NEWSMAST_APP_KEY'].present? && ENV['NEWSMAST_APP_SECRET'].present?
+      application_token = get_application_token
       if params[:password].present?
         @user.update(password: params[:password])
-        @app = doorkeeper_token.application
+        @app = application_token.application
         @access_token = Doorkeeper::AccessToken.create!(
           application: @app,
           resource_owner_id: @user.id,
@@ -170,8 +175,7 @@ module Mammoth::Api::V1
     def create_user_object 
 
       return render json: {error: "Access denied"}, status: 422 unless ENV['NEWSMAST_APP_KEY'].present? && ENV['NEWSMAST_APP_SECRET'].present?
-      client_application = Doorkeeper::Application.find_by(uid: ENV['NEWSMAST_APP_KEY'], secret: ENV['NEWSMAST_APP_SECRET'])
-      client_token = Doorkeeper::AccessToken.where(resource_owner_id: client_application.owner_id, application_id: client_application.id).where.not(last_used_at: nil).last
+      application_token = get_application_token
       if params[:instance].present? && params[:client_id].present? && params[:client_secret].present? && params[:redirect_uris].present? && params[:code].present?
         login_params = {
           instance: params[:instance],
@@ -180,13 +184,7 @@ module Mammoth::Api::V1
           redirect_uris: params[:redirect_uris],
           code: params[:code]
         }
-        result = Mammoth::FediverseLoginService.new.call(login_params, client_token)
-
-        # Update Application access token from PWA and Mobile header
-        # pattern = /^Bearer /
-        # header  = request.headers['Authorization']
-        # header_token = header.gsub(pattern, '') if header && header.match(pattern)
-        # client_token.update(token: header_token)
+        result = Mammoth::FediverseLoginService.new.call(login_params, application_token)
 
         render json: result[:data], status: result[:status_code] 
       else 
@@ -240,6 +238,8 @@ module Mammoth::Api::V1
     end
 
     def verify_otp_code_for_signup
+      return render json: {error: "Access denied"}, status: 422 unless ENV['NEWSMAST_APP_KEY'].present? && ENV['NEWSMAST_APP_SECRET'].present?
+      application_token = get_application_token
       @user = User.find(params[:user_id].to_i)
       invitation_code = params[:invitation_code].present? ? params[:invitation_code].downcase : ""
       invited_code = Mammoth::WaitList.where(invitation_code: invitation_code).last
@@ -254,7 +254,7 @@ module Mammoth::Api::V1
         invited_code.update(is_invitation_code_used: true) unless invited_code.nil? || invited_code.is_invitation_code_used == true
         #end::invitation code update
 
-        @app = doorkeeper_token.application
+        @app = application_token.application
         @access_token = Doorkeeper::AccessToken.create!(
           application: @app,
           resource_owner_id: @user.id,
@@ -310,6 +310,11 @@ module Mammoth::Api::V1
           },
         }
       })
+    end
+
+    def get_application_token 
+      client_application = Doorkeeper::Application.find_by(uid: ENV['NEWSMAST_APP_KEY'], secret: ENV['NEWSMAST_APP_SECRET'])
+      client_token = Doorkeeper::AccessToken.where(resource_owner_id: client_application.owner_id, application_id: client_application.id).last
     end
 
     def user_params
