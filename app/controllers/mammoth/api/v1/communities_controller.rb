@@ -2,7 +2,7 @@ module Mammoth::Api::V1
 	class CommunitiesController < Api::BaseController
 		before_action :require_user!, except: [:index]
 		before_action -> { doorkeeper_authorize! :read , :write}, except: [:index]
-		before_action :set_community, only: %i[show update destroy update_is_country_filter_on]
+		before_action :set_community, only: %i[show update destroy update_is_country_filter_on update_community_bio]
 
 		def index
 			ActiveRecord::Base.connected_to(role: :reading) do
@@ -538,6 +538,20 @@ module Mammoth::Api::V1
 			community_bio = Mammoth::Community.incoming_hashtags(params[:id])
 			render json: community_bio, serializer: Mammoth::CommunityBioSerializer
 		end	
+
+		def update_community_bio
+			@community.bio = community_params[:bio] if community_params[:bio].present?
+			@community.bot_account = community_params[:bot_account] if community_params[:bot_account].present?
+			@community.bot_account_info = community_params[:bot_account_info] if community_params[:bot_account_info].present?
+			@community.guides = community_params[:guides] if community_params[:guides].any?
+			@community.save
+
+			if @community
+				render json: @community
+			else
+				render json: {error: 'community bio update failed!'}
+			end
+		end
 
 		private
 

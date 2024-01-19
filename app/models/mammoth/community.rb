@@ -18,7 +18,7 @@ module Mammoth
     }
 
     scope :incoming_hashtags, ->(id){
-      Mammoth::Community.includes(:community_hashtags).find_by(slug: id)
+      Mammoth::Community.includes(:community_hashtags).find_by!(slug: id)
     }
 
     scope :get_public_communities, -> (collection = nil){

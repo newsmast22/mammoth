@@ -6,7 +6,7 @@ class Mammoth::CommunityBioSerializer < ActiveModel::Serializer
   end
 
   def guides
-    object.guides.sort_by { |hash| hash["position"] }
+    object.guides&.sort_by { |hash| hash["position"] }
   end
 
   def people_to_follow
