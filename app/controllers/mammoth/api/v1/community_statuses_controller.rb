@@ -747,7 +747,9 @@ module Mammoth::Api::V1
 				thread: @thread,
 				media_ids: image_data_array,
 				sensitive: community_status_params[:sensitive],
-				spoiler_text: community_status_params[:spoiler_text],
+				# Comment out and set value nil to spoiler text due to the issue of double text lines in replies on fediverse servers using Mastodon UI
+				# spoiler_text: community_status_params[:spoiler_text],
+				spoiler_text: '',
 				visibility: community_status_params[:visibility],
 				language: community_status_params[:language],
 				scheduled_at: community_status_params[:scheduled_at],
