@@ -90,11 +90,31 @@ module Mammoth
     end
 
     def get_admin_followed_accounts(community_id, current_account)
-      followed_account_ids = Mammoth::Account.joins(users: :community_admins).where("mammoth_communities_admins.community_id = ? ",community_id).pluck(:id)
+      community_admin_ids = get_community_admins_by_community(community_id)
       Mammoth::Account.joins("INNER JOIN follows ON accounts.id = follows.target_account_id")
-      .where("follows.account_id IN (?)", followed_account_ids)
+      .where("follows.account_id IN (?)", community_admin_ids)
       .where("accounts.id != ? ", current_account)
       .order("accounts.id desc")
+    end
+
+    def get_editorials_accounts(community_id, current_account)
+      community_admin_ids = get_community_admins_by_community(community_id)
+      Mammoth::Account.joins("INNER JOIN mammoth_community_editorials ON accounts.id = mammoth_community_editorials.target_account_id")
+      .where("mammoth_community_editorials.account_id IN (?)", community_admin_ids)
+      .where("accounts.id != ? ", current_account)
+      .order("accounts.id desc")
+    end
+
+    def get_moderator_accounts(community_id, current_account)
+      community_admin_ids = get_community_admins_by_community(community_id)
+      Mammoth::Account.joins("INNER JOIN mammoth_community_moderators ON accounts.id = mammoth_community_moderators.target_account_id")
+      .where("mammoth_community_moderators.account_id IN (?)", community_admin_ids)
+      .where("accounts.id != ? ", current_account)
+      .order("accounts.id desc")
+    end
+
+    def get_community_admins_by_community(community_id)
+      Mammoth::Account.joins(users: :community_admins).where("mammoth_communities_admins.community_id = ? ",community_id).pluck(:id)
     end
   end
 end

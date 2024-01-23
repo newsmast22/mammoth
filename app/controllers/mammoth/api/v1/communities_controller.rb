@@ -2,7 +2,7 @@ module Mammoth::Api::V1
 	class CommunitiesController < Api::BaseController
 		before_action :require_user!, except: [:index]
 		before_action -> { doorkeeper_authorize! :read , :write}, except: [:index]
-		before_action :set_community, only: %i[show update destroy update_is_country_filter_on update_community_bio people_to_follow]
+		before_action :set_community, only: %i[show update destroy update_is_country_filter_on update_community_bio people_to_follow editorial_board community_moderators]
 
 		def index
 			ActiveRecord::Base.connected_to(role: :reading) do
@@ -542,13 +542,18 @@ module Mammoth::Api::V1
 		end	
 
 		def people_to_follow 
-			accounts = Mammoth::Account.new.get_admin_followed_accounts(@community.id, current_account.id)
-			accounts = accounts.where("accounts.id < :max_id", max_id: params[:max_id]) if params[:max_id].present?
-			render json: accounts.limit(10), root: 'data', 
-											each_serializer: Mammoth::AccountSerializer, current_user: current_user, adapter: :json, 
-											meta: { 
-												has_more_objects: accounts.length > 10 ? true : false
-											}
+			accounts = Mammoth::Account.new.get_admin_followed_accounts(@community&.id, current_account.id)
+			return_community_bio_persons(accounts)
+		end	
+
+		def editorial_board 
+			accounts = Mammoth::Account.new.get_editorials_accounts(@community&.id, current_account.id)
+			return_community_bio_persons(accounts)
+		end	
+
+		def community_moderators
+			accounts = Mammoth::Account.new.get_moderator_accounts(@community&.id, current_account.id)
+			return_community_bio_persons(accounts)
 		end	
 
 		def update_community_bio
@@ -620,6 +625,15 @@ module Mammoth::Api::V1
 
 		def return_community
 			render json: @community
+		end
+
+		def return_community_bio_persons(accounts) 
+			accounts = accounts.where("accounts.id < :max_id", max_id: params[:max_id]) if params[:max_id].present?
+			render json: accounts.limit(10), root: 'data', 
+											each_serializer: Mammoth::AccountSerializer, current_user: current_user, adapter: :json, 
+											meta: { 
+												has_more_objects: accounts.length > 10 ? true : false
+											}
 		end
 
 		def set_community
