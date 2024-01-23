@@ -94,6 +94,7 @@ module Mammoth
       Mammoth::Account.joins("INNER JOIN follows ON accounts.id = follows.target_account_id")
       .where("follows.account_id IN (?)", followed_account_ids)
       .where("accounts.id != ? ", current_account)
+      .order("accounts.id desc")
     end
   end
 end

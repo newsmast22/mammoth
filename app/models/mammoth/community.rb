@@ -3,6 +3,8 @@ module Mammoth
     self.table_name = 'mammoth_communities'
 
     include Attachmentable
+    include RoutingHelper
+
 
     has_and_belongs_to_many :statuses, class_name: "Mammoth::Status"
     has_and_belongs_to_many :users, class_name: "Mammoth::User"
@@ -233,6 +235,24 @@ module Mammoth
 				participants_count: community.participants_count,
         admin_following_count: community.admin_following_count
     }
+    end
+
+    def get_community_bio_hashtags(tags, account_id)
+      community_hashtags =  []
+
+      tags.map do |tag|
+        tagged_url_str = tag_url(tag).to_s
+        tagged_url_str.gsub("/tags/", "/api/v1/tag_timelines/")
+        is_followed = TagFollow.where(tag_id: tag.id, account_id: account_id).exists?
+
+        community_hashtags << {
+          url: tagged_url_str,
+          name: tag.name,
+          post_count: Mammoth::StatusTag.where(tag_id: tag.id).count,
+          following: is_followed
+        }
+      end
+      community_hashtags
     end
 
   end

@@ -19,6 +19,7 @@ Mammoth::Engine.routes.draw do
           get 'get_participants_list' =>  'communities#get_participants_list', as: 'get_participants_list'
           get 'get_admin_following_list' =>  'communities#get_admin_following_list', as: 'get_admin_following_list'
           put 'update_community_bio/:id'=>  'communities#update_community_bio', as: 'update_community_bio'
+          get 'people_to_follow/:id'=>  'communities#people_to_follow', as: 'people_to_follow'
         end
         member do
           get :community_bio

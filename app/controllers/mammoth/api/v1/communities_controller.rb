@@ -2,7 +2,7 @@ module Mammoth::Api::V1
 	class CommunitiesController < Api::BaseController
 		before_action :require_user!, except: [:index]
 		before_action -> { doorkeeper_authorize! :read , :write}, except: [:index]
-		before_action :set_community, only: %i[show update destroy update_is_country_filter_on update_community_bio]
+		before_action :set_community, only: %i[show update destroy update_is_country_filter_on update_community_bio people_to_follow]
 
 		def index
 			ActiveRecord::Base.connected_to(role: :reading) do
@@ -536,7 +536,19 @@ module Mammoth::Api::V1
 
 		def community_bio 
 			community_bio = Mammoth::Community.incoming_hashtags(params[:id])
-			render json: community_bio, serializer: Mammoth::CommunityBioSerializer
+			tags_names = community_bio.community_hashtags.where(is_incoming: true).pluck(:name)
+			tags = Tag.find_or_create_by_names(tags_names)
+			render json: community_bio, serializer: Mammoth::CommunityBioSerializer,current_user: current_user, tags: tags
+		end	
+
+		def people_to_follow 
+			accounts = Mammoth::Account.new.get_admin_followed_accounts(@community.id, current_account.id)
+			accounts = accounts.where("accounts.id < :max_id", max_id: params[:max_id]) if params[:max_id].present?
+			render json: accounts.limit(10), root: 'data', 
+											each_serializer: Mammoth::AccountSerializer, current_user: current_user, adapter: :json, 
+											meta: { 
+												has_more_objects: accounts.length > 10 ? true : false
+											}
 		end	
 
 		def update_community_bio
