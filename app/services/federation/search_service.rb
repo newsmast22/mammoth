@@ -21,7 +21,7 @@ module Federation
 
     def call_search_api
       puts "search url ===>> #{@search_url}"
-      third_party_service.call(url: @search_url, access_token: @access_token, http_method: 'post')
+      third_party_service.call(url: @search_url, access_token: @access_token, http_method: 'get')
     end
 
     def prepare_search_url!

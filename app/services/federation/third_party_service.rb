@@ -19,8 +19,14 @@ module Federation
       headers = {
         "Authorization" => "Bearer #{@token}"
       }
-      @response = HTTParty.send(@http_method, @url, headers: headers, body: @body)
-
+      
+      case @http_method
+      when :get 
+        @response = HTTParty.get(@url, headers: headers)
+      when :post 
+        @response = HTTParty.post(@url, headers: headers, body: @body)
+      when :put 
+      end
       handle_non_successful_response unless @response.success?
     end
 
