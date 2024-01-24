@@ -1,7 +1,7 @@
 module Mammoth::Api::V1
 	class CommunitiesController < Api::BaseController
-		before_action :require_user!, except: [:index]
-		before_action -> { doorkeeper_authorize! :read , :write}, except: [:index]
+		before_action :require_user!, except: %i[index community_bio bio_hashtags people_to_follow editorial_board community_moderators]
+		before_action -> { doorkeeper_authorize! :read , :write}, except: %i[index community_bio bio_hashtags people_to_follow editorial_board community_moderators]
 		before_action :set_community, only: %i[show update destroy update_is_country_filter_on community_bio bio_hashtags update_community_bio people_to_follow editorial_board community_moderators]
 
 		DEFAULT_TAGS_LIMIT = 10
@@ -552,17 +552,17 @@ module Mammoth::Api::V1
 		end
 
 		def people_to_follow 
-			accounts = Mammoth::Account.new.get_admin_followed_accounts(@community&.id, current_account.id)
+			accounts = Mammoth::CommunityBioService.new.call_admin_followed_accounts(@community&.id, current_account&.id)
 			return_community_bio_persons(accounts)
 		end	
 
 		def editorial_board 
-			accounts = Mammoth::Account.new.get_editorials_accounts(@community&.id, current_account.id)
+			accounts = Mammoth::CommunityBioService.new.call_editorials_accounts(@community&.id, current_account&.id)
 			return_community_bio_persons(accounts)
 		end	
 
 		def community_moderators
-			accounts = Mammoth::Account.new.get_moderator_accounts(@community&.id, current_account.id)
+			accounts = Mammoth::CommunityBioService.new.call_moderator_accounts(@community&.id, current_account&.id)
 			return_community_bio_persons(accounts)
 		end	
 
