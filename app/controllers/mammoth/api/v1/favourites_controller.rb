@@ -26,8 +26,8 @@ module Mammoth::Api::V1
 
     def perform_favourite_unfavourite(activity_type)
       Federation::ActionService.new.call(
-        current_account,
         @status,
+        current_account,
         activity_type: activity_type,
         doorkeeper_token: doorkeeper_token
       )

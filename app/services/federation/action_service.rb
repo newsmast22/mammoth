@@ -3,13 +3,14 @@
 module Federation
   class ActionService < BaseService
     def call(object, current_account, options = {})
+      
       @current_account = current_account
       @object_type = object.class.name
       @activity_type = options[:activity_type]&.to_sym
       @login_user_domain = current_account.domain
       @access_token = options[:doorkeeper_token]&.token
       @object = object 
-
+      
       search_federation!
       federation_activity!
     rescue StandardError => e
@@ -19,11 +20,11 @@ module Federation
     private
 
     def search_federation!
-      raise ActiveRecord::RecordNotFound, "#{@object_type} not found for object ID" if @object.nil?
+      raise ActiveRecord::RecordNotFound if @object.nil?
 
-      raise ActiveRecord::RecordInvalid, "Login User Account is local." if @current_account.local?
+      raise ActiveRecord::RecordInvalid if @current_account.local?
 
-      @response = search_service.call(@object, @current_account, access_token: @access_token)
+      @response = search_service.call(object: @object, current_account: @current_account, access_token: @access_token)
     end
 
     def federation_activity!
@@ -46,7 +47,7 @@ module Federation
     end
 
     def call_third_party!
-      third_party_service.call(url: @action_url, access_token: @access_token, http_method: 'post')
+      third_party_service.call(url: @action_url, access_token: @access_token, http_method: 'post') if @action_url
     end
 
     def search_service

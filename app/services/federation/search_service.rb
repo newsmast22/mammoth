@@ -2,18 +2,17 @@
 
 module Federation
   class SearchService < BaseService
-    def call(object:, current_account:, limit: 1, options: {})
-      @object            = object
+    def call(options)
+      @object            = options[:object]
       @type              = @object.class.name.to_sym
-      @current_account   = current_account
-      @limit             = limit
-      @login_user_domain = current_account.domain
+      @current_account   = options[:current_account]
+      @limit             = 1
+      @login_user_domain = @current_account.domain.nil? ? "newsmast.social" : @current_account.domain
       @access_token      = options[:access_token]
-      @host_address      = "https://#{@login_user_domain}/api/v2/search?".freeze
+      @host_address      = "https://#{@login_user_domain}/api/v2/search".freeze
 
       prepare_search_url!
-      call_search_api if @domain && @access_token
-
+      call_search_api if @login_user_domain && @access_token
       @response
     rescue StandardError => e
       handle_error(e)
