@@ -9,7 +9,6 @@ module Federation
       @limit             = 1
       @login_user_domain = @current_account.domain.nil? ? "newsmast.social" : @current_account.domain
       @access_token      = options[:access_token]
-      @host_address      = "https://#{@login_user_domain}/api/v2/search".freeze
 
       prepare_search_url!
       call_search_api if @login_user_domain && @access_token
@@ -21,15 +20,16 @@ module Federation
     private
 
     def call_search_api
-      third_party_service.call(url: @search_url, access_token: @access_token, http_method: 'get')
+      puts "search url ===>> #{@search_url}"
+      third_party_service.call(url: @search_url, access_token: @access_token, http_method: 'post')
     end
 
     def prepare_search_url!
       case @type
       when :Status
-        @search_url = "#{@host_address}?q=#{URI.encode_www_form_component(@object.uri)}&resolve=true&limit=#{@limit}&type=statuses"
+        @search_url = "https://#{@login_user_domain}/api/v2/search?q=#{URI.encode_www_form_component(@object.uri)}&resolve=true&limit=#{@limit}&type=statuses"
       when :Account
-        @search_url = "#{@host_address}?q=@#{@object.username}@#{@object.domain}&resolve=true&limit=#{@limit}&type=accounts"
+        @search_url = "https://#{@login_user_domain}/api/v2/search?q=@#{@object.username}@#{@object.domain}&resolve=true&limit=#{@limit}&type=accounts"
       end
     end
 
