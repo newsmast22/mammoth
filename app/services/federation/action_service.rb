@@ -13,6 +13,13 @@ module Federation
       
       search_federation!
       federation_activity!
+      
+      raise ActiveRecord::RecordInvalid unless @response 
+
+    rescue ActiveRecord::RecordInvalid
+      unprocessable_entity
+    rescue ActiveRecord::RecordNotFound
+      not_found
     rescue StandardError => e
       handle_error(e)
     end
@@ -38,9 +45,7 @@ module Federation
       when :reblog
         @status = @response&.statuses&.first
         @action_url = "https://#{@login_user_domain}/api/v1/statuses/#{@status.id}/reblog" if @status
-      when :reply
-
-      when :create
+      when :create, :reply
 
       end
       call_third_party!
