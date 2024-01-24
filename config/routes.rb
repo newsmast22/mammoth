@@ -11,6 +11,9 @@ Mammoth::Engine.routes.draw do
       get 'connect_with_instance' => 'user_sessions#connect_with_instance', as: 'connect_with_instance'
       post 'create_user_object' => 'user_sessions#create_user_object', as: 'create_user_object'
 
+      post '/fede_favourite/:status_id', to: 'favourites#favourite', as: 'fede_favourite'
+      post '/fede_unfavourite/:status_id', to: 'favourites#unfavourite', as: 'fede_unfavourite'
+
       resources :communities do 
         collection do 
           post 'get_communities_with_collections' => 'communities#get_communities_with_collections', as: 'get_communities_with_collections'
