@@ -89,12 +89,5 @@ module Mammoth
       redis.zrange("feed:recommended:#{id}", 0, -1, with_scores: false)
     end
 
-    def get_admin_followed_accounts(community_id, current_account)
-      followed_account_ids = Mammoth::Account.joins(users: :community_admins).where("mammoth_communities_admins.community_id = ? ",community_id).pluck(:id)
-      Mammoth::Account.joins("INNER JOIN follows ON accounts.id = follows.target_account_id")
-      .where("follows.account_id IN (?)", followed_account_ids)
-      .where("accounts.id != ? ", current_account)
-      .order("accounts.id desc")
-    end
   end
 end

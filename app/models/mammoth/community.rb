@@ -19,10 +19,6 @@ module Mammoth
       joins(mammoth_communities_users: { user: :account }).where(account: {id: acc_id})
     }
 
-    scope :incoming_hashtags, ->(id){
-      Mammoth::Community.includes(:community_hashtags).find_by!(slug: id)
-    }
-
     scope :get_public_communities, -> (collection = nil){
       if collection.nil?
         where(is_recommended: true)
@@ -235,24 +231,6 @@ module Mammoth
 				participants_count: community.participants_count,
         admin_following_count: community.admin_following_count
     }
-    end
-
-    def get_community_bio_hashtags(tags, account_id)
-      community_hashtags =  []
-
-      tags.map do |tag|
-        tagged_url_str = tag_url(tag).to_s
-        tagged_url_str.gsub("/tags/", "/api/v1/tag_timelines/")
-        is_followed = TagFollow.where(tag_id: tag.id, account_id: account_id).exists?
-
-        community_hashtags << {
-          url: tagged_url_str,
-          name: tag.name,
-          post_count: Mammoth::StatusTag.where(tag_id: tag.id).count,
-          following: is_followed
-        }
-      end
-      community_hashtags
     end
 
   end

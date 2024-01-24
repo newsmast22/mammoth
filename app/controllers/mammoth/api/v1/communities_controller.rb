@@ -1,8 +1,10 @@
 module Mammoth::Api::V1
 	class CommunitiesController < Api::BaseController
-		before_action :require_user!, except: [:index]
-		before_action -> { doorkeeper_authorize! :read , :write}, except: [:index]
-		before_action :set_community, only: %i[show update destroy update_is_country_filter_on update_community_bio people_to_follow]
+		before_action :require_user!, except: %i[index community_bio bio_hashtags people_to_follow editorial_board community_moderators]
+		before_action -> { doorkeeper_authorize! :read , :write}, except: %i[index community_bio bio_hashtags people_to_follow editorial_board community_moderators]
+		before_action :set_community, only: %i[show update destroy update_is_country_filter_on community_bio bio_hashtags update_community_bio people_to_follow editorial_board community_moderators]
+
+		DEFAULT_TAGS_LIMIT = 10
 
 		def index
 			ActiveRecord::Base.connected_to(role: :reading) do
@@ -535,20 +537,33 @@ module Mammoth::Api::V1
 		end	
 
 		def community_bio 
-			community_bio = Mammoth::Community.incoming_hashtags(params[:id])
-			tags_names = community_bio.community_hashtags.where(is_incoming: true).pluck(:name)
-			tags = Tag.find_or_create_by_names(tags_names)
-			render json: community_bio, serializer: Mammoth::CommunityBioSerializer,current_user: current_user, tags: tags
+			render json: @community, serializer: Mammoth::CommunityBioSerializer
 		end	
 
+		def bio_hashtags
+			tags = Mammoth::CommunityBioService.new.call_bio_hashtag(@community&.id).offset(offset_param).limit(limit_param(DEFAULT_TAGS_LIMIT))
+
+			render json: tags, root: 'data', 
+      each_serializer: Mammoth::TagSerializer, current_user: current_user, adapter: :json,
+      meta: { 
+        has_more_objects: records_continue?(tags),
+        offset: offset_param
+      }
+		end
+
 		def people_to_follow 
-			accounts = Mammoth::Account.new.get_admin_followed_accounts(@community.id, current_account.id)
-			accounts = accounts.where("accounts.id < :max_id", max_id: params[:max_id]) if params[:max_id].present?
-			render json: accounts.limit(10), root: 'data', 
-											each_serializer: Mammoth::AccountSerializer, current_user: current_user, adapter: :json, 
-											meta: { 
-												has_more_objects: accounts.length > 10 ? true : false
-											}
+			accounts = Mammoth::CommunityBioService.new.call_admin_followed_accounts(@community&.id, current_account&.id)
+			return_community_bio_persons(accounts)
+		end	
+
+		def editorial_board 
+			accounts = Mammoth::CommunityBioService.new.call_editorials_accounts(@community&.id, current_account&.id)
+			return_community_bio_persons(accounts)
+		end	
+
+		def community_moderators
+			accounts = Mammoth::CommunityBioService.new.call_moderator_accounts(@community&.id, current_account&.id)
+			return_community_bio_persons(accounts)
 		end	
 
 		def update_community_bio
@@ -621,6 +636,23 @@ module Mammoth::Api::V1
 		def return_community
 			render json: @community
 		end
+
+		def return_community_bio_persons(accounts) 
+			accounts = accounts.where("accounts.id < :max_id", max_id: params[:max_id]) if params[:max_id].present?
+			render json: accounts.limit(10), root: 'data', 
+											each_serializer: Mammoth::AccountSerializer, current_user: current_user, adapter: :json, 
+											meta: { 
+												has_more_objects: accounts.length > 10 ? true : false
+											}
+		end
+
+		def offset_param
+      params[:offset].to_i
+    end
+
+    def records_continue?(records)
+      records.size == limit_param(DEFAULT_TAGS_LIMIT)
+    end
 
 		def set_community
 			@community = Mammoth::Community.find_by(slug: params[:id])
