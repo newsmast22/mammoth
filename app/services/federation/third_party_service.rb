@@ -19,6 +19,10 @@ module Federation
       headers = {
         "Authorization" => "Bearer #{@token}"
       }
+
+      puts "url : #{@url} http_method : #{@http_method}" 
+      puts "headers : #{@headers}"
+      puts "token : #{@token}"
       
       case @http_method
       when :get 
@@ -27,7 +31,9 @@ module Federation
         @response = HTTParty.post(@url, headers: headers, body: @body)
       when :put 
       end
-      handle_non_successful_response unless @response.success?
+
+      puts "api response : #{@response}"
+
     end
 
     def handle_non_successful_response
