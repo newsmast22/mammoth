@@ -13,9 +13,10 @@ module Federation
       
       search_federation!
       federation_activity!
-      
+
       raise ActiveRecord::RecordInvalid unless @response 
 
+      return @response 
     rescue ActiveRecord::RecordInvalid
       unprocessable_entity
     rescue ActiveRecord::RecordNotFound
@@ -37,14 +38,17 @@ module Federation
     def federation_activity!
       case @activity_type
       when :favourite
-        @status = @response&.statuses&.first
-        @action_url = "https://#{@login_user_domain}/api/v1/statuses/#{@status.id}/favourite" if @status
+        statuses = @response&.parsed_response["statuses"]
+        status_id = statuses[0]["id"]
+        @action_url = "https://#{@login_user_domain}/api/v1/statuses/#{status_id}/favourite" if status_id
       when :follow
-        @account = @response&.accounts&.first
-        @action_url = "https://#{@login_user_domain}/api/v1/accounts/#{@account.id}/follow" if @account
+        accounts = @response&.parsed_response["accounts"]
+        accounts_id = accounts[0]["id"]
+        @action_url = "https://#{@login_user_domain}/api/v1/accounts/#{accounts_id}/follow" if accounts_id
       when :reblog
-        @status = @response&.statuses&.first
-        @action_url = "https://#{@login_user_domain}/api/v1/statuses/#{@status.id}/reblog" if @status
+        statuses = @response&.parsed_response["statuses"]
+        status_id = statuses[0]["id"]
+        @action_url = "https://#{@login_user_domain}/api/v1/statuses/#{status_id}/reblog" if status_id
       when :create, :reply
 
       end
@@ -52,7 +56,7 @@ module Federation
     end
 
     def call_third_party!
-      third_party_service.call(url: @action_url, access_token: @access_token, http_method: 'post') if @action_url
+      @response = third_party_service.call(url: @action_url, access_token: @access_token, http_method: 'post') if @action_url
     end
 
     def search_service

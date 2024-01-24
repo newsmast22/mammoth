@@ -20,10 +20,6 @@ module Federation
         "Authorization" => "Bearer #{@token}"
       }
 
-      puts "url : #{@url} http_method : #{@http_method}" 
-      puts "headers : #{@headers}"
-      puts "token : #{@token}"
-      
       case @http_method
       when :get 
         @response = HTTParty.get(@url, headers: headers)
@@ -31,7 +27,7 @@ module Federation
         @response = HTTParty.post(@url, headers: headers, body: @body)
       when :put 
       end
-      puts "api response : #{@response}"
+
       return @response
     end
 
