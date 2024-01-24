@@ -741,8 +741,7 @@ module Mammoth::Api::V1
 		def save_statuses(selected_communities)
 
 			image_data_array = save_media_attachments()
-			@status = PostStatusService.new.call(
-				current_user.account,
+			status_params = {
 				text: community_status_params[:status],
 				thread: @thread,
 				media_ids: image_data_array,
@@ -761,7 +760,19 @@ module Mammoth::Api::V1
 				is_meta_preview: community_status_params[:is_meta_preview],
 				community_ids: selected_communities.any? ? selected_communities : [],
 				is_rss_content: false
-			) 
+			}
+			if current_account.local?
+				@status = PostStatusService.new.call(
+					current_user.account,
+					status_params
+				)
+			else 
+				@status = Federation::ActionService.new.call(
+					current_account,
+					@thread,
+					status_params
+				)
+			end
 
 			# To delete uploaded temp image files
 			if image_data_array.any?
