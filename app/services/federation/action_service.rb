@@ -33,6 +33,8 @@ module Federation
       raise ActiveRecord::RecordInvalid if @current_account.local?
 
       @response = search_service.call(object: @object, current_account: @current_account, access_token: @access_token)
+    
+      raise ActiveRecord::RecordInvalid if @response&.parsed_response["error"]
     end
 
     def federation_activity!
@@ -41,6 +43,10 @@ module Federation
         statuses = @response&.parsed_response["statuses"]
         status_id = statuses[0]["id"]
         @action_url = "https://#{@login_user_domain}/api/v1/statuses/#{status_id}/favourite" if status_id
+      when :unfavourite
+        statuses = @response&.parsed_response["statuses"]
+        status_id = statuses[0]["id"]
+        @action_url = "https://#{@login_user_domain}/api/v1/statuses/#{status_id}/unfavourite" if status_id
       when :follow
         accounts = @response&.parsed_response["accounts"]
         accounts_id = accounts[0]["id"]
@@ -57,6 +63,8 @@ module Federation
 
     def call_third_party!
       @response = third_party_service.call(url: @action_url, access_token: @access_token, http_method: 'post') if @action_url
+      
+      raise ActiveRecord::RecordInvalid if @response&.parsed_response["error"]
     end
 
     def search_service

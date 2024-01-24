@@ -27,7 +27,6 @@ module Federation
         @response = HTTParty.post(@url, headers: headers, body: @body)
       when :put 
       end
-
       return @response
     end
 
