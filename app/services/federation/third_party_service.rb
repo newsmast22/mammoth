@@ -31,9 +31,8 @@ module Federation
         @response = HTTParty.post(@url, headers: headers, body: @body)
       when :put 
       end
-
       puts "api response : #{@response}"
-
+      return @response
     end
 
     def handle_non_successful_response
