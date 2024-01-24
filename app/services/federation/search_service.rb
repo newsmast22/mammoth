@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class Federation
+module Federation
   class SearchService < BaseService
     def call(object:, current_account:, limit: 1, options: {})
       @object            = object
@@ -22,7 +22,7 @@ class Federation
     private
 
     def call_search_api
-      third_party_service.call(url: @search_url, access_token: @access_token)
+      third_party_service.call(url: @search_url, access_token: @access_token, http_method: 'get')
     end
 
     def prepare_search_url!

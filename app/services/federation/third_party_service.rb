@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class Federation
+module Federation
   class ThirdPartyService < BaseService
     def call(url:, access_token:, body: {}, http_method: 'get')
       @url = url
@@ -26,7 +26,6 @@ class Federation
     end
 
     def handle_non_successful_response
-      # Handle non-successful response, e.g., log the error or raise a custom exception
       puts "Non-successful HTTP response: #{@response.code}"
       @response = nil
     end

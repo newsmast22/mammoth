@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class Federation
+module Federation
   class ActionService < BaseService
     def call(object, current_account, options = {})
       @current_account = current_account
@@ -8,6 +8,7 @@ class Federation
       @activity_type = options[:activity_type]&.to_sym
       @login_user_domain = current_account.domain
       @access_token = options[:doorkeeper_token]&.token
+      @object = object 
 
       search_federation!
       federation_activity!
@@ -18,7 +19,7 @@ class Federation
     private
 
     def search_federation!
-      raise ActiveRecord::RecordNotFound, "#{@object_type} not found for object ID: #{object_id}" if @object.nil?
+      raise ActiveRecord::RecordNotFound, "#{@object_type} not found for object ID" if @object.nil?
 
       raise ActiveRecord::RecordInvalid, "Login User Account is local." if @current_account.local?
 
@@ -27,7 +28,7 @@ class Federation
 
     def federation_activity!
       case @activity_type
-      when :favorite
+      when :favourite
         @status = @response&.statuses&.first
         @action_url = "https://#{@login_user_domain}/api/v1/statuses/#{@status.id}/favourite" if @status
       when :follow
@@ -45,7 +46,7 @@ class Federation
     end
 
     def call_third_party!
-      third_party_service.call(url: @action_url, access_token: @access_token)
+      third_party_service.call(url: @action_url, access_token: @access_token, http_method: 'post')
     end
 
     def search_service
