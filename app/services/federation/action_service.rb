@@ -19,6 +19,10 @@ module Federation
       return @response
     rescue Mastodon::UnexpectedResponseError
       fail_with! 'Failed to fetch remote data (got unexpected reply from server)'
+    rescue Mastodon::RecordNotFound
+      fail_with! "Record Not Found for #{@object_type}"
+    rescue ActiveRecord::RecordInvalid
+      fail_with! "Login User is Local User #{@current_account.username}"
     end
 
     private
