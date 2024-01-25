@@ -767,10 +767,15 @@ module Mammoth::Api::V1
 					status_params
 				)
 			else 
+				option_params = {
+					activity_type: action_name,
+					doorkeeper_token: doorkeeper_token
+				}
+				options = status_params.merge(option_params)
 				@status = Federation::ActionService.new.call(
-					current_account,
 					@thread,
-					status_params
+					current_account,
+					options
 				)
 			end
 
