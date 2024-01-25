@@ -9,9 +9,10 @@ module Federation
       @activity_type = options[:activity_type]&.to_sym
       @login_user_domain = current_account.domain
       @access_token = options[:doorkeeper_token]&.token
+      @options = options
       @object = object 
       @body = nil
-      
+  
       search_federation! unless @activity_type == :create
       federation_activity!
 
@@ -82,7 +83,7 @@ module Federation
 
         statuses = @response&.parsed_response["statuses"]
         reply_to_id = statuses[0]["id"]
-
+        
         @body = {
           in_reply_to_id: reply_to_id,
           language: @options[:language],
@@ -96,7 +97,6 @@ module Federation
 
         @action_url = "https://#{@login_user_domain}/api/v1/statuses" if reply_to_id
       when :create
-
         @body = {
           in_reply_to_id: nil,
           language: @options[:language],
