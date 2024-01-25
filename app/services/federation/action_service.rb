@@ -52,6 +52,11 @@ module Federation
         accounts = @response&.parsed_response["accounts"]
         accounts_id = accounts[0]["id"]
         @action_url = "https://#{@login_user_domain}/api/v1/accounts/#{accounts_id}/mute" if accounts_id
+      when :delete
+        statuses = @response&.parsed_response["statuses"]
+        status_id = statuses[0]["id"]
+        @action_url = "https://#{@login_user_domain}/api/v1/statuses/#{status_id}" if status_id
+        @http_method = 'delete'
       when :favourite
         statuses = @response&.parsed_response["statuses"]
         status_id = statuses[0]["id"]
@@ -115,7 +120,7 @@ module Federation
     end
 
     def call_third_party!
-      @response = third_party_service.call(url: @action_url, access_token: @access_token, http_method: 'post', body: @body) if @action_url
+      @response = third_party_service.call(url: @action_url, access_token: @access_token, http_method: @http_method.nil? ? 'post' : @http_method, body: @body) if @action_url
     end
 
     def search_service
