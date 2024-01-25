@@ -14,15 +14,9 @@ module Federation
       search_federation!
       federation_activity!
 
-      raise ActiveRecord::RecordInvalid unless @response 
-
-      return @response 
-    rescue ActiveRecord::RecordInvalid
-      unprocessable_entity
-    rescue ActiveRecord::RecordNotFound
-      not_found
-    rescue StandardError => e
-      handle_error(e)
+      return @response
+    rescue Mastodon::UnexpectedResponseError
+      fail_with! 'Failed to fetch remote data (got unexpected reply from server)'
     end
 
     private
@@ -33,9 +27,8 @@ module Federation
       raise ActiveRecord::RecordInvalid if @current_account.local?
 
       @response = search_service.call(object: @object, current_account: @current_account, access_token: @access_token)
-    
-      raise ActiveRecord::RecordInvalid if @response&.parsed_response["error"]
     end
+    
 
     def federation_activity!
       case @activity_type
@@ -63,8 +56,6 @@ module Federation
 
     def call_third_party!
       @response = third_party_service.call(url: @action_url, access_token: @access_token, http_method: 'post') if @action_url
-      
-      raise ActiveRecord::RecordInvalid if @response&.parsed_response["error"]
     end
 
     def search_service
@@ -73,10 +64,6 @@ module Federation
 
     def third_party_service
       @third_party_service ||= Federation::ThirdPartyService.new
-    end
-
-    def handle_error(error)
-      puts "Error occurred: #{error.message}"
     end
   end
 end

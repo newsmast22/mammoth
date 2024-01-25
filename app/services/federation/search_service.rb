@@ -13,8 +13,6 @@ module Federation
       prepare_search_url!
       call_search_api if @login_user_domain && @access_token
       @response
-    rescue StandardError => e
-      handle_error(e)
     end
 
     private
@@ -34,11 +32,6 @@ module Federation
 
     def third_party_service
       @third_party_service ||= Federation::ThirdPartyService.new
-    end
-
-    def handle_error(error)
-      puts "Error occurred: #{error.message}"
-      @response = nil
     end
   end
 end

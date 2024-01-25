@@ -2,6 +2,8 @@
 
 module Federation
   class ThirdPartyService < BaseService
+    include JsonLdHelper
+
     def call(options) 
       @url = options[:url]
       @token = options[:access_token]
@@ -9,8 +11,6 @@ module Federation
       @body = options[:body]
       call_search_api
       @response
-    rescue StandardError => e
-      handle_error(e)
     end
 
     private
@@ -27,17 +27,7 @@ module Federation
         @response = HTTParty.post(@url, headers: headers, body: @body)
       when :put 
       end
-      return @response
-    end
-
-    def handle_non_successful_response
-      puts "Non-successful HTTP response: #{@response.code}"
-      @response = nil
-    end
-
-    def handle_error(error)
-      puts "Error occurred: #{error.message}"
-      @response = nil
+      raise Mastodon::UnexpectedResponseError, @response unless response_successful?(@response) || response_error_unsalvageable?(@response)
     end
   end
 end
