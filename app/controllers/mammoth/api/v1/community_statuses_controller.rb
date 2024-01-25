@@ -768,7 +768,7 @@ module Mammoth::Api::V1
 				)
 			else 
 				options = {
-					activity_type: action_name,
+					activity_type: community_status_params[:in_reply_to_id].present? ? 'reply' : action_name,
 					doorkeeper_token: doorkeeper_token,
 					language: community_status_params[:language],
           media_ids: community_status_params[:image_data],
