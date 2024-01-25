@@ -77,7 +77,14 @@ module Federation
         statuses = @response&.parsed_response["statuses"]
         status_id = statuses[0]["id"]
         @action_url = "https://#{@login_user_domain}/api/v1/statuses/#{status_id}/unreblog" if status_id
-     
+      when :pin
+        statuses = @response&.parsed_response["statuses"]
+        status_id = statuses[0]["id"]
+        @action_url = "https://#{@login_user_domain}/api/v1/statuses/#{status_id}/pin" if status_id
+      when :unpin
+        statuses = @response&.parsed_response["statuses"]
+        status_id = statuses[0]["id"]
+        @action_url = "https://#{@login_user_domain}/api/v1/statuses/#{status_id}/unpin" if status_id
       when :bookmark 
         statuses = @response&.parsed_response["statuses"]
         status_id = statuses[0]["id"]

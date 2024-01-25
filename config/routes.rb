@@ -2,6 +2,21 @@ Mammoth::Engine.routes.draw do
 
   namespace :api, defaults: {format: 'json'} do
     namespace :v1 do
+      resources :statuses, only: [:create, :show, :update, :destroy] do
+        scope module: :statuses do
+          resource :fedi_bookmark, only: :create
+          post :fedi_unbookmark, to: 'fedi_bookmarks#destroy'
+  
+          resource :fedi_mute, only: :create
+          post :fedi_unmute, to: 'mutes#destroy'
+  
+          resource :fedi_pin, only: :create
+          post :fedi_unpin, to: 'fedi_pins#destroy' 
+
+          resource :fedi_reblog, only: :create
+          post :fedi_unreblog, to: 'fedi_reblogs#destroy'
+        end
+      end
       post 'register_with_email' => 'user_sessions#register_with_email', as: 'register_with_email'
       post 'register_with_phone' => 'user_sessions#register_with_phone', as: 'register_with_phone'
       put  'verify_otp' => 'user_sessions#verify_otp', as: 'verify_otp'
