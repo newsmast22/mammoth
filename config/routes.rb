@@ -15,6 +15,7 @@ Mammoth::Engine.routes.draw do
       post '/fedi_favourite/:status_id', to: 'favourites#favourite', as: 'fedi_favourite'
       post '/fedi_unfavourite/:status_id', to: 'favourites#unfavourite', as: 'fedi_unfavourite'
       post '/fedi_create_status', to: 'statuses#create', as: 'fedi_create_status'
+      post '/fedi_delete_status/:status_id', to: 'statuses#delete', as: 'fedi_delete_status'
 
       resources :communities do 
         collection do 

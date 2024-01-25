@@ -26,6 +26,19 @@ module Mammoth::Api::V1
       render json: @status
     end
 
+    def delete
+      @status = Status.where(account: current_account).find(params[:status_id])
+      authorize @status, :destroy?
+      @response = Federation::ActionService.new.call(
+        @status,
+        current_account,
+        activity_type: action_name,
+        doorkeeper_token: doorkeeper_token
+      )
+        
+      render json: @response
+    end
+
     private
     def set_thread
       @thread = Status.find(status_params[:in_reply_to_id]) if status_params[:in_reply_to_id].present?
