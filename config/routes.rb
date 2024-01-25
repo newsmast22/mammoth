@@ -2,13 +2,10 @@ Mammoth::Engine.routes.draw do
 
   namespace :api, defaults: {format: 'json'} do
     namespace :v1 do
-      resources :statuses, only: [:create, :show, :update, :destroy] do
+      resources :statuses, except: [:create, :show, :update, :destroy] do
         scope module: :statuses do
           resource :fedi_bookmark, only: :create
           post :fedi_unbookmark, to: 'fedi_bookmarks#destroy'
-  
-          resource :fedi_mute, only: :create
-          post :fedi_unmute, to: 'mutes#destroy'
   
           resource :fedi_pin, only: :create
           post :fedi_unpin, to: 'fedi_pins#destroy' 
