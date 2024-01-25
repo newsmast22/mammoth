@@ -33,6 +33,24 @@ module Federation
 
     def federation_activity!
       case @activity_type
+      when :follow
+        accounts = @response&.parsed_response["accounts"]
+        accounts_id = accounts[0]["id"]
+        @action_url = "https://#{@login_user_domain}/api/v1/accounts/#{accounts_id}/follow" if accounts_id
+      when :unfollow
+        accounts = @response&.parsed_response["accounts"]
+        accounts_id = accounts[0]["id"]
+        @action_url = "https://#{@login_user_domain}/api/v1/accounts/#{accounts_id}/unfollow" if accounts_id
+      when :mute 
+        accounts = @response&.parsed_response["accounts"]
+        accounts_id = accounts[0]["id"]
+        @body = { duration: options[:duration], 
+                  notifications: options[:notifications] }
+        @action_url = "https://#{@login_user_domain}/api/v1/accounts/#{accounts_id}/mute" if accounts_id
+      when :ummute 
+        accounts = @response&.parsed_response["accounts"]
+        accounts_id = accounts[0]["id"]
+        @action_url = "https://#{@login_user_domain}/api/v1/accounts/#{accounts_id}/mute" if accounts_id
       when :favourite
         statuses = @response&.parsed_response["statuses"]
         status_id = statuses[0]["id"]
@@ -41,21 +59,32 @@ module Federation
         statuses = @response&.parsed_response["statuses"]
         status_id = statuses[0]["id"]
         @action_url = "https://#{@login_user_domain}/api/v1/statuses/#{status_id}/unfavourite" if status_id
-      when :follow
-        accounts = @response&.parsed_response["accounts"]
-        accounts_id = accounts[0]["id"]
-        @action_url = "https://#{@login_user_domain}/api/v1/accounts/#{accounts_id}/follow" if accounts_id
       when :reblog
         statuses = @response&.parsed_response["statuses"]
         status_id = statuses[0]["id"]
         @action_url = "https://#{@login_user_domain}/api/v1/statuses/#{status_id}/reblog" if status_id
+      when :unreblog
+        statuses = @response&.parsed_response["statuses"]
+        status_id = statuses[0]["id"]
+        @action_url = "https://#{@login_user_domain}/api/v1/statuses/#{status_id}/unreblog" if status_id
+     
+      when :bookmark 
+        statuses = @response&.parsed_response["statuses"]
+        status_id = statuses[0]["id"]
+
+        @action_url = "https://#{@login_user_domain}/api/v1/statuses/#{status_id}/bookmark" if status_id
+      when :unbookmark
+        statuses = @response&.parsed_response["statuses"]
+        status_id = statuses[0]["id"]
+
+        @action_url = "https://#{@login_user_domain}/api/v1/statuses/#{status_id}/unbookmark" if status_id
       when :reply
 
         statuses = @response&.parsed_response["statuses"]
         reply_to_id = statuses[0]["id"]
 
         @body = {
-          in_reply_to_id: reply_to_id
+          in_reply_to_id: reply_to_id,
           language: @options[:language],
           media_ids: @options[:media_ids],
           poll: @options[:poll],
@@ -69,7 +98,7 @@ module Federation
       when :create
 
         @body = {
-          in_reply_to_id: nil
+          in_reply_to_id: nil,
           language: @options[:language],
           media_ids: @options[:media_ids],
           poll: @options[:poll],

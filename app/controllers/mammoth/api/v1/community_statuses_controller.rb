@@ -769,8 +769,8 @@ module Mammoth::Api::V1
 			else 
 				options = {
 					activity_type: action_name,
-					doorkeeper_token: doorkeeper_token
-					language: community_status_params[:language],,
+					doorkeeper_token: doorkeeper_token,
+					language: community_status_params[:language],
           media_ids: community_status_params[:image_data],
           poll: community_status_params[:poll],
           sensitive: community_status_params[:sensitive],
