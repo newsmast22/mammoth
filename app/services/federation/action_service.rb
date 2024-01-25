@@ -18,11 +18,11 @@ module Federation
 
       return @response
     rescue Mastodon::UnexpectedResponseError
-      fail_with! 'Failed to fetch remote data (got unexpected reply from server)'
-    rescue Mastodon::RecordNotFound
-      fail_with! "Record Not Found for #{@object_type}"
+      render json: { error: "can not call remote api" }, status: 503
+    rescue ActiveRecord::RecordNotFound
+      render json: { error: "record not found for #{@object_type}" }, status: 404
     rescue ActiveRecord::RecordInvalid
-      fail_with! "Login User is Local User #{@current_account.username}"
+      render json: { error: 'current user is local user' }, status: 422
     end
 
     private
