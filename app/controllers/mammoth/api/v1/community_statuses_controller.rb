@@ -767,11 +767,17 @@ module Mammoth::Api::V1
 					status_params
 				)
 			else 
-				option_params = {
+				options = {
 					activity_type: action_name,
 					doorkeeper_token: doorkeeper_token
+					language: community_status_params[:language],,
+          media_ids: community_status_params[:image_data],
+          poll: community_status_params[:poll],
+          sensitive: community_status_params[:sensitive],
+          spoiler_text: '',
+          status: community_status_params[:status],
+          visibility: community_status_params[:visibility]
 				}
-				options = status_params.merge(option_params)
 				@status = Federation::ActionService.new.call(
 					@thread,
 					current_account,
