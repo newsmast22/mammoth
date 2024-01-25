@@ -10,8 +10,9 @@ module Federation
       @login_user_domain = current_account.domain
       @access_token = options[:doorkeeper_token]&.token
       @object = object 
+      @body = nil
       
-      search_federation!
+      search_federation! unless @activity_type == :create
       federation_activity!
 
       return @response
@@ -48,14 +49,44 @@ module Federation
         statuses = @response&.parsed_response["statuses"]
         status_id = statuses[0]["id"]
         @action_url = "https://#{@login_user_domain}/api/v1/statuses/#{status_id}/reblog" if status_id
-      when :create, :reply
+      when :reply
+
+        statuses = @response&.parsed_response["statuses"]
+        reply_to_id = statuses[0]["id"]
+
+        @body = {
+          in_reply_to_id: reply_to_id
+          language: @options[:language],
+          media_ids: @options[:media_ids],
+          poll: @options[:poll],
+          sensitive: @options[:sensitive],
+          spoiler_text: @options[:spoiler_text],
+          status: @options[:status],
+          visibility: @options[:visibility]
+        }
+
+        @action_url = "https://#{@login_user_domain}/api/v1/statuses" if reply_to_id
+      when :create
+
+        @body = {
+          in_reply_to_id: nil
+          language: @options[:language],
+          media_ids: @options[:media_ids],
+          poll: @options[:poll],
+          sensitive: @options[:sensitive],
+          spoiler_text: @options[:spoiler_text],
+          status: @options[:status],
+          visibility: @options[:visibility]
+        }
+
+        @action_url = "https://#{@login_user_domain}/api/v1/statuses" 
 
       end
       call_third_party!
     end
 
     def call_third_party!
-      @response = third_party_service.call(url: @action_url, access_token: @access_token, http_method: 'post') if @action_url
+      @response = third_party_service.call(url: @action_url, access_token: @access_token, http_method: 'post', body: @body) if @action_url
     end
 
     def search_service
