@@ -761,29 +761,10 @@ module Mammoth::Api::V1
 				community_ids: selected_communities.any? ? selected_communities : [],
 				is_rss_content: false
 			}
-			if current_account.local?
-				@status = PostStatusService.new.call(
-					current_user.account,
-					status_params
-				)
-			else 
-				options = {
-					activity_type: community_status_params[:in_reply_to_id].present? ? 'reply' : action_name,
-					doorkeeper_token: doorkeeper_token,
-					language: community_status_params[:language],
-          media_ids: community_status_params[:image_data],
-          poll: community_status_params[:poll],
-          sensitive: community_status_params[:sensitive],
-          spoiler_text: '',
-          status: community_status_params[:status],
-          visibility: community_status_params[:visibility]
-				}
-				@status = Federation::ActionService.new.call(
-					@thread,
-					current_account,
-					options
-				)
-			end
+			@status = PostStatusService.new.call(
+				current_user.account,
+				status_params
+			)
 
 			# To delete uploaded temp image files
 			if image_data_array.any?
