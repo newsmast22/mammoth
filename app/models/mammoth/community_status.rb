@@ -63,9 +63,7 @@ module Mammoth
 
     def boost_bot_status
 
-      community_slug = ["activism_civil_rights", "environment", "humanities",  "science", "ai"]
-
-      return unless ENV['BOOST_COMMUNITY_BOT_ENABLED'] == 'true' && ENV['LOCAL_DOMAIN'] == "newsmast.social" && community_slug.include?(self.community.slug)
+      return unless ENV['BOOST_COMMUNITY_BOT_ENABLED'] == 'true' && ENV['LOCAL_DOMAIN'] == "newsmast.social"
 
       community_bot_account = get_community_bot_account(self.community_id)
       return if community_bot_account.nil?
