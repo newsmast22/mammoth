@@ -11,8 +11,10 @@ Mammoth::Engine.routes.draw do
       get 'connect_with_instance' => 'user_sessions#connect_with_instance', as: 'connect_with_instance'
       post 'create_user_object' => 'user_sessions#create_user_object', as: 'create_user_object'
 
+      # for fediverse actions
       post '/fedi_favourite/:status_id', to: 'favourites#favourite', as: 'fedi_favourite'
       post '/fedi_unfavourite/:status_id', to: 'favourites#unfavourite', as: 'fedi_unfavourite'
+      post '/fedi_create_status', to: 'statuses#create', as: 'fedi_create_status'
 
       resources :communities do 
         collection do 
