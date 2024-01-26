@@ -4,11 +4,19 @@ module Mammoth::Api::V1
     before_action -> { authorize_if_got_token! :read, :'read:statuses' }
   	before_action -> { doorkeeper_authorize! :write, :'write:statuses' }
 		before_action :require_user!
-    before_action :set_thread, only: [:create]
+    before_action :set_thread, only: [:create, :fedi_create]
+
+    def fedi_create
+      create
+    end
+
+    def fedi_destroy 
+      delete
+    end
 
     def create
       options = {
-        activity_type: status_params[:in_reply_to_id].present? ? 'reply' : action_name,
+        activity_type: status_params[:in_reply_to_id].present? ? 'reply' : 'create',
         doorkeeper_token: doorkeeper_token,
         language: status_params[:language],
         media_ids: status_params[:image_data],
@@ -27,12 +35,12 @@ module Mammoth::Api::V1
     end
 
     def delete
-      @status = Status.where(account: current_account).find(params[:status_id])
+      @status = Status.where(account: current_account).find(params[:id])
       authorize @status, :destroy?
       @response = Federation::ActionService.new.call(
         @status,
         current_account,
-        activity_type: action_name,
+        activity_type: 'delete',
         doorkeeper_token: doorkeeper_token
       )
         
