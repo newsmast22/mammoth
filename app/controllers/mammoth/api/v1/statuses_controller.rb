@@ -48,7 +48,7 @@ module Mammoth::Api::V1
         status: status_params[:status],
         visibility: status_params[:visibility]
       }
-      @status = Federation::ActionService.new.call(
+      @status = Federation::StatusActionService.new.call(
         @thread,
         current_account,
         options
@@ -58,7 +58,7 @@ module Mammoth::Api::V1
 
     def delete
       authorize @status, :destroy?
-      @response = Federation::ActionService.new.call(
+      @response = Federation::StatusActionService.new.call(
         @status,
         current_account,
         activity_type: 'delete',
