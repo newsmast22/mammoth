@@ -126,8 +126,12 @@ module Federation
 
         @action_url = "https://#{@login_user_domain}/api/v1/statuses" 
       when :update
+
+        statuses = @response&.parsed_response["statuses"]
+        status_id = statuses[0]["id"]
+
         @body = {
-          in_reply_to_id: @options[:in_reply_to_id],
+          in_reply_to_id: nil,
           language: @options[:language],
           media_ids: @options[:media_ids],
           poll: @options[:poll],
@@ -137,7 +141,33 @@ module Federation
           visibility: @options[:visibility]
         }
 
-        @action_url = "https://#{@login_user_domain}/api/v1/statuses" 
+        @http_method = 'put'
+        @action_url = "https://#{@login_user_domain}/api/v1/statuses/#{status_id}" 
+      when :reply_update
+
+        statuses = @response&.parsed_response["statuses"]
+        status_id = statuses[0]["id"]
+
+        reply_object = Status.find(@options[:in_reply_to_id]) if @options[:in_reply_to_id]
+        
+        @reply_response = search_service.call(object: reply_object, current_account: @current_account, access_token: @access_token)
+        
+        reply_statuses = @reply_response&.parsed_response["statuses"]
+        reply_status_id = reply_statuses[0]["id"]
+        
+        @body = {
+          in_reply_to_id: reply_status_id,
+          language: @options[:language],
+          media_ids: @options[:media_ids],
+          poll: @options[:poll],
+          sensitive: @options[:sensitive],
+          spoiler_text: @options[:spoiler_text],
+          status: @options[:status],
+          visibility: @options[:visibility]
+        }
+
+        @http_method = 'put'
+        @action_url = "https://#{@login_user_domain}/api/v1/statuses/#{status_id}" 
       end
       call_third_party!
     end

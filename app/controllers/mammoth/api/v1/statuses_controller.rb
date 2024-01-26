@@ -5,6 +5,7 @@ module Mammoth::Api::V1
   	before_action -> { doorkeeper_authorize! :write, :'write:statuses' }
 		before_action :require_user!
     before_action :set_thread, only: [:create, :fedi_create]
+    before_action :set_status, only: [:fedi_update]
 
     def fedi_create
       create
@@ -14,15 +15,25 @@ module Mammoth::Api::V1
       delete
     end
 
-    def fedi_update 
-      @status = Status.where(account: current_account).find(params[:id])
-      authorize @status, :update?
-      @response = Federation::ActionService.new.call(
+    def fedi_update
+      options = {
+        activity_type: status_params[:in_reply_to_id].present? ? 'reply_update' : 'update',
+        in_reply_to_id: status_params[:in_reply_to_id],
+        doorkeeper_token: doorkeeper_token,
+        language: status_params[:language],
+        media_ids: status_params[:image_data],
+        poll: status_params[:poll],
+        sensitive: status_params[:sensitive],
+        spoiler_text: '',
+        status: status_params[:status],
+        visibility: status_params[:visibility]
+      }
+      @status = Federation::ActionService.new.call(
         @status,
         current_account,
-        activity_type: 'update',
-        doorkeeper_token: doorkeeper_token
+        options
       )
+      render json: @status
     end
 
     def create
@@ -58,6 +69,11 @@ module Mammoth::Api::V1
     end
 
     private
+
+    def set_status 
+      @status = Status.find(status_params[:status_id])
+    end
+
     def set_thread
       @thread = Status.find(status_params[:in_reply_to_id]) if status_params[:in_reply_to_id].present?
       authorize(@thread, :show?) if @thread.present?
