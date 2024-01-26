@@ -1,9 +1,9 @@
 module Mammoth::Api::V1
   class AccountsController < Api::BaseController
-    before_action -> { authorize_if_got_token! :read, :'read:accounts' }, except: [:follow, :unfollow, :remove_from_followers, :block, :unblock, :mute, :unmute]
-    before_action -> { doorkeeper_authorize! :follow, :write, :'write:follows' }, only: [:follow, :unfollow, :remove_from_followers]
-    before_action -> { doorkeeper_authorize! :follow, :write, :'write:mutes' }, only: [:mute, :unmute]
-    before_action -> { doorkeeper_authorize! :follow, :write, :'write:blocks' }, only: [:block, :unblock]
+    before_action -> { authorize_if_got_token! :read, :'read:accounts' }, except: [:fedi_follow, :fedi_unfollow, :fedi_remove_from_followers, :fedi_block, :fedi_unblock, :fedi_mute, :fedi_unmute]
+    before_action -> { doorkeeper_authorize! :follow, :write, :'write:follows' }, only: [:fedi_follow, :fedi_unfollow, :fedi_remove_from_followers]
+    before_action -> { doorkeeper_authorize! :follow, :write, :'write:mutes' }, only: [:fedi_mute, :fedi_unmute]
+    before_action -> { doorkeeper_authorize! :follow, :write, :'write:blocks' }, only: [:fedi_block, :fedi_unblock]
 
     before_action :require_user!
     before_action :set_account
@@ -12,41 +12,45 @@ module Mammoth::Api::V1
 
     override_rate_limit_headers :follow, family: :follows
 
-    # POST /accounts/:id/fedi_follow
+    # POST /api/v1/accounts/:id/fedi_follow
     def fedi_follow
       response = perform_action('follow')
       render json: response
     end
 
-    # POST /accounts/:id/fedi_unfollow
+    # POST /api/v1/accounts/:id/fedi_unfollow
     def fedi_unfollow
       response = perform_action('unfollow')
       render json: response
     end
 
-    # POST /accounts/:id/fedi_remove_from_followers
+    # POST /api/v1/accounts/:id/fedi_remove_from_followers
     def fedi_remove_from_followers
       
     end
 
-    # POST /accounts/:id/fedi_block
+    # POST /api/v1/accounts/:id/fedi_block
     def fedi_block
-      
+      response = perform_action('block')
+      render json: response
     end
 
-    # POST /accounts/:id/fedi_unblock
+    # POST /api/v1/accounts/:id/fedi_unblock
     def fedi_unblock
-      
+      response = perform_action('unblock')
+      render json: response
     end
 
-    # POST /accounts/:id/fedi_mute
+    # POST /api/v1/accounts/:id/fedi_mute
     def fedi_mute
-      
+      response = perform_action('mute')
+      render json: response
     end
 
-    # POST /accounts/:id/fedi_unmute
+    # POST /api/v1/accounts/:id/fedi_unmute
     def fedi_unmute
-      
+      response = perform_action('unmute')
+      render json: response
     end
 
     private
