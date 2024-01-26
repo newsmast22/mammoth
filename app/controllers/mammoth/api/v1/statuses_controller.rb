@@ -5,7 +5,7 @@ module Mammoth::Api::V1
   	before_action -> { doorkeeper_authorize! :write, :'write:statuses' }
 		before_action :require_user!
     before_action :set_thread, only: [:create, :fedi_create]
-    before_action :set_status, only: [:fedi_update]
+    before_action :set_status, only: [:fedi_update, :fedi_destroy, :delete]
 
     def fedi_create
       create
@@ -57,7 +57,6 @@ module Mammoth::Api::V1
     end
 
     def delete
-      @status = Status.where(account: current_account).find(params[:id])
       authorize @status, :destroy?
       @response = Federation::ActionService.new.call(
         @status,
@@ -71,7 +70,7 @@ module Mammoth::Api::V1
     private
 
     def set_status 
-      @status = Status.find(status_params[:status_id])
+      @status = Status.find(params[:id])
     end
 
     def set_thread

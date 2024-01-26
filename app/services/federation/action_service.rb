@@ -142,7 +142,7 @@ module Federation
         }
 
         @http_method = 'put'
-        @action_url = "https://#{@login_user_domain}/api/v1/statuses/#{status_id}" 
+        @action_url = "https://#{@login_user_domain}/api/v1/statuses/#{status_id}" if status_id
       when :reply_update
 
         statuses = @response&.parsed_response["statuses"]
@@ -167,7 +167,7 @@ module Federation
         }
 
         @http_method = 'put'
-        @action_url = "https://#{@login_user_domain}/api/v1/statuses/#{status_id}" 
+        @action_url = "https://#{@login_user_domain}/api/v1/statuses/#{status_id}" if status_id
       end
       call_third_party!
     end
