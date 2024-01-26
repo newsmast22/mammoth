@@ -2,7 +2,7 @@ Mammoth::Engine.routes.draw do
 
   namespace :api, defaults: {format: 'json'} do
     namespace :v1 do
-      resources :statuses, expect: [:create, :show, :update, :destroy] do
+      resources :statuses, except: [:create, :show, :update, :destroy] do
         collection do
           post :fedi_create
         end

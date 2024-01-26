@@ -125,7 +125,19 @@ module Federation
         }
 
         @action_url = "https://#{@login_user_domain}/api/v1/statuses" 
+      when :update
+        @body = {
+          in_reply_to_id: @options[:in_reply_to_id],
+          language: @options[:language],
+          media_ids: @options[:media_ids],
+          poll: @options[:poll],
+          sensitive: @options[:sensitive],
+          spoiler_text: @options[:spoiler_text],
+          status: @options[:status],
+          visibility: @options[:visibility]
+        }
 
+        @action_url = "https://#{@login_user_domain}/api/v1/statuses" 
       end
       call_third_party!
     end

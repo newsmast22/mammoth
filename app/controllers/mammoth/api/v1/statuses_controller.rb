@@ -14,6 +14,17 @@ module Mammoth::Api::V1
       delete
     end
 
+    def fedi_update 
+      @status = Status.where(account: current_account).find(params[:id])
+      authorize @status, :update?
+      @response = Federation::ActionService.new.call(
+        @status,
+        current_account,
+        activity_type: 'update',
+        doorkeeper_token: doorkeeper_token
+      )
+    end
+
     def create
       options = {
         activity_type: status_params[:in_reply_to_id].present? ? 'reply' : 'create',
@@ -43,7 +54,6 @@ module Mammoth::Api::V1
         activity_type: 'delete',
         doorkeeper_token: doorkeeper_token
       )
-        
       render json: @response
     end
 
