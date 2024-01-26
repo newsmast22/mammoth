@@ -29,7 +29,7 @@ Mammoth::Engine.routes.draw do
         end
       end
 
-      resources :accounts do
+      resources :accounts, except: [:show] do
         member do
           post :fedi_follow
           post :fedi_unfollow
