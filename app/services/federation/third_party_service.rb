@@ -26,6 +26,11 @@ module Federation
       when :post 
         @response = HTTParty.post(@url, headers: headers, body: @body)
       when :put 
+        @response = HTTParty.put(@url, headers: headers, body: @body)
+      when :delete 
+        @response = HTTParty.delete(@url, headers: headers, body: @body)
+      when :patch 
+        @response = HTTParty.patch(@url, headers: headers, body: @body)
       end
       raise Mastodon::UnexpectedResponseError, @response unless response_successful?(@response) || response_error_unsalvageable?(@response)
     end
