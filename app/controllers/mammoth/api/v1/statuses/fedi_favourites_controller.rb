@@ -25,7 +25,7 @@ module Mammoth::Api::V1::Statuses
     end
 
     def perform_favourite_unfavourite(activity_type)
-      Federation::ActionService.new.call(
+      Federation::StatusActionService.new.call(
         @status,
         current_account,
         activity_type: activity_type,

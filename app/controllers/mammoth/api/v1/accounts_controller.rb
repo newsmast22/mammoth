@@ -68,7 +68,7 @@ module Mammoth::Api::V1
     end
 
     def perform_action(activity_type)
-      Federation::ActionService.new.call(
+      Federation::AccountActionService.new.call(
         @account,
         current_account,
         activity_type: activity_type,

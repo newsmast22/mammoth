@@ -19,7 +19,7 @@ class Mammoth::Api::V1::Statuses::FediBookmarksController < Api::V1::Statuses::B
   private
 
   def perform_bookmark_unbookmark(activity_type)
-    Federation::ActionService.new.call(
+    Federation::StatusActionService.new.call(
       @status,
       current_account,
       activity_type: activity_type,

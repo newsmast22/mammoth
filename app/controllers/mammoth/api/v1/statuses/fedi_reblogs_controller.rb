@@ -20,7 +20,7 @@ class Mammoth::Api::V1::Statuses::FediReblogsController < Api::V1::Statuses::Reb
   private
 
   def perform_reblog_unreblog(activity_type)
-    Federation::ActionService.new.call(
+    Federation::StatusActionService.new.call(
       @status,
       current_account,
       activity_type: activity_type,

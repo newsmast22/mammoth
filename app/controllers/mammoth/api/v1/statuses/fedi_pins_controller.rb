@@ -20,7 +20,7 @@ class Mammoth::Api::V1::Statuses::FediPinsController < Api::V1::Statuses::PinsCo
   private
 
   def perform_pin_unpin(activity_type)
-    Federation::ActionService.new.call(
+    Federation::StatusActionService.new.call(
       @status,
       current_account,
       activity_type: activity_type,
