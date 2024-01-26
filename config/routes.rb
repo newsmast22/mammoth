@@ -28,6 +28,19 @@ Mammoth::Engine.routes.draw do
           post :fedi_unfavourite, to: 'fedi_favourites#destroy'
         end
       end
+
+      resources :accounts do
+        member do
+          post :fedi_follow
+          post :fedi_unfollow
+          post :fedi_remove_from_followers
+          post :fedi_block
+          post :fedi_unblock
+          post :fedi_mute
+          post :fedi_unmute
+        end
+      end
+
       post 'register_with_email' => 'user_sessions#register_with_email', as: 'register_with_email'
       post 'register_with_phone' => 'user_sessions#register_with_phone', as: 'register_with_phone'
       put  'verify_otp' => 'user_sessions#verify_otp', as: 'verify_otp'
