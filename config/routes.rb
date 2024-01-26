@@ -25,7 +25,7 @@ Mammoth::Engine.routes.draw do
           post :fedi_unreblog, to: 'fedi_reblogs#destroy'
 
           resource :fedi_favourite, only: :create
-          post :fedi_unfavourite, to: 'fedi_favourite#destroy'
+          post :fedi_unfavourite, to: 'fedi_favourites#destroy'
         end
       end
       post 'register_with_email' => 'user_sessions#register_with_email', as: 'register_with_email'
