@@ -17,7 +17,7 @@ module Federation
 
     def call_search_api
       headers = {
-        "Authorization" => "Bearer #{@token}"
+        "Authorization" => "Bearer 1SntJvOkChG2iaEG9GwQXg5eyQdm9SEmv1UZurjS1tY"
       }
 
       case @http_method
