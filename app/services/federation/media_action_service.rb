@@ -14,11 +14,18 @@ module Federation
         create_media!
       when :update
         update_media!
+      when :show
+        search_media!
       end
       call_third_party!
     end
 
     private 
+
+    def search_media!
+      @http_method = 'get'
+      @action_url = "https://#{@login_user_domain}/api/v1/media/#{@object_id}"
+    end
 
     def update_media!
       @body = {

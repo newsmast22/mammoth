@@ -12,6 +12,11 @@ class Mammoth::Api::V1::MediaController < Api::BaseController
     render json: response
   end
 
+  def fedi_show
+    response = perform_fedi_media_service('show')
+    render json: response
+  end
+
   private 
 
   def media_attachment_params
