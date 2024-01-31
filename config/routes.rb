@@ -2,7 +2,14 @@ Mammoth::Engine.routes.draw do
 
   namespace :api, defaults: {format: 'json'} do
     namespace :v1 do
-      resources :media, except: [:create, :update, :show] do 
+      
+      resources :polls, except: [:create, :show] do
+        member do
+          post :fedi_vote, controller: 'polls/votes'
+        end
+      end
+
+      resources :media, except: [:create, :update, :show] do
         collection do
           post :fedi_create
         end
