@@ -5,10 +5,11 @@ class Mammoth::Api::V1::Polls::VotesController < Api::BaseController
 
   before_action -> { doorkeeper_authorize! :write, :'write:statuses' }
   before_action :require_user!
+  before_action :set_poll
 
   def fedi_vote
     response = Federation::VoteService.new.call(
-                              params[:id],
+                              @poll,
                               current_account,
                               activity_type: 'create',
                               doorkeeper_token: doorkeeper_token,
@@ -19,6 +20,10 @@ class Mammoth::Api::V1::Polls::VotesController < Api::BaseController
   end
 
   private
+
+  def set_poll
+    @poll = Poll.attached.find(params[:id])
+  end
 
   def vote_params
     params.permit(choices: [])
