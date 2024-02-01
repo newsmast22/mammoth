@@ -9,6 +9,13 @@ Mammoth::Engine.routes.draw do
         end
       end
 
+      resources :tags, except: [:show] do
+        member do
+          post :fedi_follow
+          post :fedi_unfollow
+        end
+      end
+
       resources :media, except: [:create, :update, :show] do
         collection do
           post :fedi_create
