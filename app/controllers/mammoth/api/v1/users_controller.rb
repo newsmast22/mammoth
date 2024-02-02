@@ -561,30 +561,16 @@ module Mammoth::Api::V1
         #end::check account requested or not
 
         account_data = single_serialize(account_info, Mammoth::CredentialAccountSerializer)
-        if current_account.local?
-          render json: {
-            data:{
-              account_data: account_data.merge(:is_requested => is_requested,:is_my_account => is_my_account, :is_followed => is_following),
-              community_images_url: community_images,
-              following_images_url: following_account_images,
-              is_admin: is_admin,
-              community_slug: community_slug,
-              account_type: role_name
-            }
-          }
-        else
-          account_data = account_data.merge(
-            is_requested: is_requested,
-            is_my_account: is_my_account,
-            is_followed: is_following,
+        render json: {
+          data:{
+            account_data: account_data.merge(:is_requested => is_requested,:is_my_account => is_my_account, :is_followed => is_following),
             community_images_url: community_images,
             following_images_url: following_account_images,
             is_admin: is_admin,
             community_slug: community_slug,
             account_type: role_name
-          )
-          render json: account_data[:account]
-        end
+          }
+        }
       end
     end
 
