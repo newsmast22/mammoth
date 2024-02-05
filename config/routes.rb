@@ -54,6 +54,10 @@ Mammoth::Engine.routes.draw do
       end
 
       resources :accounts, except: [:show] do
+        collection do 
+          get :fedi_tag_commu_count
+        end
+
         member do
           post :fedi_follow
           post :fedi_unfollow

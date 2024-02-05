@@ -6,11 +6,16 @@ module Mammoth::Api::V1
     before_action -> { doorkeeper_authorize! :follow, :write, :'write:blocks' }, only: [:fedi_block, :fedi_unblock]
 
     before_action :require_user!
-    before_action :set_account
+    before_action :set_account, except: [:fedi_tag_commu_count]
     before_action :check_account_approval
     before_action :check_account_confirmation
 
     override_rate_limit_headers :follow, family: :follows
+
+    def fedi_tag_commu_count
+      response = Federation::TagCommuCountService.new.call(current_account)
+      render json: response
+    end
 
     # POST /api/v1/accounts/:id/fedi_follow
     def fedi_follow
