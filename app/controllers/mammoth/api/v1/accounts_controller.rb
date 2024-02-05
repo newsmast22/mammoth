@@ -7,8 +7,8 @@ module Mammoth::Api::V1
 
     before_action :require_user!
     before_action :set_account, except: [:fedi_tag_commu_count]
-    before_action :check_account_approval
-    before_action :check_account_confirmation
+    before_action :check_account_approval, except: [:fedi_tag_commu_count]
+    before_action :check_account_confirmation, except: [:fedi_tag_commu_count]
 
     override_rate_limit_headers :follow, family: :follows
 
