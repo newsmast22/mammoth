@@ -42,8 +42,29 @@ module Federation
       case @activity_type
       when :follow, :unfollow, :mute, :unmute, :block, :unblock
         process_activity
+      when :update_credentials
+        update_credentials
       end
       call_third_party!
+    end
+
+    def update_credentials
+      accounts = @response&.parsed_response["accounts"]
+      account_id = accounts&.first&.dig("id")
+      @http_method = 'patch'
+      @body = {
+        display_name: @options.display_name,
+        note: @options.note,
+        avatar: @options.avatar,
+        header: @options.header,
+        locked: @options.locked,
+        bot: @options.bot,
+        discoverable: @options.discoverable,
+        hide_collections: @options.hide_collections,
+        indexable: @options.indexable,
+        fields_attributes: @options.fields_attributes
+      }
+      @action_url = "https://#{@login_user_domain}/api/v1/accounts/update_credentials" if account_id
     end
 
     def process_activity

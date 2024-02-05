@@ -6,11 +6,34 @@ module Mammoth::Api::V1
     before_action -> { doorkeeper_authorize! :follow, :write, :'write:blocks' }, only: [:fedi_block, :fedi_unblock]
 
     before_action :require_user!
-    before_action :set_account, except: [:fedi_tag_commu_count]
-    before_action :check_account_approval, except: [:fedi_tag_commu_count]
-    before_action :check_account_confirmation, except: [:fedi_tag_commu_count]
+    before_action :set_account, except: [:fedi_tag_commu_count, :fedi_profile_update]
+    before_action :check_account_approval, except: [:fedi_tag_commu_count, :fedi_profile_update]
+    before_action :check_account_confirmation, except: [:fedi_tag_commu_count, :fedi_profile_update]
 
     override_rate_limit_headers :follow, family: :follows
+
+    def fedi_profile_update
+      options = {
+        activity_type: 'update_credentials',
+        doorkeeper_token: doorkeeper_token,
+        display_name: account_update_params[:display_name],
+        note: account_update_params[:note],
+        avatar: account_update_params[:avatar],
+        header: account_update_params[:header],
+        locked: account_update_params[:locked],
+        bot: account_update_params[:bot],
+        discoverable: account_update_params[:discoverable],
+        hide_collections: account_update_params[:hide_collections],
+        indexable: account_update_params[:indexable],
+        fields_attributes: account_update_params[:fields_attributes]
+      }
+
+      Federation::AccountActionService.new.call(
+        current_account,
+        current_account,
+        options
+      )
+    end
 
     def fedi_tag_commu_count
       response = Federation::TagCommuCountService.new.call(current_account)
@@ -82,6 +105,21 @@ module Mammoth::Api::V1
         current_account,
         activity_type: activity_type,
         doorkeeper_token: doorkeeper_token
+      )
+    end
+    
+    def account_update_params
+      params.permit(
+        :display_name,
+        :note,
+        :avatar,
+        :header,
+        :locked,
+        :bot,
+        :discoverable,
+        :hide_collections,
+        :indexable,
+        fields_attributes: [:name, :value]
       )
     end
   end
