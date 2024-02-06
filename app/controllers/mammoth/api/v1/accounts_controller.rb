@@ -28,11 +28,12 @@ module Mammoth::Api::V1
         fields_attributes: account_update_params[:fields_attributes]
       }
 
-      Federation::AccountActionService.new.call(
+      @response = Federation::AccountActionService.new.call(
         current_account,
         current_account,
         options
       )
+      render json: @response
     end
 
     def fedi_tag_commu_count

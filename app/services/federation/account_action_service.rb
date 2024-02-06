@@ -21,7 +21,7 @@ module Federation
       @current_account = current_account
       @object_type = object.class.name
       @activity_type = options[:activity_type]&.to_sym
-      @login_user_domain = current_account.domain
+      @login_user_domain = current_account.domain.nil? ? "newsmast.social" : @current_account.domain
       @access_token = options[:doorkeeper_token]&.token
       @options = options
       @object = object
@@ -53,16 +53,16 @@ module Federation
       account_id = accounts&.first&.dig("id")
       @http_method = 'patch'
       @body = {
-        display_name: @options.display_name,
-        note: @options.note,
-        avatar: @options.avatar,
-        header: @options.header,
-        locked: @options.locked,
-        bot: @options.bot,
-        discoverable: @options.discoverable,
-        hide_collections: @options.hide_collections,
-        indexable: @options.indexable,
-        fields_attributes: @options.fields_attributes
+        display_name: @options[:display_name],
+        note: @options[:note],
+        avatar: @options[:avatar],
+        header: @options[:header],
+        locked: @options[:locked],
+        bot: @options[:bot],
+        discoverable: @options[:discoverable],
+        hide_collections: @options[:hide_collections],
+        indexable: @options[:indexable],
+        fields_attributes: @options[:fields_attributes]
       }
       @action_url = "https://#{@login_user_domain}/api/v1/accounts/update_credentials" if account_id
     end
