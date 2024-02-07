@@ -35,6 +35,7 @@ class Mammoth::UserCommunitiesService < BaseService
           image_url: community.image.url,
           collection_id: community.collection.id,
           followers: Mammoth::UserCommunity.where(community_id: community.id).size,
+          participants_count: community.participants_count,
           created_at: community.created_at,
           updated_at: community.updated_at,
           is_default_checked: false,
@@ -62,6 +63,7 @@ class Mammoth::UserCommunitiesService < BaseService
             image_url: new_community.image.url,
             collection_id: new_community.collection.id,
             followers: Mammoth::UserCommunity.where(community_id: new_community.id).size,
+            participants_count: new_community.participants_count,
             created_at: new_community.created_at,
             updated_at: new_community.updated_at,
             is_default_checked: false,
@@ -168,6 +170,7 @@ class Mammoth::UserCommunitiesService < BaseService
         image_url: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/my_server_newsmast_cover_photos/newsmast_community_profile_photo.png",
         collection_id: nil,
         followers: 0,
+        participants_count: 0,
         created_at: Time.now,
         updated_at: Time.now,
         is_default_checked: false
