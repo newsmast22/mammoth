@@ -2,6 +2,75 @@ Mammoth::Engine.routes.draw do
 
   namespace :api, defaults: {format: 'json'} do
     namespace :v1 do
+      
+      resources :polls, except: [:create, :show] do
+        member do
+          post :fedi_vote, controller: 'polls/votes'
+        end
+      end
+
+      resources :tags, except: [:show] do
+        member do
+          post :fedi_follow
+          post :fedi_unfollow
+        end
+      end
+
+      resources :media, except: [:create, :update, :show] do
+        collection do
+          post :fedi_create
+        end
+
+        member do
+          put :fedi_update
+          get :fedi_show
+        end
+      end
+      resources :statuses, except: [:create, :show, :update, :destroy] do
+        collection do
+          post :fedi_create
+        end
+  
+        member do
+          get :fedi_show
+          patch :fedi_update
+          put :fedi_update
+          delete :fedi_destroy
+        end
+
+        scope module: :statuses do
+          resource :fedi_bookmark, only: :create
+          post :fedi_unbookmark, to: 'fedi_bookmarks#destroy'
+
+          resource :fedi_pin, only: :create
+          post :fedi_unpin, to: 'fedi_pins#destroy' 
+
+          resource :fedi_reblog, only: :create
+          post :fedi_unreblog, to: 'fedi_reblogs#destroy'
+
+          resource :fedi_favourite, only: :create
+          post :fedi_unfavourite, to: 'fedi_favourites#destroy'
+        end
+      end
+
+      resources :accounts, except: [:show] do
+        collection do 
+          get :fedi_tag_commu_count
+          patch :fedi_profile_update
+        end
+
+        member do
+          post :fedi_profile_update
+          post :fedi_follow
+          post :fedi_unfollow
+          post :fedi_remove_from_followers
+          post :fedi_block
+          post :fedi_unblock
+          post :fedi_mute
+          post :fedi_unmute
+        end
+      end
+
       post 'register_with_email' => 'user_sessions#register_with_email', as: 'register_with_email'
       post 'register_with_phone' => 'user_sessions#register_with_phone', as: 'register_with_phone'
       put  'verify_otp' => 'user_sessions#verify_otp', as: 'verify_otp'
@@ -10,6 +79,12 @@ Mammoth::Engine.routes.draw do
       put  'reset_password' => 'user_sessions#reset_password', as: 'reset_password'
       get 'connect_with_instance' => 'user_sessions#connect_with_instance', as: 'connect_with_instance'
       post 'create_user_object' => 'user_sessions#create_user_object', as: 'create_user_object'
+
+      # for fediverse actions
+      post '/fedi_favourite/:status_id', to: 'favourites#favourite', as: 'fedi_favourite'
+      post '/fedi_unfavourite/:status_id', to: 'favourites#unfavourite', as: 'fedi_unfavourite'
+      post '/fedi_create_status', to: 'statuses#create', as: 'fedi_create_status'
+      post '/fedi_delete_status/:status_id', to: 'statuses#delete', as: 'fedi_delete_status'
 
       resources :communities do 
         collection do 
