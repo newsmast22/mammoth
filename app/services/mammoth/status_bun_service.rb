@@ -3,8 +3,8 @@ class Mammoth::StatusBunService < BaseService
     @status = status
     @options = options
     @tags = @status.tags
-    @community_ids = @options[:community_ids] if @options[:community_ids].present?
-    @flag = @options[:flag]
+    @community_ids = @status.communities.pluck(:id)
+    @flag = @options[:action] if @options[:action]
     check_and_insert_bun_keyword!
   end
 
