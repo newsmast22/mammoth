@@ -102,6 +102,5 @@ module Mammoth
     def update_status_manually_by_user(status_id)
       Mammoth::CommunityFilterStatus.where(status_id: status_id)&.destroy_all
     end
-
   end
 end
