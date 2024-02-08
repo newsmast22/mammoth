@@ -1,6 +1,5 @@
 class Mammoth::StatusBunService < BaseService
-  def call(current_account, status, options)
-    @current_account = current_account
+  def call(status, options)
     @status = status
     @options = options
     @tags = @status.tags

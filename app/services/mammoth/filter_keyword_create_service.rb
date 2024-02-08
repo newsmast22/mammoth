@@ -1,6 +1,5 @@
 class Mammoth::FilterKeywordCreateService < BaseService
-  def call(current_account, keyword_obj, options)
-    @current_account = current_account
+  def call(keyword_obj, options)
     @keyword_obj = keyword_obj
     @options = options
     @flag = @options[:action] if @options[:action]
