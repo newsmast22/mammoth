@@ -21,27 +21,11 @@ module Mammoth
     private
 
     def create_community_filter_statuses
-
-      json = {
-        'community_id' => self.community_id,
-        'is_status_create' => "non",
-        'status_id' => nil,
-        'community_filter_keyword_id' => self.id,
-        'community_filter_keyword_request' => "create"
-      }
-      community_statuses = Mammoth::CommunityFilterStatusesCreateWorker.perform_async(json)
+      Mammoth::FilterKeyworkCreateWorker.perform_async(self.id, options = { action: 'create' })
     end
 
     def update_community_filter_statuses
-
-      json = {
-        'community_id' => self.community_id,
-        'is_status_create' => "non",
-        'status_id' => nil,
-        'community_filter_keyword_id' => self.id,
-        'community_filter_keyword_request' => "update"
-      }
-      community_statuses = Mammoth::CommunityFilterStatusesCreateWorker.perform_async(json)
+      Mammoth::FilterKeyworkCreateWorker.perform_async(self.id, options = { action: 'update' })
     end
 
   end
