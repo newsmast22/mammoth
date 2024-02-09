@@ -66,7 +66,7 @@ module Mammoth
       return unless ENV['BOOST_COMMUNITY_BOT_ENABLED'] == 'true' && ENV['LOCAL_DOMAIN'] == "newsmast.social"
 
       community_bot_account = get_community_bot_account(self.community_id)
-      return if community_bot_account.nil?
+      return if community_bot_account.nil? && self.status.banned?
       
       Mammoth::BoostCommunityBotWorker.perform_async(self.status_id, community_bot_account)
     end
