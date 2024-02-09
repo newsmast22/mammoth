@@ -352,7 +352,7 @@ module Mammoth
         order(id: :desc)
         .select('statuses.id') 
         .distinct
-        paginate(page: page_no, per_page: 5)
+        .page(page_no).per(5)
       end
     }
 
