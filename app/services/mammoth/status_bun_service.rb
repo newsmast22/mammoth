@@ -27,6 +27,7 @@ class Mammoth::StatusBunService < BaseService
     key_word = keyword_obj.keyword
     is_status_banned = keyword_obj.is_filter_hashtag ? check_hashtag_keyword_filter(key_word) : keyword_filter(key_word)
     bun_status_process!(keyword_obj.id) if is_status_banned
+    Mammoth::BoostBotWorker.perform_async(@status.id) if ENV['BOOST_BOT_ENABLED'] == 'true' && @status.local? && !@status.reply && !@status.is_rss_content && !is_status_banned
   end
 
   def check_keyword_filters
