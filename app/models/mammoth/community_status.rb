@@ -68,10 +68,10 @@ module Mammoth
       community_bot_account = get_community_bot_account(self.community_id)
       return if community_bot_account.nil? && self.status.banned?
       
-      Mammoth::BoostCommunityBotWorker.perform_async(self.status_id, community_bot_account)
+      Mammoth::BoostCommunityBotWorker.perform_in(5.seconds, self.status_id, community_bot_account)
     end
 
-    private 
+    private  
 
     def get_community_bot_account(community_id)
       Mammoth::Community.where(id: community_id).last&.bot_account
