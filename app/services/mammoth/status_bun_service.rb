@@ -1,6 +1,11 @@
 class Mammoth::StatusBunService < BaseService
+  include Redisable
+  include Payloadable
+  include Lockable
+
   def call(status, options)
     @status = status
+    @account  = status.account
     @options = options
     @tags = @status.tags
     @community_ids = @status.communities.pluck(:id)
@@ -62,11 +67,19 @@ class Mammoth::StatusBunService < BaseService
       community_filter_keyword_id: key_word_id
     )
     DistributionWorker.perform_async(@status.id)
-    RemoveStatusService.new.call(Status.with_discarded.find(@status), options = {'immediate' => false})
+    status_reach_finder = StatusReachFinder.new(@status, unsafe: true)
+
+    ActivityPub::DeliveryWorker.push_bulk(status_reach_finder.inboxes, limit: 1_000) do |inbox_url|
+      [signed_activity_json, @account.id, inbox_url]
+    end
   end
 
   def clear_bunned_status_by_id!
     Mammoth::CommunityFilterStatus.where(status_id: @status.id).destroy_all
     DistributionWorker.perform_async(@status.id)
+  end
+
+  def signed_activity_json
+    @signed_activity_json ||= Oj.dump(serialize_payload(@status, @status.reblog? ? ActivityPub::UndoAnnounceSerializer : ActivityPub::DeleteSerializer, signer: @account, always_sign: true))
   end
 end
