@@ -78,15 +78,21 @@ module Mammoth
     end
 
     def is_blocked_by_admins?(community_id, account_id)
-      target_account_ids = Block
-                          .where(account_id: Mammoth::Account
-                          .joins(users: :community_admins)
-                          .where(community_admins: { community_id: community_id }, users: { role_id: 4 })
-                          .pluck(:id))
-                          .pluck(:target_account_id)
+      target_account_ids = (
+                            Block
+                            .where(account_id: Mammoth::Account
+                            .joins(users: :community_admins)
+                            .where(community_admins: { community_id: 3 }, users: { role_id: 4 })
+                            .pluck(:id))
+                            .pluck(:target_account_id) + Mute
+                            .where(account_id: Mammoth::Account
+                            .joins(users: :community_admins)
+                            .where(community_admins: { community_id: 3 }, users: { role_id: 4 })
+                            .pluck(:id))
+                            .pluck(:target_account_id)
+                            ).uniq
 
       return true if target_account_ids.include?(account_id.to_i)
-
       false
     end
 
