@@ -63,14 +63,13 @@ module Mammoth
 
     def boost_bot_status
 
-      #return unless ENV['BOOST_COMMUNITY_BOT_ENABLED'] == 'true' && ENV['LOCAL_DOMAIN'] == "newsmast.social"
-
+      return unless ENV['BOOST_COMMUNITY_BOT_ENABLED'] == 'true' && ENV['LOCAL_DOMAIN'] == "newsmast.social"
 
       community_bot_account = get_community_bot_account(self.community_id)
       
       return if community_bot_account.nil? && self.status.banned? && is_blocked_by_admins?(self.community_id, self.status.account_id)
       
-      Mammoth::BoostCommunityBotWorker.perform_in(5.seconds, self.status_id, community_bot_account)
+      Mammoth::BoostCommunityBotWorker.perform_async(self.status_id, community_bot_account)
     end
 
     private  
@@ -80,15 +79,21 @@ module Mammoth
     end
 
     def is_blocked_by_admins?(community_id, account_id)
-      target_account_ids = Block
-                          .where(account_id: Mammoth::Account
-                          .joins(users: :community_admins)
-                          .where(community_admins: { community_id: community_id }, users: { role_id: 4 })
-                          .pluck(:id))
-                          .pluck(:target_account_id)
+      target_account_ids = (
+                            Block
+                            .where(account_id: Mammoth::Account
+                            .joins(users: :community_admins)
+                            .where(community_admins: { community_id: 3 }, users: { role_id: 4 })
+                            .pluck(:id))
+                            .pluck(:target_account_id) + Mute
+                            .where(account_id: Mammoth::Account
+                            .joins(users: :community_admins)
+                            .where(community_admins: { community_id: 3 }, users: { role_id: 4 })
+                            .pluck(:id))
+                            .pluck(:target_account_id)
+                            ).uniq
 
       return true if target_account_ids.include?(account_id.to_i)
-
       false
     end
 

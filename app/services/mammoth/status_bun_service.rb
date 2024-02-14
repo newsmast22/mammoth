@@ -78,7 +78,7 @@ class Mammoth::StatusBunService < BaseService
     Mammoth::CommunityFilterStatus.where(status_id: @status.id).destroy_all
     DistributionWorker.perform_async(@status.id)
   end
-
+  
   def signed_activity_json
     @signed_activity_json ||= Oj.dump(serialize_payload(@status, @status.reblog? ? ActivityPub::UndoAnnounceSerializer : ActivityPub::DeleteSerializer, signer: @account, always_sign: true))
   end
