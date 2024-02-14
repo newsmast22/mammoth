@@ -34,7 +34,8 @@ module Mammoth::Api::V1
 			params.require(:mammoth_setting).permit(
 				:thing_type,
 				settings: [
-					:theme
+					:theme,
+					:detect_flag
 				]
 			)
 		end
