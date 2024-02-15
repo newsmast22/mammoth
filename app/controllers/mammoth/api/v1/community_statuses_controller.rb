@@ -674,14 +674,13 @@ module Mammoth::Api::V1
 			if params[:content].present?
 				status = params[:content]
 
-				return render json: status, serializer: Mammoth::StatusSerializer unless ENV['TRANSLATION_ENABLED'] == "true"
+				return render json: {content: status} unless ENV['TRANSLATION_ENABLED'] == "true"
 
 				unless status.nil? ||  status.nil? ||  status.blank?
 					status = call_mastodon_text_service(status)
 				end
-				render json: status
+				render json: {content: status} 
 
-				#render json: status, serializer: Mammoth::StatusSerializer
 			end
 		end
 
@@ -829,7 +828,7 @@ module Mammoth::Api::V1
 		def call_mastodon_text_service(status)
 			aws_lamda_service = Mammoth::AwsLamdaTranslateService.new
 			translated_text = aws_lamda_service.translate_text(status, is_mastodon = true)
-			return translated_text if translated_text.code == 200 && !translated_text["body"].nil?
+			return translated_text["body"]["translated_text"] if translated_text.code == 200 && !translated_text["body"].nil?
 			status
 		end
 
