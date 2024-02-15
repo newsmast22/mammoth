@@ -7,6 +7,7 @@ module Mammoth::Api::V1
 		before_action :set_thread, only: [:create]
 
 		include Authorization
+		include FormattingHelper
 
 		# This API was originally unlimited, pagination cannot be introduced without
 		# breaking backwards-compatibility. Arbitrarily high number to cover most
@@ -658,7 +659,7 @@ module Mammoth::Api::V1
 		end
 
 		def translate_text 
-			params[:id].present?
+			if params[:id].present?
 				status = Status.where(id: params[:id]).last
 				
 				return render json: status, serializer: Mammoth::StatusSerializer unless ENV['TRANSLATION_ENABLED'] == "true"
@@ -667,6 +668,22 @@ module Mammoth::Api::V1
 					status = call_translate_text_service(status)
 				end
 				render json: status, serializer: Mammoth::StatusSerializer
+			end
+		end
+
+		def translate_mastodon_text
+			if params[:content].present?
+				status = params[:content]
+
+				return render json: status, serializer: Mammoth::StatusSerializer unless ENV['TRANSLATION_ENABLED'] == "true"
+
+				unless status.nil? ||  status.nil? ||  status.blank?
+					status = call_mastodon_text_service(status)
+				end
+				render json: status
+
+				#render json: status, serializer: Mammoth::StatusSerializer
+			end
 		end
 
     private
@@ -800,7 +817,7 @@ module Mammoth::Api::V1
 
 		def call_translate_text_service(status) 
       aws_lamda_service = Mammoth::AwsLamdaTranslateService.new
-      translated_text = aws_lamda_service.translate_text(status.text)
+      translated_text = aws_lamda_service.translate_text(status.text, is_mastodon = false)
       if translated_text.code == 200 && !translated_text["body"].nil?
         unless translated_text["body"]["original_language"].nil? || translated_text["body"]["original_language"] == "en"
           status.update_columns(language: translated_text["body"]["original_language"], translated_text: translated_text["body"]["translated_text"])
@@ -809,6 +826,13 @@ module Mammoth::Api::V1
       end
 			return status
     end
+
+		def call_mastodon_text_service(status)
+			aws_lamda_service = Mammoth::AwsLamdaTranslateService.new
+			translated_text = aws_lamda_service.translate_text(status, is_mastodon = true)
+			return translated_text if translated_text.code == 200 && !translated_text["body"].nil?
+			status
+		end
 
   end
 end
