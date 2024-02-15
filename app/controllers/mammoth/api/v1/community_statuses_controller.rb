@@ -7,7 +7,6 @@ module Mammoth::Api::V1
 		before_action :set_thread, only: [:create]
 
 		include Authorization
-		include FormattingHelper
 
 		# This API was originally unlimited, pagination cannot be introduced without
 		# breaking backwards-compatibility. Arbitrarily high number to cover most
