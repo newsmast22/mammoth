@@ -2,7 +2,7 @@ module Mammoth
   class BoostCommunityBotWorker
     include Sidekiq::Worker
     include FormattingHelper
-    sidekiq_options retry: false, dead: true
+    sidekiq_options queue: 'custom_bot_boosting', retry: false, dead: true
     
     def perform(status_id, community_bot_account)
       post_url = get_post_url(status_id)
