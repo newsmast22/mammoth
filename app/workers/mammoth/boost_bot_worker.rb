@@ -1,7 +1,7 @@
 module Mammoth
   class BoostBotWorker
     include Sidekiq::Worker
-    sidekiq_options retry: false, dead: true
+    sidekiq_options queue: 'custom_bot_boosting', retry: false, dead: true
     
     def perform(status_id)
       bot_lamda_service = Mammoth::BoostLamdaBotService.new
