@@ -678,6 +678,8 @@ module Mammoth::Api::V1
 
 				unless status.nil? ||  status.nil? ||  status.blank?
 					status = call_mastodon_text_service(status)
+					status = HtmlAwareFormatter.new(status, true, {}).to_s
+
 				end
 				render json: {content: status} 
 
@@ -815,7 +817,7 @@ module Mammoth::Api::V1
 
 		def call_translate_text_service(status) 
       aws_lamda_service = Mammoth::AwsLamdaTranslateService.new
-      translated_text = aws_lamda_service.translate_text(status.text, is_mastodon = false)
+      translated_text = aws_lamda_service.translate_text(status.text)
       if translated_text.code == 200 && !translated_text["body"].nil?
         unless translated_text["body"]["original_language"].nil? || translated_text["body"]["original_language"] == "en"
           status.update_columns(language: translated_text["body"]["original_language"], translated_text: translated_text["body"]["translated_text"])
@@ -827,7 +829,7 @@ module Mammoth::Api::V1
 
 		def call_mastodon_text_service(status)
 			aws_lamda_service = Mammoth::AwsLamdaTranslateService.new
-			translated_text = aws_lamda_service.translate_text(status, is_mastodon = true)
+			translated_text = aws_lamda_service.translate_text(status)
 			return translated_text["body"]["translated_text"] if translated_text.code == 200 && !translated_text["body"].nil?
 			status
 		end
