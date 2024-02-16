@@ -681,7 +681,10 @@ module Mammoth::Api::V1
 					status = HtmlAwareFormatter.new(status, true, {}).to_s
 
 				end
-				render json: {content: status} 
+				render json: {
+					content: status,
+					id: params[:id]
+				} 
 
 			end
 		end
