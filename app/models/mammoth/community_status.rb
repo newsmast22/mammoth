@@ -83,12 +83,12 @@ module Mammoth
                             Block
                             .where(account_id: Mammoth::Account
                             .joins(users: :community_admins)
-                            .where(community_admins: { community_id: 3 }, users: { role_id: 4 })
+                            .where(community_admins: { community_id: community_id}, users: { role_id: 4 })
                             .pluck(:id))
                             .pluck(:target_account_id) + Mute
                             .where(account_id: Mammoth::Account
                             .joins(users: :community_admins)
-                            .where(community_admins: { community_id: 3 }, users: { role_id: 4 })
+                            .where(community_admins: { community_id: community_id}, users: { role_id: 4 })
                             .pluck(:id))
                             .pluck(:target_account_id)
                             ).uniq

@@ -7,16 +7,14 @@ module Mammoth
           @api_key = ENV['TRANSLATE_API_KEY']
       end
       
-      def translate_text(text, is_mastodon)
+      def translate_text(text)
 
-      unless is_mastodon
         # Check if the string contains any HTML tags
         contains_html_tags = /<("[^"]*"|'[^']*'|[^'">])*>/.match?(text)
 
         if contains_html_tags
           text = PlainTextFormatter.new(text, false).to_s
         end
-      end
 
         HTTParty.post(@base_url, 
           :body => {
