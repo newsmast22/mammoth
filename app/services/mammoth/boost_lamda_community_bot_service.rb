@@ -5,6 +5,8 @@ module Mammoth
     def initialize  
         @base_url = ENV['BOOST_COMMUNITY_BOT_URL']
         @api_key = ENV['BOOST_COMMUNITY_BOT_API_KEY']
+        puts "************BOOST_COMMUNITY_BOT_URL: #{ENV['BOOST_COMMUNITY_BOT_URL']}"
+        puts "************BOOST_COMMUNITY_BOT_API_KEY: #{ENV['BOOST_COMMUNITY_BOT_API_KEY']}"
     end
     
     def boost_status(post_bot_account, post_id, post_url)
