@@ -35,6 +35,7 @@ module Federation
     def search_federation!
       raise ActiveRecord::RecordNotFound if @object.nil?
       raise ActiveRecord::RecordInvalid if @current_account.local?
+      
       @response = search_service.call(object: @object, current_account: @current_account, access_token: @access_token)
     end
 
@@ -48,9 +49,16 @@ module Federation
 
     def process_activity
       hashtags = @response&.parsed_response["hashtags"]
-      hashtag_name = hashtags&.first&.dig("name")
+    
+      if hashtags.nil? || hashtags.empty?
+        hashtag_name = @object.name
+      else
+        hashtag_name = hashtags.first["name"]
+      end
+    
       @action_url = "https://#{@login_user_domain}/api/v1/tags/#{hashtag_name}/#{@activity_type}" if hashtag_name
     end
+    
 
     def call_third_party!
       @response = third_party_service.call(url: @action_url, access_token: @access_token, http_method: @http_method || 'post', body: @body) if @action_url

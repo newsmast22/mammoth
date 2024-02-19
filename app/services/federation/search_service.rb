@@ -28,7 +28,7 @@ module Federation
       when :Account
         @search_url = "https://#{@login_user_domain}/api/v2/search?q=@#{@object.username}@#{@object.domain}&resolve=true&limit=#{@limit}&type=accounts"
       when :Tag
-        @search_url = "https://#{@login_user_domain}/api/v2/search?q=##{@object.name}&resolve=true&limit=#{@limit}&type=hashtags"
+        @search_url = "https://#{@login_user_domain}/api/v2/search?q=#{@object.name}&resolve=false&limit=#{@limit}&type=hashtags"
       end
     end
 
