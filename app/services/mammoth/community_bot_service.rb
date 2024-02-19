@@ -38,7 +38,7 @@ class Mammoth::CommunityBotService < BaseService
 
       bot_lamda_service = Mammoth::BoostLamdaCommunityBotService.new
 
-      boost_status = bot_lamda_service.boost_status(community_bot_account, @status.id, post_url)
+      boost_status = bot_lamda_service.boost_status(community_bot_account, @status.id, post_url.to_s)
       return true if boost_status["statusCode"] == 200
       false
     end
