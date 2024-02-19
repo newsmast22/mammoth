@@ -8,7 +8,7 @@ module Mammoth
       return false unless ENV['BOOST_COMMUNITY_BOT_ENABLED'] == 'true' && ENV['LOCAL_DOMAIN'] == "newsmast.social"
 
       puts "BoostCommunityBotWorker status_id: #{status_id} | community_id: #{community_id}"
-
+      Mammoth::Status.reload
       @status = Mammoth::Status.find(status_id)
 
       if community_id.nil?
