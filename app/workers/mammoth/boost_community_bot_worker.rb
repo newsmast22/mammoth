@@ -9,6 +9,8 @@ module Mammoth
 
       @status = Mammoth::Status.find(status_id)
 
+      puts "BoostCommunityBotWorker status_id: #{@status} | community_id: #{community_id}"
+
       if community_id.nil?
         boost_for_all_community
       else
@@ -34,7 +36,7 @@ module Mammoth
         community_bot_account = get_community_bot_account(community_id)
         return false if community_bot_account.nil? || @status.banned? || is_blocked_by_admins?(community_id, @status.account_id)
 
-        post_url = get_post_url(@status.id)
+        post_url = get_post_url
         bot_lamda_service = Mammoth::BoostLamdaCommunityBotService.new
 
         boost_status = bot_lamda_service.boost_status(community_bot_account, @status.id, post_url)
@@ -42,10 +44,9 @@ module Mammoth
         false
       end
 
-      def get_post_url(status_id)
-        status = Status.find(status_id)
-        username = status.account.pretty_acct
-        url = "https://newsmast.social/@#{username}/#{status_id}"
+      def get_post_url
+        username = @status.account.pretty_acct
+        url = "https://newsmast.social/@#{username}/#{@status.id}"
       end
 
       def get_community_bot_account(community_id)
