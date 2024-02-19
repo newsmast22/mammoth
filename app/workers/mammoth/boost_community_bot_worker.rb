@@ -7,9 +7,10 @@ module Mammoth
     def perform(community_id, status_id)      
       return false unless ENV['BOOST_COMMUNITY_BOT_ENABLED'] == 'true' && ENV['LOCAL_DOMAIN'] == "newsmast.social"
 
-      puts "BoostCommunityBotWorker status_id: #{status_id} | community_id: #{community_id}"
-      Mammoth::Status.reload
-      @status = Mammoth::Status.find(status_id)
+      puts "**********BoostCommunityBotWorker status_id: #{status_id} | community_id: #{community_id}"
+      
+      @status = Status.find(status_id)
+      puts "**********BoostCommunityBotWorker status: #{@status.inspect}"
 
       if community_id.nil?
         boost_for_all_community
@@ -23,9 +24,13 @@ module Mammoth
 
       def boost_for_all_community
         # Looping community to fetch followed accounts by community admin
-        @status.get_admins_from_follow.each do |community_admin|
+        puts "**********BoostCommunityBotWorker get_admins_from_follow: #{get_admins_from_follow}"
+
+        get_admins_from_follow.each do |community_admin|
           communities = Mammoth::Account.find(community_admin.id).get_owned_communities
           # Looping community
+          puts "**********BoostCommunityBotWorker communities: #{communities.pluck(:slug)}"
+
           communities.each do |community|
             boost_by_community_bot(community.id)
           end
@@ -37,6 +42,8 @@ module Mammoth
         return false if community_bot_account.nil? || @status.banned? || is_blocked_by_admins?(community_id, @status.account_id)
 
         post_url = get_post_url
+        puts "**********BoostCommunityBotWorker post_url: #{post_url}"
+
         bot_lamda_service = Mammoth::BoostLamdaCommunityBotService.new
 
         boost_status = bot_lamda_service.boost_status(community_bot_account, @status.id, post_url)
@@ -70,6 +77,18 @@ module Mammoth
         
         return true if target_account_ids.include?(account_id.to_i)
         false
+      end
+
+      def get_admins_from_follow
+        Mammoth::Account.where(id: get_followed_admins)
+      end
+
+      def get_followed_admins
+        Follow.where(account_id: get_all_community_admins.pluck(:id), target_account_id: @status.account_id).pluck(:account_id)
+      end
+
+      def get_all_community_admins
+        Mammoth::Account.joins(users: :community_admins)
       end
 
   end 
