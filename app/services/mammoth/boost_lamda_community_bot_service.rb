@@ -23,6 +23,7 @@ module Mammoth
                     "x-api-key" => @api_key
                     }
       )
+      puts "************BoostLamdaCommunityBotService result: #{result.inspect}"
       return result
     end
   
