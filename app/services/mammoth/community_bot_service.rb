@@ -1,7 +1,10 @@
 class Mammoth::CommunityBotService < BaseService
   include FormattingHelper
-  def call(community_id, status)
-    @status = status
+  def call(community_id, status_id)
+
+    @status = Mammoth::Status.find(status_id)
+    puts "**********BoostCommunityBotWorker status: #{@status.inspect}"
+
     if community_id.nil?
       boost_for_all_community
     else
