@@ -31,7 +31,7 @@ class Mammoth::CommunityBotService < BaseService
 
     def boost_by_community_bot(community_id)
       community_bot_account = get_community_bot_account(community_id)
-      return false if community_bot_account.nil? || @status.banned? || is_blocked_by_admins?(community_id, @status.account_id)
+      return false if community_bot_account.nil? || @status.banned? || is_blocked_by_admins?(community_id, @status.account_id) || @status.reply?
 
       post_url = get_post_url
       puts "**********MammothCommunityBotService post_url: #{post_url}"
