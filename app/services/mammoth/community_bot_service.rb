@@ -3,7 +3,6 @@ class Mammoth::CommunityBotService < BaseService
   def call(community_id, status_id)
 
     @status = Mammoth::Status.find(status_id)
-    puts "**********BoostCommunityBotWorker status: #{@status.inspect}"
 
     if community_id.nil?
       boost_for_all_community
@@ -15,14 +14,12 @@ class Mammoth::CommunityBotService < BaseService
   private
 
     def boost_for_all_community
-      # Looping community to fetch followed accounts by community admin
-      puts "**********MammothCommunityBotService get_admins_from_follow: #{get_admins_from_follow}"
 
+      # Looping community to fetch followed accounts by community admin
       get_admins_from_follow.each do |community_admin|
         communities = Mammoth::Account.find(community_admin.id).get_owned_communities
-        # Looping community
-        puts "**********MammothCommunityBotService communities: #{communities.pluck(:slug)}"
 
+        # Looping community
         communities.each do |community|
           boost_by_community_bot(community.id)
         end
@@ -34,10 +31,7 @@ class Mammoth::CommunityBotService < BaseService
       return false if community_bot_account.nil? || @status.banned? || is_blocked_by_admins?(community_id, @status.account_id) || @status.reply?
 
       post_url = get_post_url
-      puts "**********MammothCommunityBotService post_url: #{post_url}"
-
       bot_lamda_service = Mammoth::BoostLamdaCommunityBotService.new
-
       boost_status = bot_lamda_service.boost_status(community_bot_account, @status.id, post_url.to_s)
       return true if boost_status["statusCode"] == 200
       false

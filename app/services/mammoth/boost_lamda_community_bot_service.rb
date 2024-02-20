@@ -5,16 +5,9 @@ module Mammoth
     def initialize  
         @base_url = ENV['BOOST_COMMUNITY_BOT_URL']
         @api_key = ENV['BOOST_COMMUNITY_BOT_API_KEY']
-        puts "************BOOST_COMMUNITY_BOT_URL: #{ENV['BOOST_COMMUNITY_BOT_URL']}"
-        puts "************BOOST_COMMUNITY_BOT_API_KEY: #{ENV['BOOST_COMMUNITY_BOT_API_KEY']}"
     end
     
     def boost_status(post_bot_account, post_id, post_url)
-
-      puts "************post_bot_account: #{post_bot_account}"
-      puts "************post_id: #{post_id}"
-      puts "************post_id: #{post_url.gsub(/\s+/, "")}"
-
       result = HTTParty.post(@base_url, 
         :body => { 
           "body": {
@@ -27,7 +20,6 @@ module Mammoth
                     "x-api-key" => @api_key
                     }
       )
-      puts "************BoostLamdaCommunityBotService result: #{result.inspect}"
       return result
     end
   
