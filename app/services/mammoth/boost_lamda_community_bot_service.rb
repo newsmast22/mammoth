@@ -8,13 +8,12 @@ module Mammoth
     end
     
     def boost_status(post_bot_account, post_id, post_url)
-
       result = HTTParty.post(@base_url, 
         :body => { 
           "body": {
             "post_bot": post_bot_account,
             "post_id": post_id,
-            "post_url": post_url
+            "post_url": post_url.gsub(/\s+/, "")
           }  
         }.to_json,
         :headers => {'Content-Type' => 'application/json',
