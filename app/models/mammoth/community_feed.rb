@@ -43,7 +43,7 @@ module Mammoth
 
       def invoke_rss_worker
         json = {
-          'is_callback' =>  true,
+          'is_callback' =>  self.deleted_at.nil?,
           'rss_feed_url' => custom_url,
           'account_id' =>   account_id,
           'community_id' => community_id,

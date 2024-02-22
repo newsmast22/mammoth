@@ -9,6 +9,8 @@ module Mammoth
     sidekiq_options backtrace: true, retry: 2, dead: true
 
     def perform(params = {})
+     puts "*************** invoke_rss_worker_params: #{params}"
+
       is_callback   = params['is_callback'] == true
       
       if is_callback
@@ -44,6 +46,7 @@ module Mammoth
         feed.entries.to_a.sort_by(&:published).each do |item|
           link = item.try(:url) || item.try(:enclosure_url)
           if item.published >= 10.days.ago.to_date
+            puts "********************** [Intial] @kept_text: #{@kept_text} ************************"
 
             next if @account.statuses.find_by(rss_link: link)
           
@@ -56,16 +59,15 @@ module Mammoth
             search_text = generate_comminity_hashtags(text)
             search_text_link = search_text +" "+link
 
-            puts "********************** search_text_link: #{search_text_link} ************************"
-            is_status_duplicate = is_status_duplicate?(search_text_link)
-            next if is_status_duplicate || @kept_text == search_text_link
-            puts "********************** search_text_link: #{is_status_duplicate} ************************"
+            puts "********************** search_text_link: #{search_text_link} <<<<|>>>> is_status_duplicate?(search_text_link): #{is_status_duplicate?(search_text_link)} <<<<|>>>> @kept_text == search_text_link:#{@kept_text == search_text_link} ************************"
 
+            next if is_status_duplicate?(search_text_link) || @kept_text == search_text_link
 
             create_status(text, desc, link, search_text_link)
             create_community_status if @status
             crawl_Link(link) if @status
             @kept_text = @status.text
+
           end
         end
       rescue => e
@@ -74,6 +76,8 @@ module Mammoth
 
       def create_status(title, desc, link, search_text_link)
         begin
+          puts "********************** [create status] @kept_text: #{@kept_text} <<<<|>>>> search_text_link: #{search_text_link}************************"
+
           return @status = nil if @kept_text == search_text_link
 
           media_attachment_params = {
