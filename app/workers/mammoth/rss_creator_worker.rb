@@ -53,9 +53,11 @@ module Mammoth
             search_text = generate_comminity_hashtags(text)
             search_text_link = search_text +" "+link
 
-            next unless is_status_duplicate?(search_text)
+            puts "********************** search_text_link: #{search_text_link} ************************"
+            is_status_duplicate = is_status_duplicate?(search_text_link)
+            next if is_status_duplicate
+            puts "********************** search_text_link: #{is_status_duplicate} ************************"
 
-            next unless is_status_duplicate?(search_text_link)
 
             create_status(text, desc, link)
             create_community_status if @status
@@ -133,7 +135,7 @@ module Mammoth
       end
 
       def is_status_duplicate?(text)
-        Status.where(is_rss_content: true, reply: false).where(text: text).exists?
+        Status.where(is_rss_content: true, reply: false).where(text: text).limit(1).exists?
       end
 
   end
