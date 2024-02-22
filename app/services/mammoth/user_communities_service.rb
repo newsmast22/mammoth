@@ -170,7 +170,7 @@ class Mammoth::UserCommunitiesService < BaseService
         image_url: "https://newsmast-assets.s3.eu-west-2.amazonaws.com/my_server_newsmast_cover_photos/newsmast_community_profile_photo.png",
         collection_id: nil,
         followers: 0,
-        participants_count: 0,
+        participants_count: Community.sum(:participants_count),
         created_at: Time.now,
         updated_at: Time.now,
         is_default_checked: false
