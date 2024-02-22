@@ -27,6 +27,9 @@ module Mammoth
 
           puts "********************** feed.community_id: #{feed.community_id} ************************"
           fetch_feed(feed.custom_url)
+
+          # To avoid duplicate status create
+          @kept_text = ""
         end
       end
     end
@@ -55,21 +58,23 @@ module Mammoth
 
             puts "********************** search_text_link: #{search_text_link} ************************"
             is_status_duplicate = is_status_duplicate?(search_text_link)
-            next if is_status_duplicate
+            next if is_status_duplicate || @kept_text == search_text_link
             puts "********************** search_text_link: #{is_status_duplicate} ************************"
 
 
-            create_status(text, desc, link)
+            create_status(text, desc, link, search_text_link)
             create_community_status if @status
             crawl_Link(link) if @status
+            @kept_text = @status.text
           end
         end
       rescue => e
         Rails.logger.error "#{e}, URL: #{url}"
       end
 
-      def create_status(title, desc, link)
+      def create_status(title, desc, link, search_text_link)
         begin
+          return @status = nil if @kept_text == search_text_link
 
           media_attachment_params = {
             file: URI.open(@image)
@@ -135,7 +140,7 @@ module Mammoth
       end
 
       def is_status_duplicate?(text)
-        Status.where(is_rss_content: true, reply: false).where(text: text).limit(1).exists?
+        Status.where(is_rss_content: true, reply: false).where("text LIKE ?", "%#{text}%").limit(1).exists?
       end
 
   end
