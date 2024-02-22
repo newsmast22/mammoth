@@ -5,7 +5,8 @@ module Mammoth
   class RSSCreatorWorker
     include Sidekiq::Worker
 
-    sidekiq_options backtrace: true, retry: 2, dead: true, lock: :until_executed, on_conflict: :log
+    #sidekiq_options backtrace: true, retry: 2, dead: true, lock: :until_executed, on_conflict: :log
+    sidekiq_options backtrace: true, retry: 2, dead: true
 
     def perform(params = {})
       is_callback   = params['is_callback'] == true
@@ -24,6 +25,7 @@ module Mammoth
           @account  = feed.account
           @cfeed_id = feed.id
 
+          puts "********************** feed.community_id: #{feed.community_id} ************************"
           fetch_feed(feed.custom_url)
         end
       end
@@ -51,9 +53,9 @@ module Mammoth
             search_text = generate_comminity_hashtags(text)
             search_text_link = search_text +" "+link
 
-            next if is_status_duplicate?(search_text)
+            next unless is_status_duplicate?(search_text)
 
-            next if is_status_duplicate?(search_text_link)
+            next unless is_status_duplicate?(search_text_link)
 
             create_status(text, desc, link)
             create_community_status if @status
