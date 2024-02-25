@@ -42,14 +42,16 @@ module Mammoth
     private
 
       def invoke_rss_worker
+        # When record created/updated deleted_at will be null => is_callback: true.
+        # When record deleted deleted_at will be null  => is_callback: false.
         json = {
-          'is_callback' =>  self.deleted_at.nil?,
-          'rss_feed_url' => custom_url,
-          'account_id' =>   account_id,
-          'community_id' => community_id,
-          'feed_id' => self.id
+          'is_callback'   => self.deleted_at.nil?,
+          'url'  => custom_url,
+          'account_id'    => account_id,
+          'community_id'  => community_id,
+          'feed_id'       => self.id
         }
-        Mammoth::RSSCreatorWorker.perform_async(json)
+        Mammoth::RSSCreatorWorker.perform_async(json) if self.deleted_at.nil?
       end
   end
 end
