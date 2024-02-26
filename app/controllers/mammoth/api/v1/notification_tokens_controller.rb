@@ -36,7 +36,7 @@ module Mammoth::Api::V1
     def update 
     end
 
-    def destroy 
+    def destroy
     end
 
     private
