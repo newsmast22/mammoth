@@ -353,7 +353,7 @@ module Mammoth::Api::V1
     end
 
     def logout
-      #Mammoth::NotificationToken.find_by(account_id: current_account.id, notification_token: params[:notification_token], platform_type: params[:platform_type]).destroy
+      Mammoth::NotificationToken.where(account_id: current_account.id, notification_token: params[:notification_token], platform_type: params[:platform_type]).last.destroy
       Doorkeeper::AccessToken.where(token: doorkeeper_token.token).last.destroy
       render json: {message: 'logout successed'}
     end
