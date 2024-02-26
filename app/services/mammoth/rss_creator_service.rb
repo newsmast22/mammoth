@@ -109,11 +109,19 @@ class Mammoth::RSSCreatorService < BaseService
     end
 
     def is_status_duplicate?(text)
-      Status.where(is_rss_content: true, reply: false).where("text LIKE ?", "%#{text}%").limit(1).exists?
+      Status.where(is_rss_content: true, reply: false)
+      .where("text LIKE ?", "%#{text}%")
+      .order(created_at: :desc)
+      .limit(400)
+      .exists?
     end
 
     def is_rss_link_exists?(link)
-      Status.where(is_rss_content: true, reply: false).where("rss_link LIKE ?", "%#{link}%").limit(1).exists?
+      Status.where(is_rss_content: true, reply: false)
+      .where("rss_link LIKE ?", "%#{link}%")
+      .order(created_at: :desc)
+      .limit(400)
+      .exists?
     end
 
 end
