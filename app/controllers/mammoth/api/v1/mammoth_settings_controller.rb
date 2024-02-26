@@ -20,6 +20,11 @@ module Mammoth::Api::V1
 			return_setting_json
 		end
 
+		def destroy
+			@setting = Mammoth::MammothSetting.find(params[:id]).destroy
+			return_setting_json
+		end
+
 		private
 		
 		def set_settings 

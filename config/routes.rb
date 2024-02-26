@@ -236,7 +236,7 @@ Mammoth::Engine.routes.draw do
 
       resources :notification_tokens, only: :create
 
-      resources :mammoth_settings, only: [:index, :create]
+      resources :mammoth_settings, only: [:index, :create, :destroy]
 
       resources :app_versions,only: [] do 
         collection do
