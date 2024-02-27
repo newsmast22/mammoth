@@ -20,7 +20,7 @@ class Mammoth::RSSCreatorService < BaseService
         link = item.try(:url) || item.try(:enclosure_url)
         if item.published >= 10.days.ago.to_date
           
-          next if is_rss_link_exists?(link)
+          next if is_duplicate?("rss_link", link)
         
           text  = item.title rescue ''
           desc   = item.summary rescue ''
@@ -31,7 +31,7 @@ class Mammoth::RSSCreatorService < BaseService
           @regenerated_text = generate_comminity_hashtags(text)
           search_text_link = @regenerated_text +" "+link
 
-          next if is_status_duplicate?(search_text_link)
+          next if is_duplicate?('text', search_text_link)
 
           create_status(text, desc, link)
           create_community_status if @status
@@ -108,20 +108,12 @@ class Mammoth::RSSCreatorService < BaseService
       end
     end
 
-    def is_status_duplicate?(text)
+    def is_duplicate?(attribute, value)
       Status.where(is_rss_content: true, reply: false)
-      .where("text LIKE ?", "%#{text}%")
-      .order(created_at: :desc)
-      .limit(400)
-      .exists?
-    end
-
-    def is_rss_link_exists?(link)
-      Status.where(is_rss_content: true, reply: false)
-      .where("rss_link LIKE ?", "%#{link}%")
-      .order(created_at: :desc)
-      .limit(400)
-      .exists?
+        .where("#{attribute} LIKE ?", "%#{value}%")
+        .order(created_at: :desc)
+        .limit(200)
+        .exists?
     end
 
 end
