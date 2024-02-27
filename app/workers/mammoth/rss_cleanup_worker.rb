@@ -46,8 +46,14 @@ module Mammoth
       end
 
       def delete_status_and_associations(status)
-        Mammoth::CommunityStatus.where(status: status).destroy_all
-        status.destroy
+        begin
+          status.discard_with_reblogs
+          StatusPin.find_by(status: status)&.destroy
+          status.account.statuses_count = status.account.statuses_count - 1
+          RemovalWorker.perform_async(status.id, { 'redraft' => true })
+        rescue
+          puts 'Status delection failed!'
+        end
       end
 
   end
