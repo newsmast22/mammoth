@@ -27,6 +27,7 @@ module Mammoth::Api::V1
           wait_list_id: nil,
           step: "dob",
           otp_code: @otp_code,
+          via_newsmast_api: true
         )
         @user.account.update!(discoverable: true)
       elsif !@user.confirmed_at.present?
@@ -46,6 +47,7 @@ module Mammoth::Api::V1
           wait_list_id: nil,
           step: "dob",
           otp_code: @otp_code,
+          via_newsmast_api: true
         )
         @user.account.update!(discoverable: true)
         @user.account.update!(username: user_params[:username])
@@ -79,6 +81,7 @@ module Mammoth::Api::V1
           invite_request_attributes: { text: user_params[:reason] },
           wait_list_id: nil,
           step: "dob",
+          via_newsmast_api: true
         )
         @user.save(validate: false)
         @user.account.update!(discoverable: true)
@@ -102,6 +105,7 @@ module Mammoth::Api::V1
           invite_request_attributes: { text: user_params[:reason] },
           wait_list_id: nil,
           step: "dob",
+          via_newsmast_api: true
         )
         @user.account.update!(discoverable: true)
       end
