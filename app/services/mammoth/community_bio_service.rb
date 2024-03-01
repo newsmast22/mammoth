@@ -3,7 +3,7 @@ module Mammoth
 
     def call_bio_hashtag(community_id = nil)
 
-      tags_names = get_tag_names(community_id)
+      tags_names = Mammoth::CommunityHashtag.where(community_id: community_id, is_bio: true).pluck(:name)
       tag_ids = Tag.find_or_create_by_names(tags_names).map(&:id)
       Tag.joins("LEFT JOIN  statuses_tags ON tags.id = statuses_tags.tag_id")
       .select('tags.*')
@@ -40,23 +40,6 @@ module Mammoth
         Mammoth::Account.joins("INNER JOIN #{tbl_name} ON accounts.id = #{tbl_name}.target_account_id")
         .where("#{tbl_name}.account_id IN (?) #{remove_current_account_sql}", community_admin_ids)
         .order("accounts.id desc")
-      end
-
-      def get_tag_names(community_id)
-        tags_names = []
-
-        # name:Mathematics , slug: mathematics
-        if ENV['LOCAL_DOMAIN'] == "newsmast.social" && community_id = 54
-          tags_names = ["maths", "mathematics", "math"]
-
-        # name:American politics (Black Voices) , slug: american-politics
-        elsif ENV['LOCAL_DOMAIN'] == "backend-staging.newsmast.org" && community_id = 1 
-          tags_names = ["americanpolitics", "USAPOLITICS", "customAmericaPolitics"]
-
-        else
-          tags_names = Mammoth::CommunityHashtag.where(is_incoming: true, community_id: community_id).pluck(:name)
-        end
-         tags_names
       end
       
   end
