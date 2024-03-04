@@ -1,7 +1,7 @@
 module Mammoth::Api::V1
   class UserSessionsController < Api::BaseController
 
-    before_action -> { doorkeeper_authorize! :write, :'write:accounts' }, except: [:connect_with_instance, :create_user_object, :register_with_email, :register_with_phone, :reset_password, :verify_otp]
+    before_action -> { doorkeeper_authorize! :write, :'write:accounts' }, except: [:connect_with_instance, :create_user_object, :register_with_email, :register_with_phone, :reset_password, :verify_otp, :get_reset_password_otp, :verify_reset_password_otp]
     before_action :check_enabled_registrations, only: [:create]
     before_action :generate_otp, except: [:verify_otp, :verify_reset_password_otp, :update_password]
     before_action :find_by_email_phone, only: [:get_reset_password_otp, :verify_reset_password_otp, :reset_password]
