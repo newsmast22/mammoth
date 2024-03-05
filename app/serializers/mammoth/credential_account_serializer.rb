@@ -15,7 +15,7 @@ class Mammoth::CredentialAccountSerializer < Mammoth::AccountSerializer
         sensitive: user.setting_default_sensitive,
         language: user.setting_default_language,
         note: object.note,
-        fields: object.fields.map(&:to_h),
+        fields: object.fields.select { |field| field.value.present? },
         follow_requests_count: FollowRequest.where(target_account: object).limit(40).count,
       }
     end
