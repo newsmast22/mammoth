@@ -50,8 +50,12 @@ class Mammoth::AccountSerializer < ActiveModel::Serializer
     end
 
   end
+  
+  has_many :filtered_fields, key: :fields, serializer: FieldSerializer
 
-  has_many :fields
+  def filtered_fields
+    object.fields.select { |field| field.value.present? }
+  end
 
   def id
     object.id.to_s
