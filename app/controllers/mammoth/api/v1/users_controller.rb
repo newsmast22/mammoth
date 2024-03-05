@@ -1,8 +1,8 @@
 module Mammoth::Api::V1
   class UsersController < Api::BaseController
-		before_action -> { doorkeeper_authorize! :read , :write}, except: [:get_profile_detail_info_by_account, :get_profile_detail_statuses_by_account]
+		before_action -> { doorkeeper_authorize! :read , :write}, except: [:get_profile_detail_info_by_account, :get_profile_detail_statuses_by_account, :get_country_list]
     before_action :generate_otp, only: [:change_email_phone]
-    before_action :require_user!, except: [:global_suggestion, :get_profile_detail_info_by_account, :get_profile_detail_statuses_by_account]
+    before_action :require_user!, except: [:global_suggestion, :get_profile_detail_info_by_account, :get_profile_detail_statuses_by_account, :get_country_list]
 
     require 'aws-sdk-sns'
 
