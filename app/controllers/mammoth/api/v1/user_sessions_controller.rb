@@ -150,7 +150,26 @@ module Mammoth::Api::V1
           use_refresh_token: Doorkeeper.configuration.refresh_token_enabled?
         )
         response = Doorkeeper::OAuth::TokenResponse.new(@access_token)
-        render json: {message: 'password updating successed', access_token: JSON.parse(Oj.dump(response.body["access_token"]))}
+
+        if @user.role_id == -99 || @user.role_id.nil? 
+          role_name = "end-user"
+        elsif @user.role_id == 4 || @user.role_id == 5
+          role_name = UserRole.find(@user.role_id).name
+          community_slug = Mammoth::CommunityAdmin.find_by(user_id: @user.id).community.slug 
+        else
+          role_name = UserRole.find(@user.role_id).name
+        end
+
+        render json: {
+          message: 'password updating successed',
+          access_token: JSON.parse(Oj.dump(response.body["access_token"])),
+          role: role_name,
+          community_slug: community_slug,
+          is_active: @user.is_active,
+          is_account_setup_finished: @user.is_account_setup_finished,
+          step: @user.step.nil? && !@user.is_account_setup_finished ? 'dob' : @user.step,
+          user_id: @user.id
+        }
       end
     end
 
