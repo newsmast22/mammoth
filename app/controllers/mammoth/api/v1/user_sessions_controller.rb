@@ -1,7 +1,7 @@
 module Mammoth::Api::V1
   class UserSessionsController < Api::BaseController
 
-    before_action -> { doorkeeper_authorize! :write, :'write:accounts' }, except: [:connect_with_instance, :create_user_object, :register_with_email, :register_with_phone, :reset_password, :verify_otp]
+    before_action -> { doorkeeper_authorize! :write, :'write:accounts' }, except: [:connect_with_instance, :create_user_object, :register_with_email, :register_with_phone, :reset_password, :verify_otp, :get_reset_password_otp, :verify_reset_password_otp]
     before_action :check_enabled_registrations, only: [:create]
     before_action :generate_otp, except: [:verify_otp, :verify_reset_password_otp, :update_password]
     before_action :find_by_email_phone, only: [:get_reset_password_otp, :verify_reset_password_otp, :reset_password]
@@ -150,7 +150,26 @@ module Mammoth::Api::V1
           use_refresh_token: Doorkeeper.configuration.refresh_token_enabled?
         )
         response = Doorkeeper::OAuth::TokenResponse.new(@access_token)
-        render json: {message: 'password updating successed', access_token: JSON.parse(Oj.dump(response.body["access_token"]))}
+
+        if @user.role_id == -99 || @user.role_id.nil? 
+          role_name = "end-user"
+        elsif @user.role_id == 4 || @user.role_id == 5
+          role_name = UserRole.find(@user.role_id).name
+          community_slug = Mammoth::CommunityAdmin.find_by(user_id: @user.id).community.slug 
+        else
+          role_name = UserRole.find(@user.role_id).name
+        end
+
+        render json: {
+          message: 'password updating successed',
+          access_token: JSON.parse(Oj.dump(response.body["access_token"])),
+          role: role_name,
+          community_slug: community_slug,
+          is_active: @user.is_active,
+          is_account_setup_finished: @user.is_account_setup_finished,
+          step: @user.step.nil? && !@user.is_account_setup_finished ? 'dob' : @user.step,
+          user_id: @user.id
+        }
       end
     end
 
