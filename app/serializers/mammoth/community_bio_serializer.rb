@@ -13,7 +13,7 @@ class Mammoth::CommunityBioSerializer < ActiveModel::Serializer
 
   def bot_account_id 
     return nil if object.bot_account.nil?
-    Account.where(domain: "newsmast.community", username: object.bot_account).last&.id
+    Account.where(domain: "newsmast.community", username: object.bot_account).last&.id.to_i
   end
 
 end
