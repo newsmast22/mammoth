@@ -90,6 +90,7 @@ module Mammoth::Api::V1
 		def update
 			collection = Mammoth::Collection.find_by(slug: community_params[:collection_id])
 			@community.name = community_params[:name]	if community_params[:name].present?
+			@community.slug = community_params[:slug]	if community_params[:slug].present?
 			@community.position = community_params[:position] if community_params[:position].present?
 			@community.description = community_params[:description] if community_params[:description].present?
 			@community.is_country_filtering = community_params[:is_country_filtering].present? ? true : false
