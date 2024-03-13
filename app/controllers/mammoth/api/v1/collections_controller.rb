@@ -72,8 +72,9 @@ module Mammoth::Api::V1
     end
 
     def update
-      #@collection.name = collection_params[:name]
-      @collection.position = collection_params[:name]
+      @collection.name = collection_params[:name]	if collection_params[:name].present?
+      @collection.position = collection_params[:position]	if collection_params[:position].present?
+      @collection.slug = collection_params[:slug]	if collection_params[:slug].present?
       @collection.save
       unless collection_params[:image_data].nil?
         image = Paperclip.io_adapters.for(collection_params[:image_data])
@@ -122,7 +123,7 @@ module Mammoth::Api::V1
     end
 
     def collection_params
-      params.require(:collection).permit(:name, :slug, :image_data)
+      params.require(:collection).permit(:name, :slug, :image_data,:position)
     end
   end
 end
