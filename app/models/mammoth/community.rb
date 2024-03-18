@@ -14,6 +14,7 @@ module Mammoth
     has_many :community_statuses, class_name: "Mammoth::CommunityStatus", dependent: :destroy
     has_many :community_filter_keywords, class_name: "Mammoth::CommunityFilterKeyword", dependent: :destroy
     has_many :community_hashtags, class_name: "Mammoth::CommunityHashtag", dependent: :destroy
+    has_many :community_feeds, class_name: "Mammoth::CommunityFeed", dependent: :destroy
 
     scope :get_my_communities, ->(acc_id){
       joins(mammoth_communities_users: { user: :account }).where(account: {id: acc_id})
