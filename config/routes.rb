@@ -2,7 +2,8 @@ Mammoth::Engine.routes.draw do
 
   namespace :api, defaults: {format: 'json'} do
     namespace :v1 do
-      
+      resource :amplifier_settings
+
       resources :polls, except: [:create, :show] do
         member do
           post :fedi_vote, controller: 'polls/votes'
