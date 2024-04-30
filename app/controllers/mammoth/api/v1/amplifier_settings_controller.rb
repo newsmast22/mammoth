@@ -17,7 +17,7 @@ class Mammoth::Api::V1::AmplifierSettingsController < Api::BaseController
     private
   
     def set_setting
-      @setting = Mammoth::UserTimelineSetting.where(user: current_user).first_or_initialize(user: current_user)
+      @setting = Mammoth::UserTimelineSetting.where(user_id: current_user.id).first_or_initialize(user_id: current_user.id)
     end
   end
     
