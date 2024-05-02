@@ -18,7 +18,9 @@ class Mammoth::Api::V1::AmplifierSettingsController < Api::BaseController
     end
 
     @setting.update!(selected_filters: params[:selected_filters])
+    
     current_user.account.update_excluded_and_domains_from_timeline_cache
+    current_user.account.update_excluded_from_timeline_domains
 
     render json: @setting
   end
