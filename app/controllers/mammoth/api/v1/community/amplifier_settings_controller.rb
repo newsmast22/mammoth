@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class Mammoth::Api::V1::Communities::AmplifierSettingController < Api::BaseController
+class Mammoth::Api::V1::Community::AmplifierSettingsController < Api::BaseController
   before_action :require_user!
   before_action :set_setting, only: [:show, :update] # Set the setting for both show and update actions
 
@@ -35,8 +35,8 @@ class Mammoth::Api::V1::Communities::AmplifierSettingController < Api::BaseContr
 
   private
 
-  def set_setting 
-    @community = Mammoth::Community.find_by(slug: params[:id])
+  def set_setting
+    @community = Mammoth::Community.find_by(slug: params[:slug])
     @setting = Mammoth::CommunityAmplifierSettings.find_or_initialize_by(user_id: current_user.id, mammoth_community_id: @community.id)
   end
 end

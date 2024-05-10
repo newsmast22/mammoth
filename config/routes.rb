@@ -86,8 +86,12 @@ Mammoth::Engine.routes.draw do
       post '/fedi_unfavourite/:status_id', to: 'favourites#unfavourite', as: 'fedi_unfavourite'
       post '/fedi_create_status', to: 'statuses#create', as: 'fedi_create_status'
       post '/fedi_delete_status/:status_id', to: 'statuses#delete', as: 'fedi_delete_status'
-
-      resources :communities do 
+     
+      namespace :community do
+        resource :amplifier_setting
+      end
+      
+      resources :communities do
         collection do 
           post 'get_communities_with_collections' => 'communities#get_communities_with_collections', as: 'get_communities_with_collections'
           post 'update_is_country_filter_on' => 'communities#update_is_country_filter_on', as: 'update_is_country_filter_on'
@@ -100,12 +104,6 @@ Mammoth::Engine.routes.draw do
           get 'community_moderators/:id'=>  'communities#community_moderators', as: 'community_moderators'
           get 'bio_hashtags/:id'=>  'communities#bio_hashtags', as: 'bio_hashtags'
         end
-        member do
-          get :community_bio
-          put 'amplifier_setting', to: 'communities/amplifier_setting#update'
-          get :amplifier_setting
-        end
-        
       end
 
       resources :community_feeds
