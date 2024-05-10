@@ -102,7 +102,10 @@ Mammoth::Engine.routes.draw do
         end
         member do
           get :community_bio
+          put 'amplifier_setting', to: 'communities/amplifier_setting#update'
+          get :amplifier_setting
         end
+        
       end
 
       resources :community_feeds
