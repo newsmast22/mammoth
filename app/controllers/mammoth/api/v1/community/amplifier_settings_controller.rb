@@ -23,10 +23,8 @@ class Mammoth::Api::V1::Community::AmplifierSettingsController < Api::BaseContro
     
     @setting.save
   
-    # Uncomment these lines if needed
-    # current_user.account.update_excluded_and_domains_from_timeline_cache
-    # current_user.account.update_excluded_from_timeline_domains
-  
+    current_user.account.update_excluded_and_domains_from_timeline_cache_by_community(@community.id) if @community&.id
+   
     render json: @setting
   rescue ActiveRecord::RecordNotFound => e
     render json: { error: "Validation failed: Community must exist" }, status: :unprocessable_entity
