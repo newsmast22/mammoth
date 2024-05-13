@@ -104,6 +104,9 @@ Mammoth::Engine.routes.draw do
           get 'community_moderators/:id'=>  'communities#community_moderators', as: 'community_moderators'
           get 'bio_hashtags/:id'=>  'communities#bio_hashtags', as: 'bio_hashtags'
         end
+        member do
+          get :community_bio
+        end
       end
 
       resources :community_feeds
