@@ -18,7 +18,8 @@ class Mammoth::Api::V1::AmplifierSettingsController < Api::BaseController
     end
 
     @setting.update!(selected_filters: params[:selected_filters])
-    
+    current_user.update_all_community_amplifier_blocked_bluesky if current_user.is_global_blocked_bluesky?
+    current_user.update_all_community_amplifier_blocked_thread if current_user.is_global_blocked_thread?
     current_user.account.update_excluded_and_domains_from_timeline_cache
 
     render json: @setting
