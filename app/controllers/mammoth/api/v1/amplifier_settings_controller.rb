@@ -16,10 +16,12 @@ class Mammoth::Api::V1::AmplifierSettingsController < Api::BaseController
       user_timeline_settings.destroy_all
       @setting = Mammoth::UserTimelineSetting.create(user_id: user_id) 
     end
+    
+    current_user.update_all_community_amplifier_blocked_bluesky if current_user.is_global_changed_bluesky(params[:selected_filters])
+    current_user.update_all_community_amplifier_blocked_thread if current_user.is_global_changed_thread(params[:selected_filters])
 
     @setting.update!(selected_filters: params[:selected_filters])
-    current_user.update_all_community_amplifier_blocked_bluesky if current_user.is_global_blocked_bluesky?
-    current_user.update_all_community_amplifier_blocked_thread if current_user.is_global_blocked_thread?
+    
     current_user.account.update_excluded_and_domains_from_timeline_cache
 
     render json: @setting
