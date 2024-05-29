@@ -133,7 +133,8 @@ module Mammoth
       filtered_accounts = []
       unless @search_keywords.nil?
         filtered_accounts = perform_accounts_search! if account_searchable?
-        @accounts = Account.where.not(id: @current_account.id).where(id: filtered_accounts.pluck(:id)).order(id: :desc) 
+        @accounts = Account.where.not(id: @current_account.id).where(id: filtered_accounts.pluck(:id))
+        #.order(id: :desc) 
       end
 
       unless filtered_accounts.any? || !@search_keywords.nil?
@@ -209,13 +210,24 @@ module Mammoth
     end
 
     def self.perform_accounts_search!
+      # AccountSearchService.new.call(
+      #   @search_keywords,
+      #   @current_account,
+      #   limit: @search_limit,
+      #   resolve: true,
+      #   offset: @search_offset
+      # )
+
       AccountSearchService.new.call(
-        @search_keywords,
-        @current_account,
-        limit: @search_limit,
-        resolve: true,
-        offset: @search_offset
-      )
+      @search_keywords,
+      @current_account,
+      limit: @search_limit,
+      resolve: true,
+      offset: @search_offset,
+      use_searchable_text: true,
+      following: false,
+      start_with_hashtag: @search_keywords.start_with?('#')
+    )
     end
 
   end
