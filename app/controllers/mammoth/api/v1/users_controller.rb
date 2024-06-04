@@ -287,7 +287,7 @@ module Mammoth::Api::V1
 
         profile_acc = Account.find(params[:id])
 
-        is_account_following = current_account.following?(profile_acc)
+        is_account_following = current_user.nil? ? false : current_account.following?(profile_acc)
 
         statuses = Mammoth::Status.user_profile_timeline(current_account_id ,profile_acc.id, is_account_following, params[:max_id] , page_no = nil )
 
