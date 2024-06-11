@@ -21,7 +21,8 @@ class Mammoth::Api::V1::AmplifierSettingsController < Api::BaseController
     current_user.update_all_community_amplifier_blocked_thread if current_user.is_global_changed_thread(params[:selected_filters])
 
     @setting.update!(selected_filters: params[:selected_filters])
-    
+    @setting.reload
+  
     current_user.account.update_excluded_and_domains_from_timeline_cache
 
     render json: @setting
