@@ -24,7 +24,11 @@ class Mammoth::Api::V1::AmplifierSettingsController < Api::BaseController
     @setting.reload
   
     current_user.account.update_excluded_and_domains_from_timeline_cache
-
+    json_data = current_user.get_user_amplifier_setting
+    if json_data&.dig("is_filter_turn_on")
+      time_zones = json_data&.dig("home", "time_zones")
+      Newsmast::TimelineRegeneratorByTimezones.perform_async("home",current_user.account.id, time_zones)  if time_zones
+    end
     render json: @setting
   end
 

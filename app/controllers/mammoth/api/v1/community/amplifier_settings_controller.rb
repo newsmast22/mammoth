@@ -24,7 +24,15 @@ class Mammoth::Api::V1::Community::AmplifierSettingsController < Api::BaseContro
     @setting.save
   
     current_user.account.update_excluded_and_domains_from_timeline_cache_by_community(@community.id) if @community&.id
-   
+    
+    commu_amplifier_setting = current_user.community_amplifier_settings.find_by(mammoth_community_id: @community&.id)
+    json_data = commu_amplifier_setting&.amplifier_setting
+  
+    if json_data && commu_amplifier_setting.is_turn_on
+      time_zones = json_data&.dig("time_zones")
+      Newsmast::Community::TimelineRegeneratorByTimezones.perform_async("for_you", @community&.id, time_zones) if time_zones.present?
+      Newsmast::Community::TimelineRegeneratorByTimezones.perform_async("community_statuses", @community&.id, time_zones) if time_zones.present?
+    end
     render json: @setting
   rescue ActiveRecord::RecordNotFound => e
     render json: { error: "Validation failed: Community must exist" }, status: :unprocessable_entity
