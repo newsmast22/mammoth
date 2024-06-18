@@ -27,7 +27,15 @@ class Mammoth::Api::V1::AmplifierSettingsController < Api::BaseController
     json_data = current_user.get_user_amplifier_setting
     if json_data&.dig("is_filter_turn_on")
       time_zones = json_data&.dig("home", "time_zones")
-      Newsmast::TimelineRegeneratorByTimezones.perform_async("home",current_user.account.id, time_zones)  if time_zones
+      current_user.account.my_pins.each do |my_pin|
+        Newsmast::Community::TimelineRegeneratorByTimezones.perform_async("community_statuses", my_pin.pinned_obj_id, time_zones) if time_zones.present?
+      end
+      
+      current_user&.community_users.each do |commu_user|
+        community_id = commu_user.community_id
+        Newsmast::Community::TimelineRegeneratorByTimezones.perform_async("community_statuses", community_id, time_zones) if time_zones.present?
+      end
+      Newsmast::TimelineRegeneratorByTimezones.perform_async("home",current_user.account.id, time_zones) if time_zones.present?
     end
     render json: @setting
   end
