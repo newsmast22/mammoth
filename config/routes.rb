@@ -256,6 +256,13 @@ Mammoth::Engine.routes.draw do
           end
         end
       end
+
+      resources :drafted_statuses, only: [:create, :index, :show, :update, :destroy] do
+        member do
+          post :publish
+        end
+      end
+
       
     end
   end
