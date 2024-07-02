@@ -13,7 +13,7 @@ module Mammoth::Api::V1
     after_action :insert_pagination_headers, only: :index
 
     def create 
-      @status = Mammoth::DraftedStatusService.new.call(
+      @status = PostStatusService.new.call(
         current_user.account,
         text: drafted_status_params[:status],
         thread: @thread,
@@ -36,7 +36,7 @@ module Mammoth::Api::V1
         is_rss_content: false
       )
   
-      render json: @status, serializer: @status.is_a?(ScheduledStatus) ? REST::DraftedStatusSerializer : Mammoth::DraftedStatusSerializer
+      render json: @status, serializer: Mammoth::DraftedStatusSerializer
     rescue PostStatusService::UnexpectedMentionsError => e
       unexpected_accounts = ActiveModel::Serializer::CollectionSerializer.new(
         e.accounts,
@@ -46,12 +46,15 @@ module Mammoth::Api::V1
     end
 
     def publish
-      @status.destroy!
 
-      PostStatusService.new.call(
+      status = PostStatusService.new.call(
         @status.account,
-        options_with_objects(@status.params.with_indifferent_access)
-    ) 
+        options_with_objects(@status.params.with_indifferent_access.except(:drafted))
+    )
+
+    @status.destroy!
+    render json: status, serializer:  REST::StatusSerializer
+ 
     end
 
     def index
@@ -64,7 +67,7 @@ module Mammoth::Api::V1
 
     def update 
       @status.destroy!
-      @status = Mammoth::DraftedStatusService.new.call(
+      @status = PostStatusService.new.call(
         current_user.account,
         text: drafted_status_params[:status],
         thread: @thread,
@@ -75,7 +78,7 @@ module Mammoth::Api::V1
         language: drafted_status_params[:language],
         community_ids: drafted_status_params[:community_ids],
         scheduled_at: drafted_status_params[:scheduled_at],
-        drafted: drafted_status_params[:drafted],
+        drafted: true,
         is_only_for_followers: drafted_status_params.include?(:is_only_for_followers) ? drafted_status_params[:is_only_for_followers] : true,
         is_meta_preview: drafted_status_params.include?(:is_meta_preview)? drafted_status_params[:is_meta_preview] : false,
         application: doorkeeper_token.application,
@@ -87,7 +90,7 @@ module Mammoth::Api::V1
         is_rss_content: false
       )
   
-      render json: @status, serializer: @status.is_a?(ScheduledStatus) ? REST::DraftedStatusSerializer : Mammoth::DraftedStatusSerializer
+      render json: @status, serializer: Mammoth::DraftedStatusSerializer
     rescue PostStatusService::UnexpectedMentionsError => e
       unexpected_accounts = ActiveModel::Serializer::CollectionSerializer.new(
         e.accounts,
