@@ -2,7 +2,7 @@
 module Mammoth::Api::V1
   class DraftedStatusesController < Api::BaseController
     include Authorization
-    before_action :require_user!, except: :create
+    before_action :require_user!
     before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, except: [:update, :destroy, :publish]
     before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :update, :destroy, :publish]
 
@@ -43,18 +43,6 @@ module Mammoth::Api::V1
         serializer: REST::AccountSerializer
       )
       render json: { error: e.message, unexpected_accounts: unexpected_accounts }, status: 422
-    end
-
-    def publish
-
-      status = PostStatusService.new.call(
-        @status.account,
-        options_with_objects(@status.params.with_indifferent_access.except(:drafted))
-    )
-
-    @status.destroy!
-    render json: status, serializer:  REST::StatusSerializer
- 
     end
 
     def index
@@ -102,6 +90,26 @@ module Mammoth::Api::V1
     def destroy
       @status.destroy!
       render_empty
+    end
+
+    def publish
+      params_attributes = @status.params.with_indifferent_access
+      params_attributes = params_attributes.merge(scheduled_at: drafted_status_params[:scheduled_at]) if drafted_status_params[:scheduled_at]
+
+      status = PostStatusService.new.call(
+        @status.account,
+        options_with_objects(params_attributes.except(:drafted))
+      )
+
+      @status.destroy!
+      
+      render json: status, serializer: status.is_a?(ScheduledStatus) ? REST::ScheduledStatusSerializer : REST::StatusSerializer
+    rescue PostStatusService::UnexpectedMentionsError => e
+    unexpected_accounts = ActiveModel::Serializer::CollectionSerializer.new(
+      e.accounts,
+      serializer: REST::AccountSerializer
+    )
+    render json: { error: e.message, unexpected_accounts: unexpected_accounts }, status: 422
     end
 
     private
