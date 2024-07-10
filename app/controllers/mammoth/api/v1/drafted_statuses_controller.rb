@@ -93,17 +93,32 @@ module Mammoth::Api::V1
     end
 
     def publish
-      params_attributes = @status.params.with_indifferent_access
-      params_attributes = params_attributes.merge(scheduled_at: drafted_status_params[:scheduled_at]) if drafted_status_params[:scheduled_at]
-
-      status = PostStatusService.new.call(
-        @status.account,
-        options_with_objects(params_attributes.except(:drafted))
-      )
-
       @status.destroy!
+
+      @status = PostStatusService.new.call(
+        current_user.account,
+        text: drafted_status_params[:status],
+        thread: @thread,
+        media_ids: drafted_status_params[:media_ids],
+        sensitive: drafted_status_params[:sensitive],
+        spoiler_text: drafted_status_params[:spoiler_text],
+        visibility: drafted_status_params[:visibility],
+        language: drafted_status_params[:language],
+        community_ids: drafted_status_params[:community_ids],
+        scheduled_at: drafted_status_params[:scheduled_at],
+        drafted: false,
+        is_only_for_followers: drafted_status_params.include?(:is_only_for_followers) ? drafted_status_params[:is_only_for_followers] : true,
+        is_meta_preview: drafted_status_params.include?(:is_meta_preview)? drafted_status_params[:is_meta_preview] : false,
+        application: doorkeeper_token.application,
+        poll: drafted_status_params[:poll],
+        allowed_mentions: drafted_status_params[:allowed_mentions],
+        idempotency: request.headers['Idempotency-Key'],
+        with_rate_limit: true,
+        text_count: drafted_status_params[:text_count],
+        is_rss_content: false
+      )
       
-      render json: status, serializer: status.is_a?(ScheduledStatus) ? REST::ScheduledStatusSerializer : REST::StatusSerializer
+      render json: @status, serializer: @status.is_a?(ScheduledStatus) ? REST::ScheduledStatusSerializer : REST::StatusSerializer
     rescue PostStatusService::UnexpectedMentionsError => e
     unexpected_accounts = ActiveModel::Serializer::CollectionSerializer.new(
       e.accounts,
