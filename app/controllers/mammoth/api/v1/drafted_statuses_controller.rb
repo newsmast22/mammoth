@@ -46,7 +46,7 @@ module Mammoth::Api::V1
     end
 
     def index
-      render json: @statuses, each_serializer: Mammoth::DraftedStatusSerializer
+      render json: render_custom_grouped_dates
     end
 
     def show
@@ -128,6 +128,16 @@ module Mammoth::Api::V1
     end
 
     private
+
+    def render_custom_grouped_dates
+      drafted_statuses = @statuses.group_by { |status| status.created_at.to_date }
+      drafted_statuses.map do |date, statuses|
+        {
+          date: date,
+          datas: statuses.map { |status| Mammoth::DraftedStatusSerializer.new(status) },
+        }
+      end
+    end
 
     def set_statuses
       @statuses = current_account.mammoth_drafted_statuses.to_a_paginated_by_id(limit_param(DEFAULT_STATUSES_LIMIT), params_slice(:max_id, :since_id, :min_id))
