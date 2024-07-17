@@ -3,10 +3,10 @@ module Mammoth
     self.table_name = 'users'
     
     has_and_belongs_to_many :communities, class_name: "Mammoth::Community"
-    has_many :user_communities , class_name: "Mammoth::UserCommunity"
-    has_many :community_admins, class_name: "Mammoth::CommunityAdmin"
-    has_many :user_timeline_settings, class_name: "Mammoth::UserTimelineSetting"
-    has_many :user_community_settings, class_name: "Mammoth::UserCommunitySetting"
+    has_many :user_communities , class_name: "Mammoth::UserCommunity", dependent: :destroy
+    has_many :community_admins, class_name: "Mammoth::CommunityAdmin", dependent: :destroy
+    has_many :user_timeline_settings, class_name: "Mammoth::UserTimelineSetting", dependent: :destroy
+    has_many :user_community_settings, class_name: "Mammoth::UserCommunitySetting", dependent: :destroy
     belongs_to :wait_list, inverse_of: :user, optional: true
 
 
