@@ -78,8 +78,12 @@ class Mammoth::RSSCreatorService < BaseService
     end
 
     def generate_comminity_hashtags(text)
-      @community_ids = Mammoth::Community.where(slug: @community_slug).pluck(:id).to_a.uniq
-      community_hash_tags = Mammoth::CommunityHashtag.where(community_id: @community_ids, is_incoming: false)
+      community_hash_tags = Mammoth::CommunityHashtag
+                      .joins(:community)
+                      .where(is_incoming: false, community: {slug: @community_slug})
+
+      # @community_ids = Mammoth::Community.where(slug: @community_slug).pluck(:id).to_a.uniq
+      # community_hash_tags = Mammoth::CommunityHashtag.where(community_id: @community_ids, is_incoming: false)
       post = text
       community_hash_tags.each do |community_hash_tag|
         post += " ##{community_hash_tag.hashtag}"

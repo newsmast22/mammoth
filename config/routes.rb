@@ -2,7 +2,8 @@ Mammoth::Engine.routes.draw do
 
   namespace :api, defaults: {format: 'json'} do
     namespace :v1 do
-      
+      resource :amplifier_settings
+
       resources :polls, except: [:create, :show] do
         member do
           post :fedi_vote, controller: 'polls/votes'
@@ -85,8 +86,12 @@ Mammoth::Engine.routes.draw do
       post '/fedi_unfavourite/:status_id', to: 'favourites#unfavourite', as: 'fedi_unfavourite'
       post '/fedi_create_status', to: 'statuses#create', as: 'fedi_create_status'
       post '/fedi_delete_status/:status_id', to: 'statuses#delete', as: 'fedi_delete_status'
-
-      resources :communities do 
+     
+      namespace :community do
+        resource :amplifier_setting
+      end
+      
+      resources :communities do
         collection do 
           post 'get_communities_with_collections' => 'communities#get_communities_with_collections', as: 'get_communities_with_collections'
           post 'update_is_country_filter_on' => 'communities#update_is_country_filter_on', as: 'update_is_country_filter_on'
@@ -251,6 +256,13 @@ Mammoth::Engine.routes.draw do
           end
         end
       end
+
+      resources :drafted_statuses, only: [:create, :index, :show, :update, :destroy] do
+        member do
+          post :publish
+        end
+      end
+
       
     end
   end

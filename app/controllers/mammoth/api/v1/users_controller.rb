@@ -287,7 +287,9 @@ module Mammoth::Api::V1
 
         profile_acc = Account.find(params[:id])
 
-        statuses = Mammoth::Status.user_profile_timeline(current_account_id ,profile_acc.id, params[:max_id] , page_no = nil )
+        is_account_following = current_user.nil? ? false : current_account.following?(profile_acc)
+
+        statuses = Mammoth::Status.user_profile_timeline(current_account_id ,profile_acc.id, is_account_following, params[:max_id] , page_no = nil )
 
         render json: statuses,root: 'statuses_data', each_serializer: Mammoth::StatusSerializer,adapter: :json,
         meta:{

@@ -3,12 +3,7 @@ module Mammoth
     self.table_name = 'users'
     
     has_and_belongs_to_many :communities, class_name: "Mammoth::Community"
-    has_many :user_communities , class_name: "Mammoth::UserCommunity"
-    has_many :community_admins, class_name: "Mammoth::CommunityAdmin"
-    has_many :user_timeline_settings, class_name: "Mammoth::UserTimelineSetting"
-    has_many :user_community_settings, class_name: "Mammoth::UserCommunitySetting"
     belongs_to :wait_list, inverse_of: :user, optional: true
-
 
     scope :filter_with_words, ->(words) { joins(:account).where("LOWER(users.email) like '%#{words}%' OR LOWER(users.phone) like '%#{words}%' OR LOWER(accounts.username) like '%#{words}%' OR LOWER(accounts.display_name) like '%#{words}%'") }
     scope :filter_blocked_accounts,->(account_ids) {where.not(account_id: account_ids)}
@@ -133,7 +128,8 @@ module Mammoth
       filtered_accounts = []
       unless @search_keywords.nil?
         filtered_accounts = perform_accounts_search! if account_searchable?
-        @accounts = Account.where.not(id: @current_account.id).where(id: filtered_accounts.pluck(:id)).order(id: :desc) 
+        @accounts = Account.where.not(id: @current_account.id).where(id: filtered_accounts.pluck(:id))
+        #.order(id: :desc) 
       end
 
       unless filtered_accounts.any? || !@search_keywords.nil?
@@ -209,13 +205,24 @@ module Mammoth
     end
 
     def self.perform_accounts_search!
+      # AccountSearchService.new.call(
+      #   @search_keywords,
+      #   @current_account,
+      #   limit: @search_limit,
+      #   resolve: true,
+      #   offset: @search_offset
+      # )
+
       AccountSearchService.new.call(
-        @search_keywords,
-        @current_account,
-        limit: @search_limit,
-        resolve: true,
-        offset: @search_offset
-      )
+      @search_keywords,
+      @current_account,
+      limit: @search_limit,
+      resolve: true,
+      offset: @search_offset,
+      use_searchable_text: true,
+      following: false,
+      start_with_hashtag: @search_keywords.start_with?('#')
+    )
     end
 
   end

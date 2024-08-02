@@ -311,12 +311,19 @@ module Mammoth
       .order(id: :desc).limit(400)
     }
 
-    scope :user_profile_timeline, -> (account_id, profile_id, max_id = nil , page_no = nil ) {
+    scope :user_profile_timeline, -> (account_id, profile_id, is_account_following, max_id = nil , page_no = nil ) {
       
       left_joins(:status_pins)
       .where(deleted_at: nil, reply: false, account_id: profile_id)
       .filter_block_inactive_statuses_by_acc_ids(account_id)
-      .where(visibility: account_id == profile_id ? [:public, :unlisted, :private, :direct] : [:public, :unlisted])
+      .where(visibility: if account_id == profile_id
+                          [:public, :unlisted, :private, :direct]
+                        elsif is_account_following
+                          [:public, :unlisted, :private]
+                        else
+                          [:public, :unlisted]
+                        end
+      )
       .pin_statuses_fileter(max_id)
 
     }
