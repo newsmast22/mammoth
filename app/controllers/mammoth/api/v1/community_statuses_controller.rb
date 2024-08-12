@@ -7,6 +7,7 @@ module Mammoth::Api::V1
 		before_action :set_thread, only: [:create]
 
 		include Authorization
+		require 'link_thumbnailer'
 
 		# This API was originally unlimited, pagination cannot be introduced without
 		# breaking backwards-compatibility. Arbitrarily high number to cover most
@@ -648,8 +649,7 @@ module Mammoth::Api::V1
 
 		def link_preview
 			unless params[:url].nil?
-				data = LinkThumbnailer.generate("#{params[:url]}")
-				render json: data
+				render json: fetch_generic_thumbnail(params[:url])
 			else
 				render json: {
 					error: "Url must be present"
@@ -835,6 +835,12 @@ module Mammoth::Api::V1
 			translated_text = aws_lamda_service.translate_text(status)
 			return translated_text["body"]["translated_text"] if translated_text.code == 200 && !translated_text["body"].nil?
 			status
+		end
+	
+		def fetch_generic_thumbnail(url)
+			LinkThumbnailer.generate(url)
+		rescue
+			nil
 		end
 
   end
