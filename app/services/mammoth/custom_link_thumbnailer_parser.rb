@@ -21,14 +21,15 @@ module Mammoth
       link_preview = LinkThumbnailer.generate(url)
       {
         description: link_preview.description,
+        url: link_preview.url,
         title: link_preview.title,
         favicon: nil,
-        image:[
+        images:[
           src: "https://img.youtube.com/vi/#{video_id}/hqdefault.jpg",# or choose a different thumbnail quality,
           type: "jpg",
           size: get_image_size("https://img.youtube.com/vi/#{video_id}/hqdefault.jpg")
         ],
-        video: []
+        videos: []
       }
     end
 
