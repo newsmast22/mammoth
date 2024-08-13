@@ -837,12 +837,6 @@ module Mammoth::Api::V1
 			return translated_text["body"]["translated_text"] if translated_text.code == 200 && !translated_text["body"].nil?
 			status
 		end
-	
-		def fetch_generic_thumbnail(url)
-			LinkThumbnailer.generate(url)
-		rescue
-			nil
-		end
 
   end
 end
