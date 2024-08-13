@@ -649,7 +649,8 @@ module Mammoth::Api::V1
 
 		def link_preview
 			unless params[:url].nil?
-				render json: fetch_generic_thumbnail(params[:url])
+				parser = Mammoth::CustomLinkThumbnailerParser.new
+				render json: parser.parse(params[:url])
 			else
 				render json: {
 					error: "Url must be present"
