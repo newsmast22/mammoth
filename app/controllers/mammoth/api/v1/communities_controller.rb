@@ -62,16 +62,22 @@ module Mammoth::Api::V1
 		end
 
 		def create
+
 			collection = Mammoth::Collection.find_by(slug: community_params[:collection_id]) 
-			@community = Mammoth::Community.new(community_params.except(:collection_id, :image_data))
+			@community = Mammoth::Community.new(community_params.except(:collection_id, :image_data, :header_data))
 			@community.collection_id = collection&.id
 			@community.save
 
 			unless community_params[:image_data].nil?
-				image = Paperclip.io_adapters.for(community_params[:image_data])
-				@community.image = image
+				@community.image = Paperclip.io_adapters.for(community_params[:image_data])
 				@community.save
 			end
+
+			unless community_params[:header_data].nil?
+				@community.header =  Paperclip.io_adapters.for(community_params[:header_data])
+				@community.save
+			end
+
 			if @community.save
 				render json: @community
 			else
@@ -94,7 +100,7 @@ module Mammoth::Api::V1
 				guides: community_params[:guides]
 			)
 
-			@community.collection_id = collection.id
+			@community.collection_id = collection&.id
 
 			if community_params[:fields].size == 9
 				social_media_json = {
