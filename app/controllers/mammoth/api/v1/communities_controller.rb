@@ -62,17 +62,9 @@ module Mammoth::Api::V1
 		end
 
 		def create
-			collection = Mammoth::Collection.find_by(slug: community_params[:collection_id])
-			@community = Mammoth::Community.new()
-			@community.name = community_params[:name]
-			@community.slug = community_params[:slug]
-			@community.description = community_params[:description]
-			@community.bot_account = community_params[:bot_account]
-			@community.bio = community_params[:bio]
-			@community.bot_account = community_params[:bot_account]
-			@community.bot_account_info = community_params[:bot_account_info]
-			@community.guides = community_params[:guides] if community_params[:guides].any?
-			@community.collection_id = collection.id
+			collection = Mammoth::Collection.find_by(slug: community_params[:collection_id]) 
+			@community = Mammoth::Community.new(community_params.except(:collection_id, :image_data))
+			@community.collection_id = collection&.id
 			@community.save
 
 			unless community_params[:image_data].nil?
@@ -89,72 +81,72 @@ module Mammoth::Api::V1
 
 		def update
 			collection = Mammoth::Collection.find_by(slug: community_params[:collection_id])
-			@community.name = community_params[:name]	if community_params[:name].present?
-			@community.slug = community_params[:slug]	if community_params[:slug].present?
-			@community.position = community_params[:position] if community_params[:position].present?
-			@community.description = community_params[:description] if community_params[:description].present?
-			@community.is_country_filtering = community_params[:is_country_filtering].present? ? true : false
-			@community.is_recommended = community_params[:is_recommended].present? ? true : false
-			@community.bio = community_params[:bio] if community_params[:bio].present?
-			@community.bot_account = community_params[:bot_account] if community_params[:bot_account].present?
-			@community.bot_account_info = community_params[:bot_account_info] if community_params[:bot_account_info].present?
-			@community.guides = community_params[:guides] if community_params[:guides].any?
+			@community.assign_attributes(
+				name: community_params[:name],
+				slug: community_params[:slug],
+				position: community_params[:position],
+				description: community_params[:description],
+				is_country_filtering: community_params[:is_country_filtering].present?,
+				is_recommended: community_params[:is_recommended].present?,
+				bio: community_params[:bio],
+				bot_account: community_params[:bot_account],
+				bot_account_info: community_params[:bot_account_info],
+				guides: community_params[:guides]
+			)
 
 			@community.collection_id = collection.id
 
-			social_media_json = nil
-      if community_params[:fields].size == 9
-          social_media_json = {
-            "0": {
-              name: "Website",
-              value: community_params[:fields][0][:value].present? ? community_params[:fields][0][:value] : ""
-            },
-            "1": {
-              name: "Twitter",
-              value: community_params[:fields][1][:value].present? ? get_social_media_username("Twitter",community_params[:fields][1][:value].strip) : ""
-            },
-            "2": {
-              name: "TikTok",
-              value: community_params[:fields][2][:value].present? ? get_social_media_username("TikTok",community_params[:fields][2][:value].strip) : ""
-            },
-            "3": {
-              name: "Youtube",
-              value: community_params[:fields][3][:value].present? ? get_social_media_username("Youtube",community_params[:fields][3][:value].strip) : ""
-            },
-            "4": {
-              name: "Linkedin",
-              value: community_params[:fields][4][:value].present? ? get_social_media_username("Linkedin",community_params[:fields][4][:value].strip) : ""
-            },
-            "5": {
-              name: "Instagram",
-              value: community_params[:fields][5][:value].present? ? get_social_media_username("Instagram",community_params[:fields][5][:value].strip) : ""
-            },
-            "6": {
-              name: "Substack",
-              value: community_params[:fields][6][:value].present? ? get_social_media_username("Substack",community_params[:fields][6][:value].strip) : ""
-            },
-            "7": {
-              name: "Facebook",
-              value: community_params[:fields][7][:value].present? ? get_social_media_username("Facebook",community_params[:fields][7][:value].strip) : ""
-            },
-            "8": {
-              name: "Email",
-              value: community_params[:fields][8][:value].present? ? community_params[:fields][8][:value] : ""
-            }
-          } 
-					@community.fields = social_media_json
+			if community_params[:fields].size == 9
+				social_media_json = {
+					"0": {
+						name: "Website",
+						value: community_params[:fields][0][:value].presence || ""
+					},
+					"1": {
+						name: "Twitter",
+						value: get_social_media_username("Twitter", community_params[:fields][1][:value].strip)
+					},
+					"2": {
+						name: "TikTok",
+						value: get_social_media_username("TikTok", community_params[:fields][2][:value].strip)
+					},
+					"3": {
+						name: "Youtube",
+						value: get_social_media_username("Youtube", community_params[:fields][3][:value].strip)
+					},
+					"4": {
+						name: "Linkedin",
+						value: get_social_media_username("Linkedin", community_params[:fields][4][:value].strip)
+					},
+					"5": {
+						name: "Instagram",
+						value: get_social_media_username("Instagram", community_params[:fields][5][:value].strip)
+					},
+					"6": {
+						name: "Substack",
+						value: get_social_media_username("Substack", community_params[:fields][6][:value].strip)
+					},
+					"7": {
+						name: "Facebook",
+						value: get_social_media_username("Facebook", community_params[:fields][7][:value].strip)
+					},
+					"8": {
+						name: "Email",
+						value: community_params[:fields][8][:value].presence || ""
+					}
+				}
+				@community.fields = social_media_json
 			end
+
 			@community.save
 
-			if community_params[:image_data] !=nil &&  community_params[:image_data] !=  "/images/original/missing.png"
+			if community_params[:image_data].present? && community_params[:image_data] != "/images/original/missing.png"
 				image = Paperclip.io_adapters.for(community_params[:image_data])
 				@community.image = image
 				@community.save
-			else
-
 			end
 
-			if community_params[:header_data] != nil && community_params[:header_data] != "/headers/original/missing.png"
+			if community_params[:header_data].present? && community_params[:header_data] != "/headers/original/missing.png"
 				header_image = Paperclip.io_adapters.for(community_params[:header_data])
 				@community.header = header_image
 				@community.save
@@ -163,7 +155,7 @@ module Mammoth::Api::V1
 			if @community
 				render json: @community
 			else
-				render json: {error: 'community update failed!'}
+				render json: { error: 'community update failed!' }
 			end
 		end
 

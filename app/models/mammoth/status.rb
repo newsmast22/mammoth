@@ -521,13 +521,26 @@ module Mammoth
       .where.not(community: { id: community_id }).any?
     end
 
-    def is_bot_acc?
+    def bot_acc?
       Mammoth::Status.joins(account: :users)
       .where(users: { email: "posts@#{ENV['LOCAL_DOMAIN']}" }, id: self.id).any?
     end
 
     def belong_to_community?(community_id)
       Mammoth::CommunityStatus.where(community_id: community_id, status_id: self.id).any?
+    end
+
+    def mentioned_closed_community?
+      closed_community = ENV.fetch('CLOSED_COMMUNITY', nil)
+      closed_community_email = ENV.fetch('CLOSED_COMMUNITY_ACCOUNT_EMAIL', nil)
+  
+      return false if closed_community.blank? || closed_community_email.blank?
+  
+      closed_community_user = User.find_by(email: closed_community_email)
+  
+      return false if closed_community_user&.account.nil?
+  
+      mentions.any? { |mention| mention.account_id == closed_community_user&.account&.id }
     end
   
     def get_community_admins
