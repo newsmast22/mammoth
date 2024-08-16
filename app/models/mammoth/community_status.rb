@@ -59,5 +59,18 @@ module Mammoth
     validates_attachment_content_type :image, content_type: IMAGE_MIME_TYPES
     validates_attachment_size :image, less_than: IMAGE_LIMIT
 
+    def attach_to_private_community(status_id)
+      community_slug = ENV.fetch('PRIVATE_COMMUNITY', nil)
+      return if community_slug.blank?
+  
+      community = Mammoth::Community.find_by(slug: community_slug)
+      return unless community
+  
+      Mammoth::CommunityStatus.create!(
+        status_id: status_id,
+        community_id: community.id
+      )
+    end
   end
+
 end

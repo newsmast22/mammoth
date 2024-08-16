@@ -1,5 +1,5 @@
 class Mammoth::UserCommunitiesService < BaseService
-  def initialize(params,current_user)
+  def initialize(params, current_user)
     @params = params
     @current_user = current_user
     @params.permit!
@@ -14,74 +14,18 @@ class Mammoth::UserCommunitiesService < BaseService
 
   def get_user_communities
     @user = Mammoth::User.find(@current_user.id)
-    @communities = @user&.communities || []
-    @user_communitiess = Mammoth::UserCommunity.where(user_id: @current_user.id)
-    @user_communities = Mammoth::UserCommunity.find_by(user_id: @current_user.id,is_primary: true)
+    @communities = @current_user.account.follow_private_community? ? @user&.communities || [] : @user&.communities.where.not(slug: ENV['PRIVATE_COMMUNITY']) || []
+    @user_communities = Mammoth::UserCommunity.find_by(user_id: @current_user.id, is_primary: true)
     @data = []
-    
+
     unless @communities.empty?
-      @communities.each do |community|
-        @data << {
-          id: community.id.to_s,
-          user_id: @user.id.to_s,
-          is_primary: community.id == (@user_communities&.community_id || 0) ? true : false,
-          name: community.name,
-          slug: community.slug,
-          image_file_name: community.image_file_name,
-          image_content_type: community.image_content_type,
-          image_file_size: community.image_file_size,
-          image_updated_at: community.image_updated_at,
-          description: community.description,
-          image_url: community.image.url,
-          collection_id: community.collection.id,
-          followers: Mammoth::UserCommunity.where(community_id: community.id).size,
-          participants_count: community.participants_count,
-          created_at: community.created_at,
-          updated_at: community.updated_at,
-          is_default_checked: false,
-          is_pinned: !MyPin.find_by(pinned_obj: Community.find(community.id), pin_type: 0, account: @current_user.account).nil?,
-          community_hashtags: get_community_hashtags(community.id)
-        }
-      end
+      @data = build_community_data(@communities, @user, @user_communities)
+      @data = sort_and_prepend_new_community(@data, @params[:community_slug], @user) if @params[:community_slug].present?
 
-      @data = @data.sort_by {|h| [h[:is_primary] ? 0 : 1,h[:slug]]}
-
-      if @params[:community_slug].present? && !(@params[:community_slug] == ENV['ALL_COLLECTION'] || @params[:community_slug] == ENV['NEWSMAST_COLLECTION'])
-        new_community = Mammoth::Community.find_by(slug: @params[:community_slug])
-        unless @data.any? { |obj| obj[:slug] == @params[:community_slug] }
-          @data.prepend << {
-            id: new_community.id.to_s,
-            user_id: @user.id.to_s,
-            is_primary:  false,
-            name: new_community.name,
-            slug: new_community.slug,
-            image_file_name: new_community.image_file_name,
-            image_content_type: new_community.image_content_type,
-            image_file_size: new_community.image_file_size,
-            image_updated_at: new_community.image_updated_at,
-            description: new_community.description,
-            image_url: new_community.image.url,
-            collection_id: new_community.collection.id,
-            followers: Mammoth::UserCommunity.where(community_id: new_community.id).size,
-            participants_count: new_community.participants_count,
-            created_at: new_community.created_at,
-            updated_at: new_community.updated_at,
-            is_default_checked: false,
-            community_hashtags: get_community_hashtags(new_community.id)
-          }
-          @data = @data.sort_by {|h| [h[:slug] == new_community.slug ? 0 : 1,h[:slug]]}
-        end
-      end
-      
       virtual_community
-
-      if @params.include?(:status_id)
-        fetch_status_communities(@params[:status_id])
-      end
-
+      fetch_status_communities(@params[:status_id]) if @params.include?(:status_id)
     end
-    return @data
-    #return @user_communitiess
+    @data
   end
 
   def fetch_status_communities(status_id)
@@ -182,6 +126,49 @@ class Mammoth::UserCommunitiesService < BaseService
 
   def get_community_hashtags(community_id)
     Mammoth::CommunityHashtag.where(community_id: community_id, is_incoming: false).pluck(:hashtag).map{|a| "##{a}" }
+  end
+
+  def build_community_data(communities, user, user_communities)
+    data = []
+    communities.each do |community|
+      data << build_community_hash(community, user, user_communities)
+    end
+    data.sort_by { |h| [h[:is_primary] ? 0 : 1, h[:slug]] }
+  end
+
+  def sort_and_prepend_new_community(data, community_slug, user)
+    return data if community_slug == ENV['ALL_COLLECTION'] || community_slug == ENV['NEWSMAST_COLLECTION']
+  
+    new_community = Mammoth::Community.find_by(slug: community_slug)
+    unless data.any? { |obj| obj[:slug] == community_slug }
+      data.prepend(build_community_hash(new_community, user, nil))
+      data = data.sort_by { |h| [h[:slug] == new_community.slug ? 0 : 1, h[:slug]] }
+    end
+    data
+  end
+
+  def build_community_hash(community, user, user_communities)
+    {
+      id: community.id.to_s,
+      user_id: user.id.to_s,
+      is_primary: community.id == (user_communities&.community_id || 0) ? true : false,
+      name: community.name,
+      slug: community.slug,
+      image_file_name: community.image_file_name,
+      image_content_type: community.image_content_type,
+      image_file_size: community.image_file_size,
+      image_updated_at: community.image_updated_at,
+      description: community.description,
+      image_url: community.image.url,
+      collection_id: community&.collection&.id,
+      followers: Mammoth::UserCommunity.where(community_id: community.id).size,
+      participants_count: community.participants_count,
+      created_at: community.created_at,
+      updated_at: community.updated_at,
+      is_default_checked: false,
+      is_pinned: !MyPin.find_by(pinned_obj: Community.find(community.id), pin_type: 0, account: @current_user.account).nil?,
+      community_hashtags: get_community_hashtags(community.id)
+    }
   end
 
 end

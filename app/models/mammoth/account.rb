@@ -77,12 +77,29 @@ module Mammoth
       Follow.where(account_id: get_all_community_admins.pluck(:id), target_account_id: self.id).pluck(:account_id)
     end
 
+    def get_followed_private_admins
+      Follow.where(account_id: get_private_community_admins.pluck(:id), target_account_id: self.id).pluck(:account_id)
+    end
+
     def get_joined_communities
       Mammoth::Community.joins(:community_users).where(community_users: { user_id: self.user.id })
     end
 
     def get_all_community_admins
       Mammoth::Account.joins(users: :community_admins)
+    end
+
+    def get_private_community_admins 
+      private_community_slug = ENV.fetch('PRIVATE_COMMUNITY', nil)
+      private_community_account_email = ENV.fetch('PRIVATE_COMMUNITY_ACCOUNT_EMAIL', nil)
+  
+      return [] if private_community_slug.blank? || private_community_account_email.blank?
+
+      Mammoth::Account
+        .joins(users: {community_admins: :community})
+        .where(users: { email: private_community_account_email })
+        .where(community: {slug: private_community_slug})
+
     end
 
     def recommended_statuses

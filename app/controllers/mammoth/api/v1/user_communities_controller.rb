@@ -6,11 +6,15 @@ module Mammoth::Api::V1
 
     def index
       ActiveRecord::Base.connected_to(role: :reading) do
-        data = @service.get_user_communities
-        if data.count > 0
-          render json: data
-        else
-          render json: { error: 'no communities found' }
+        begin
+          data = @service.get_user_communities
+          if data.size > 0
+            render json: data
+          else
+            render json: { error: 'no communities found' }
+          end
+        rescue => e
+          render json: { error: e.message }, status: :internal_server_error
         end
       end
     end

@@ -530,17 +530,17 @@ module Mammoth
       Mammoth::CommunityStatus.where(community_id: community_id, status_id: self.id).any?
     end
 
-    def mentioned_closed_community?
-      closed_community = ENV.fetch('CLOSED_COMMUNITY', nil)
-      closed_community_email = ENV.fetch('CLOSED_COMMUNITY_ACCOUNT_EMAIL', nil)
+    def mentioned_private_community?
+      private_community = ENV.fetch('PRIVATE_COMMUNITY', nil)
+      private_community_email = ENV.fetch('PRIVATE_COMMUNITY_ACCOUNT_EMAIL', nil)
   
-      return false if closed_community.blank? || closed_community_email.blank?
+      return false if private_community.blank? || private_community_email.blank?
   
-      closed_community_user = User.find_by(email: closed_community_email)
+      private_community_user = User.find_by(email: private_community_email)
   
-      return false if closed_community_user&.account.nil?
+      return false if private_community_user&.account.nil?
   
-      mentions.any? { |mention| mention.account_id == closed_community_user&.account&.id }
+      mentions.any? { |mention| mention.account_id == private_community_user&.account&.id }
     end
   
     def get_community_admins
@@ -593,6 +593,10 @@ module Mammoth
     
     def get_admins_from_follow
       Mammoth::Account.where(id: self.account.get_followed_admins)
+    end
+
+    def get_private_admins_from_follow
+      Mammoth::Account.where(id: self.account.get_followed_private_admins)
     end
 
     def belong_to_other?(community_id)
