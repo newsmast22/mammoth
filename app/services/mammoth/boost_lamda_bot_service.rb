@@ -10,11 +10,8 @@ module Mammoth
     def boost_status(status_id)
       status = Status.find_by(id: status_id)
       close_group = ''
-      if status
-        owner_email = status.account.user.email
-        if owner_email == ENV['PRIVATE_COMMUNITY_ACCOUNT_EMAIL']
-          close_group = "@#{ENV['PRIVATE_COMMUNITY_ACCOUNT_EMAIL']}"
-        end
+      if status.account.follow_private_community? && status.mentioned_private_community?
+        close_group = "@#{ENV['PRIVATE_COMMUNITY_ACCOUNT_EMAIL']}"
       end
       res = HTTParty.post(@base_url,
         :body => {
