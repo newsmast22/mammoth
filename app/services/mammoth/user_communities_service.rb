@@ -9,12 +9,16 @@ class Mammoth::UserCommunitiesService < BaseService
       @is_virtual = false
     else
       @is_virtual = false
-    end 
+    end
   end
 
   def get_user_communities
     @user = Mammoth::User.find(@current_user.id)
-    @communities = @current_user.account.follow_private_community? ? @user&.communities || [] : @user&.communities.where.not(slug: ENV['PRIVATE_COMMUNITY']) || []
+    # @communities = @current_user.account.follow_private_community? ? @user&.communities || [] : @user&.communities.where.not(slug: ENV['PRIVATE_COMMUNITY']) || []
+    @communities = @user&.communities
+    if !@current_user.account.follow_private_community? && !@current_user.account.private_community_admin?
+      @communities = @communities.where.not(slug: ENV['PRIVATE_COMMUNITY'])
+    end
     @user_communities = Mammoth::UserCommunity.find_by(user_id: @current_user.id, is_primary: true)
     @data = []
 
@@ -31,7 +35,7 @@ class Mammoth::UserCommunitiesService < BaseService
   def fetch_status_communities(status_id)
 
     status = Status.where(id: status_id).last
-    
+
     if status.present?
       status_communities = status.communities
 
@@ -78,12 +82,12 @@ class Mammoth::UserCommunitiesService < BaseService
       # Loop status's communities [end]
 
       @data = @data.sort_by {|h| [h[:is_primary] ? 0 : 1,h[:slug]]}
-      
+
     end
   end
 
   def self.virtual_user_community_details
-    { 
+    {
       community_followed_user_counts: 0,
       community_name: ENV['NEWSMAST_COLLECTION'].capitalize,
       community_description:  "All posts from the communities of Newsmast.",
@@ -138,7 +142,7 @@ class Mammoth::UserCommunitiesService < BaseService
 
   def sort_and_prepend_new_community(data, community_slug, user)
     return data if community_slug == ENV['ALL_COLLECTION'] || community_slug == ENV['NEWSMAST_COLLECTION']
-  
+
     new_community = Mammoth::Community.find_by(slug: community_slug)
     unless data.any? { |obj| obj[:slug] == community_slug }
       data.prepend(build_community_hash(new_community, user, nil))
