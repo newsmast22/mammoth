@@ -16,9 +16,9 @@ class Mammoth::UserCommunitiesService < BaseService
     @user = Mammoth::User.find(@current_user.id)
     # @communities = @current_user.account.follow_private_community? ? @user&.communities || [] : @user&.communities.where.not(slug: ENV['PRIVATE_COMMUNITY']) || []
     @communities = if @current_user.account.follow_private_community? || @current_user.account.private_community_admin?
-                      (@user&.communities || [])
+                      @user&.communities || []
                     else
-                      (@user&.communities&.where.not(slug: ENV['PRIVATE_COMMUNITY']) || [])
+                      @user&.communities&.where.not(slug: ENV['PRIVATE_COMMUNITY']) || []
                     end
     @user_communities = Mammoth::UserCommunity.find_by(user_id: @current_user.id, is_primary: true)
     @data = []
