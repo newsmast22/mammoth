@@ -90,16 +90,11 @@ module Mammoth
     end
 
     def get_private_community_admins 
-      private_community_slug = ENV.fetch('PRIVATE_COMMUNITY', nil)
       private_community_account_email = ENV.fetch('PRIVATE_COMMUNITY_ACCOUNT_EMAIL', nil)
-  
-      return [] if private_community_slug.blank? || private_community_account_email.blank?
 
-      Mammoth::Account
-        .joins(users: {community_admins: :community})
-        .where(users: { email: private_community_account_email })
-        .where(community: {slug: private_community_slug})
+      return [] if private_community_account_email.blank?
 
+      Mammoth::Account.where(users: { email: private_community_account_email })
     end
 
     def recommended_statuses
