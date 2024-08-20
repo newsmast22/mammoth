@@ -13,14 +13,11 @@ class Mammoth::UserCommunitiesService < BaseService
   end
 
   def get_user_communities
-    @user = Mammoth::User.find(@current_user.id)
-    # @communities = @current_user.account.follow_private_community? ? @user&.communities || [] : @user&.communities.where.not(slug: ENV['PRIVATE_COMMUNITY']) || []
-    @communities = @user&.communities
-    if !@current_user.account.follow_private_community? && !@current_user.account.private_community_admin?
-      @communities = @communities.where.not(slug: ENV['PRIVATE_COMMUNITY'])
-    end
-    @user_communities = Mammoth::UserCommunity.find_by(user_id: @current_user.id, is_primary: true)
     @data = []
+
+    @user = Mammoth::User.find(@current_user.id)
+    @communities = @current_user.account.follow_private_community? ? @user&.communities || [] : @user&.communities.where.not(slug: ENV['PRIVATE_COMMUNITY']) || []
+    @user_communities = Mammoth::UserCommunity.find_by(user_id: @current_user.id, is_primary: true)
 
     unless @communities.empty?
       @data = build_community_data(@communities, @user, @user_communities)
@@ -29,6 +26,7 @@ class Mammoth::UserCommunitiesService < BaseService
       virtual_community
       fetch_status_communities(@params[:status_id]) if @params.include?(:status_id)
     end
+    @data.append(build_community_hash(Mammoth::Community.find_by(slug: ENV.fetch('PRIVATE_COMMUNITY', nil)), @user, nil)) if @current_user.account.private_community_admin?
     @data
   end
 
