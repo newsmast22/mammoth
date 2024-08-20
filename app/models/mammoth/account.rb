@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 module Mammoth
   class Account < Account
     include Redisable
@@ -94,7 +96,9 @@ module Mammoth
 
       return [] if private_community_account_email.blank?
 
-      Mammoth::Account.where(users: { email: private_community_account_email })
+      Mammoth::Account
+      .joins(:users)
+      .where(users: { email: private_community_account_email })
     end
 
     def recommended_statuses
