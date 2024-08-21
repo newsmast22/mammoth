@@ -530,7 +530,7 @@ module Mammoth
       Mammoth::CommunityStatus.where(community_id: community_id, status_id: self.id).any?
     end
 
-    def mentioned_private_community?
+    def mentioned_private_community_account?
       private_community = ENV.fetch('PRIVATE_COMMUNITY', nil)
       private_community_email = ENV.fetch('PRIVATE_COMMUNITY_ACCOUNT_EMAIL', nil)
   
