@@ -23,7 +23,8 @@ module Mammoth
 
     has_many :tag_follows
     has_many :tags, through: :tag_follows
-    
+
+    has_many :mammoth_notification_tokens, dependent: :destroy    
 
     scope :filter_timeline_with_countries,->(country_alpah2_name) {where(country: country_alpah2_name)}
     scope :filter_timeline_with_contributor_role,->(id) {where( "about_me_title_option_ids && ARRAY[?]::integer[]",id)}
