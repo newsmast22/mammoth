@@ -114,10 +114,11 @@ class Mammoth::RSSCreatorService < BaseService
 
     def is_duplicate?(attribute, value)
       Status.where(is_rss_content: true, reply: false)
-        .where("#{attribute} LIKE ?", "%#{value}%")
-        .order(created_at: :desc)
-        .limit(200)
-        .exists?
+      .order(created_at: :desc)
+      .limit(200) 
+      .where("#{attribute} LIKE ?", "%#{value}%")
+      .select(:id)
+      .exists?
     end
 
 end
