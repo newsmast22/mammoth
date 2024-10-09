@@ -2,6 +2,8 @@ require 'feedjira'
 require 'httparty'
 
 class Mammoth::RSSCreatorService < BaseService
+  include DatabaseHelper
+
   def call (params = {})
     @cid      = params['community_id']
     @cfeed_id = params['feed_id']
@@ -113,12 +115,14 @@ class Mammoth::RSSCreatorService < BaseService
     end
 
     def is_duplicate?(attribute, value)
-      Status.where(is_rss_content: true, reply: false)
-      .order(created_at: :desc)
-      .limit(200) 
-      .where("#{attribute} LIKE ?", "%#{value}%")
-      .select(:id)
-      .exists?
+      with_read_replica do
+        Status.where(is_rss_content: true, reply: false)
+        .order(created_at: :desc)
+        .limit(200) 
+        .where("#{attribute} LIKE ?", "%#{value}%")
+        .select(:id)
+        .exists?
+      end
     end
 
 end
