@@ -1,9 +1,9 @@
 class AddIndexesToStatuses < ActiveRecord::Migration[7.0]
   disable_ddl_transaction!
 
-  def change
+  def up
     safety_assured do
-      execute('SET lock_timeout TO \'10s\'')
+      execute('SET lock_timeout TO \'60s\'')
 
       add_index_if_not_exists :statuses, :is_rss_content, algorithm: :concurrently
       add_index_if_not_exists :statuses, :reply, algorithm: :concurrently
@@ -16,7 +16,7 @@ class AddIndexesToStatuses < ActiveRecord::Migration[7.0]
 
   def down
     safety_assured do
-      execute('SET lock_timeout TO \'10s\'')
+      execute('SET lock_timeout TO \'60s\'')
 
       remove_index_if_exists :statuses, :is_rss_content
       remove_index_if_exists :statuses, :reply
@@ -35,9 +35,9 @@ class AddIndexesToStatuses < ActiveRecord::Migration[7.0]
     end
   end
 
-  def remove_index_if_exists(table_name, column_name, options = {})
+  def remove_index_if_exists(table_name, column_name)
     if index_exists?(table_name, column_name)
-      remove_index(table_name, column_name, options)
+      remove_index(table_name, column_name)
     end
   end
 end
