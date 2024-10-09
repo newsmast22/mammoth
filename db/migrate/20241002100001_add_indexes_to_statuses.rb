@@ -30,13 +30,13 @@ class AddIndexesToStatuses < ActiveRecord::Migration[7.0]
   private
 
   def add_index_if_not_exists(table_name, column_name, options = {})
-    unless index_exists?(table_name, column_name, options)
+    unless index_exists?(table_name, column_name)
       add_index(table_name, column_name, options)
     end
   end
 
   def remove_index_if_exists(table_name, column_name, options = {})
-    if index_exists?(table_name, column_name, options)
+    if index_exists?(table_name, column_name)
       remove_index(table_name, column_name, options)
     end
   end
