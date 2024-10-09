@@ -5,19 +5,19 @@ class AddIndexesToStatuses < ActiveRecord::Migration[7.0]
     safety_assured do
       execute('SET lock_timeout TO \'60s\'')
 
-      unless index_exists?(:statuses, :is_rss_content)
+      unless index_exists?(:statuses, :is_rss_content, unique: false, algorithm: :concurrently)
         add_index :statuses, :is_rss_content, algorithm: :concurrently
       end
 
-      unless index_exists?(:statuses, :reply)
+      unless index_exists?(:statuses, :reply, unique: false, algorithm: :concurrently)
         add_index :statuses, :reply, algorithm: :concurrently
       end
 
-      unless index_exists?(:statuses, :created_at)
+      unless index_exists?(:statuses, :created_at, unique: false, algorithm: :concurrently)
         add_index :statuses, :created_at, algorithm: :concurrently
       end
 
-      unless index_exists?(:statuses, [:is_rss_content, :reply, :created_at])
+      unless index_exists?(:statuses, [:is_rss_content, :reply, :created_at], unique: false, algorithm: :concurrently)
         add_index :statuses, [:is_rss_content, :reply, :created_at], algorithm: :concurrently
       end
 
@@ -29,19 +29,19 @@ class AddIndexesToStatuses < ActiveRecord::Migration[7.0]
     safety_assured do
       execute('SET lock_timeout TO \'60s\'')
 
-      if index_exists?(:statuses, :is_rss_content)
+      if index_exists?(:statuses, :is_rss_content, unique: false, algorithm: :concurrently)
         remove_index :statuses, :is_rss_content
       end
 
-      if index_exists?(:statuses, :reply)
+      if index_exists?(:statuses, :reply, unique: false, algorithm: :concurrently)
         remove_index :statuses, :reply
       end
 
-      if index_exists?(:statuses, :created_at)
+      if index_exists?(:statuses, :created_at, unique: false, algorithm: :concurrently)
         remove_index :statuses, :created_at
       end
 
-      if index_exists?(:statuses, column: [:is_rss_content, :reply, :created_at])
+      if index_exists?(:statuses, [:is_rss_content, :reply, :created_at], unique: false, algorithm: :concurrently)
         remove_index :statuses, column: [:is_rss_content, :reply, :created_at]
       end
 
