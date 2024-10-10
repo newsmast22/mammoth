@@ -1,5 +1,7 @@
 require 'feedjira'
 require 'httparty'
+require 'set'
+
 
 class Mammoth::RSSCreatorService < BaseService
   include DatabaseHelper
@@ -18,8 +20,12 @@ class Mammoth::RSSCreatorService < BaseService
       feed = Feedjira.parse(xml)
       fallback_image_url = "https://newsmast-assets.s3.eu-west-2.amazonaws.com/default_fallback_resized.png"
       
+      @status_rss_link_200 = fetch_status_200('rss_link').to_set
+      
+      @status_text_200 = fetch_status_200('text').to_set
+
       feed.entries.to_a.sort_by(&:published).each do |item|
-        link = item.try(:url) || item.try(:enclosure_url)
+        link = item&.url || item&.enclosure_url
         if item.published >= 10.days.ago.to_date
           
           next if is_duplicate?("rss_link", link)
@@ -30,8 +36,8 @@ class Mammoth::RSSCreatorService < BaseService
           @community_slug = Mammoth::Community.where(id: @cid).last.slug
 
           # Check status conent duplication
-          @regenerated_text = generate_comminity_hashtags(text)
-          search_text_link = @regenerated_text +" "+link
+          @regenerated_text = generate_community_hashtags(text)
+          search_text_link = @regenerated_text + " " + link
 
           next if is_duplicate?('text', search_text_link)
 
@@ -41,7 +47,7 @@ class Mammoth::RSSCreatorService < BaseService
 
         end
       end
-    rescue => e
+    rescue StandardError => e
       Rails.logger.error "#{e}, URL: #{url}"
     end
 
@@ -79,13 +85,11 @@ class Mammoth::RSSCreatorService < BaseService
       true
     end
 
-    def generate_comminity_hashtags(text)
+    def generate_community_hashtags(text)
       community_hash_tags = Mammoth::CommunityHashtag
                       .joins(:community)
                       .where(is_incoming: false, community: {slug: @community_slug})
 
-      # @community_ids = Mammoth::Community.where(slug: @community_slug).pluck(:id).to_a.uniq
-      # community_hash_tags = Mammoth::CommunityHashtag.where(community_id: @community_ids, is_incoming: false)
       post = text
       community_hash_tags.each do |community_hash_tag|
         post += " ##{community_hash_tag.hashtag}"
@@ -96,7 +100,7 @@ class Mammoth::RSSCreatorService < BaseService
     def create_community_status
       begin
         @community_status = Mammoth::CommunityStatus.find_or_create_by(status: @status, community_id: @cid)
-      rescue
+      rescue StandardError
         puts 'RSS Feed CommunityStatus creation failed!'
       end
     end
@@ -109,19 +113,29 @@ class Mammoth::RSSCreatorService < BaseService
           url  = meta&.images&.first&.src
         end
         url
-      rescue 
+      rescue StandardError
         url
       end
     end
 
-    def is_duplicate?(attribute, value)
-      with_read_replica do
+    def is_duplicate?(attribute, val)
+      if attribute == 'rss_link'
+        @status_rss_link_200.include?(val)
+      elsif attribute == 'text'
+        @status_text_200.include?(val)
+      end
+    end
+
+    def fetch_status_200(attribute)
+      start_date = 1.month.ago.beginning_of_day
+      end_date = Date.today.end_of_day
+      
+      with_read_replica do # accessing read replica
         Status.where(is_rss_content: true, reply: false)
+        .where(created_at: start_date..end_date)
         .order(created_at: :desc)
-        .limit(200) 
-        .where("#{attribute} LIKE ?", "%#{value}%")
-        .select(:id)
-        .exists?
+        .limit(200)
+        .pluck(attribute.to_sym)
       end
     end
 
