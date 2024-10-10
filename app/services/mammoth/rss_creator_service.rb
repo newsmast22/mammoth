@@ -20,9 +20,9 @@ class Mammoth::RSSCreatorService < BaseService
       feed = Feedjira.parse(xml)
       fallback_image_url = "https://newsmast-assets.s3.eu-west-2.amazonaws.com/default_fallback_resized.png"
       
-      @status_rss_link_200 = fetch_status_200('rss_link').to_set
-      
-      @status_text_200 = fetch_status_200('text').to_set
+      recent_statuses = fetch_recent_rss_statuses
+      @status_rss_link_200 = recent_statuses.pluck(:rss_link).to_set
+      @status_text_200 = recent_statuses.pluck(:text).to_set
 
       feed.entries.to_a.sort_by(&:published).each do |item|
         link = item&.url || item&.enclosure_url
@@ -44,6 +44,9 @@ class Mammoth::RSSCreatorService < BaseService
           create_status(text, desc, link)
           create_community_status if @status
           crawl_Link(link) if @status
+
+          @status_rss_link_200.add(link)
+          @status_text_200.add(search_text_link)
 
         end
       end
@@ -126,16 +129,15 @@ class Mammoth::RSSCreatorService < BaseService
       end
     end
 
-    def fetch_status_200(attribute)
+    def fetch_recent_rss_statuses
       start_date = 1.month.ago.beginning_of_day
       end_date = Date.today.end_of_day
       
-      with_read_replica do # accessing read replica
-        Status.where(is_rss_content: true, reply: false)
-        .where(created_at: start_date..end_date)
-        .order(created_at: :desc)
-        .limit(200)
-        .pluck(attribute.to_sym)
+      with_read_replica do
+      Status.where(is_rss_content: true, reply: false, community_feed_id: @cfeed_id)
+      .where(created_at: start_date..end_date)
+      .order(created_at: :desc)
+      .limit(200)
       end
     end
 
