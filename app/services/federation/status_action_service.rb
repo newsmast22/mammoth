@@ -89,7 +89,7 @@ module Federation
       @body = {
         in_reply_to_id: nil,
         language: @options[:language],
-        media_ids: @options[:media_ids],
+        media_ids: @options[:media_ids].nil? || !@options.key?(:media_ids) || @options[:media_ids].empty? ? nil : @options[:media_ids],
         media_attributes: @options[:media_attributes],
         poll: @options[:poll],
         sensitive: @options[:sensitive],
