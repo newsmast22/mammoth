@@ -257,6 +257,8 @@ Mammoth::Engine.routes.draw do
         end
       end
 
+      resources :community_hashtags, only: %i[index]
+
       resources :drafted_statuses, only: [:create, :index, :show, :update, :destroy] do
         member do
           post :publish
