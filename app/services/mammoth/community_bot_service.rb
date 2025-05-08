@@ -4,8 +4,16 @@ class Mammoth::CommunityBotService < BaseService
 
     @status = Mammoth::Status.find(status_id)
 
+    @community_ids = []
+
     if community_id.nil?
-      boost_for_all_community
+      find_matching_communities_from_hashtags
+      find_form_follower_community_admins
+
+      @community_ids.each do |id|
+        boost_by_community_bot(id)
+      end
+
     else
       boost_by_community_bot(community_id)
     end
@@ -13,17 +21,15 @@ class Mammoth::CommunityBotService < BaseService
 
   private
 
-    def boost_for_all_community
-
+    def find_form_follower_community_admins
       # Looping community to fetch followed accounts by community admin
       get_admins_from_follow.each do |community_admin|
         communities = Mammoth::Account.find(community_admin.id).get_owned_communities
 
         # Looping community
-        communities.each do |community|
-          boost_by_community_bot(community.id)
-        end
+        @community_ids.concat(communities.ids)
       end
+      @community_ids.uniq
     end
 
     def boost_by_community_bot(community_id)
@@ -37,9 +43,20 @@ class Mammoth::CommunityBotService < BaseService
       false
     end
 
+    def find_matching_communities_from_hashtags
+      tag_names = @status&.tags&.map(&:name)
+      return if tag_names.blank?
+    
+      @community_ids = Mammoth::CommunityHashtag
+                       .where("name ILIKE ANY (array[?])", tag_names)
+                       .where(is_incoming: true)
+                       .pluck(:community_id)
+                       .uniq
+    end
+
     def get_post_url
       username = @status.account.pretty_acct
-      url = "https://newsmast.social/@#{username}/#{@status.id}"
+      "https://newsmast.social/@#{username}/#{@status.id}"
     end
 
     def get_community_bot_account(community_id)
