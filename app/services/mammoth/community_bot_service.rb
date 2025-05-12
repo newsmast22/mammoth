@@ -44,14 +44,21 @@ class Mammoth::CommunityBotService < BaseService
     end
 
     def find_matching_communities_from_hashtags
-      tag_names = @status&.tags&.map(&:name)
-      return if tag_names.blank?
-    
-      @community_ids = Mammoth::CommunityHashtag
-                       .where("name ILIKE ANY (array[?])", tag_names)
-                       .where(is_incoming: true)
-                       .pluck(:community_id)
-                       .uniq
+      return if @status.nil? || @status.tags.blank?
+
+      tag_names = @status.tags.map(&:name)
+
+      tag_names.each do |tag|
+        @community_ids.concat(
+          Rails.cache.fetch("community_hashtags/#{tag}", expires_in: 1.day) do
+            Mammoth::CommunityHashtag
+              .where("LOWER(name) = ?", tag)
+              .where(is_incoming: true)
+              .pluck(:community_id)
+          end
+        )
+      end
+      @community_ids.uniq!
     end
 
     def get_post_url

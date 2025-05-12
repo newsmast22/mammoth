@@ -16,7 +16,35 @@ module Mammoth
 
     after_create :create_community_filter_statuses
 
-    after_update :update_community_filter_statuses 
+    after_update :update_community_filter_statuses
+
+    def self.analyze_hashtag_matches(hashtags=[])
+      # Loop through each hashtag and count matching records
+      hashtags.each do |tag|
+        count = Mammoth::CommunityFilterKeyword.where("keyword ILIKE ?", "%{tag}%").count
+        hashtag_counts[tag] = count
+      end
+    
+      # Output results
+      puts "=== Hashtag Matching Records Summary ==="
+      total_records = 0
+    
+      hashtag_counts.each do |tag, count|
+        puts "#{tag}: #{count} records"
+        total_records += count
+      end
+    
+      puts "------------------------"
+      puts "Total records found: #{total_records}"
+    
+      # Sort and display hashtags by number of matches (highest first)
+      puts "\n=== Sorted by Count (Highest First) ==="
+      hashtag_counts.sort_by { |_tag, count| -count }.each do |tag, count|
+        puts "#{tag}: #{count} records" if count > 0
+      end
+      
+    hashtag_counts
+  end
 
     private
 
