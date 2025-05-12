@@ -18,10 +18,11 @@ module Mammoth
 
     after_update :update_community_filter_statuses
 
-    def self.analyze_hashtag_matches(hashtags=[])
+    def self.analyze_hashtag_matches(hashtags=[],is_filter_hashtag=true)
       # Loop through each hashtag and count matching records
+      hashtag_counts ={}
       hashtags.each do |tag|
-        count = Mammoth::CommunityFilterKeyword.where("keyword ILIKE ?", "%{tag}%").count
+        count = Mammoth::CommunityFilterKeyword.where("LOWER(keyword) = LOWER(?)", tag).where(is_filter_hashtag: is_filter_hashtag).count
         hashtag_counts[tag] = count
       end
     
@@ -42,9 +43,9 @@ module Mammoth
       hashtag_counts.sort_by { |_tag, count| -count }.each do |tag, count|
         puts "#{tag}: #{count} records" if count > 0
       end
-      
-    hashtag_counts
-  end
+        
+      hashtag_counts
+    end
 
     private
 
