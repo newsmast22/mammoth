@@ -43,7 +43,7 @@ module Mammoth
       begin
         url = nil
         if link.present?
-          fallback_image_url = "https://newsmast-assets.s3.eu-west-2.amazonaws.com/default_fallback_resized.png"
+          fallback_image_url = "https://newsmast-assets.s3.eu-west-2.amazonaws.com/default_fallback_newsmast_resized.png"
           meta = LinkThumbnailer.generate(link)
           image_url  = meta&.images&.first&.src
           unless image_url.blank?
